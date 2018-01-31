@@ -1,0 +1,7 @@
+- DONE - ak je index noty v stupnici mimo, spraviť zalomenie
+- TODO - evolve sequence
+- TODO - Clock
+- DONE - Wobbler class derived from tk.Frame
+- TODO - polyphony
+- TODO - all notes off on exit
+-
