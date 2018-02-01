@@ -3,7 +3,7 @@ import math as m
 import time
 import random
 
-from cc import CCKeys
+from source.cc import CCKeys
 from source.constants import *
 
 

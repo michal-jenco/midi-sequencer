@@ -1,7 +1,7 @@
 import random
 import hashlib
 
-from scales import Scales
+from source.scales import Scales
 from source.constants import *
 
 
@@ -51,8 +51,8 @@ class Parser:
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp
                     msg.append(note_value)
                     msg.append(100)
-
                     msg_list.append(msg)
+
                 elif note == "r":
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
@@ -117,7 +117,8 @@ class Parser:
                     pass
 
                 elif note.isalpha():
-
+                    pass
+                    """
                     idx = ord(hashlib.sha256(note.encode('utf-8')).hexdigest()[0])
                     note_value = Scales().get_note_by_index_wrap(idx, context.scale)
                     str_seq += str(context.scale.index(note_value)) + " "
@@ -126,7 +127,7 @@ class Parser:
 
                     note_value += context.root + self.get_octave(control)
                     msg_list.append([0x90, note_value, 100])
-
+                    """
 
         elif mode == MODE_SAMPLE:
             notes = list(text)

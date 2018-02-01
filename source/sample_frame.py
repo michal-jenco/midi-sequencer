@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from parser_my import Parser
+from source.parser_my import Parser
 from source.constants import MODE_SAMPLE
 
 

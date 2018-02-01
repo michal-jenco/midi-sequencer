@@ -5,15 +5,16 @@ import copy
 import random
 
 from source.note_lengths import NoteLengths
-from scales import Scales
-from context import Context
-from parser_my import Parser
+from source.scales import Scales
+from source.context import Context
+from source.parser_my import Parser
 from source.evolver import Evolver
 from source.wobbler import Wobbler
 from source.midi_clock import MidiClock
-from notes import *
+from source.notes import *
 from source.constants import *
-from sample_frame import SampleFrame
+from source.sample_frame import SampleFrame
+
 
 class Sequencer:
     def set_sequence(self, _):

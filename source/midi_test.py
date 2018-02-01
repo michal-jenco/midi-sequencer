@@ -1,4 +1,4 @@
-from sequencer import Sequencer
+from source.sequencer import Sequencer
 import threading
 import rtmidi
 
