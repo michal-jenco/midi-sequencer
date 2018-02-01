@@ -4,7 +4,7 @@ from parser_my import Parser
 from context import Context
 from scales import Scales
 from notes import *
-from constants import *
+from source.constants import *
 
 root = tk.Tk()
 

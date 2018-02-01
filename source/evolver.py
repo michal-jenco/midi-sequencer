@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from constants import *
+from source.constants import *
 
 
 class Evolver:

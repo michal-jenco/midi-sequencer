@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from parser_my import Parser
-from constants import MODE_SAMPLE
+from source.constants import MODE_SAMPLE
 
 
 class SampleFrame(tk.Frame):

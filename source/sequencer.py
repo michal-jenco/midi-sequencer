@@ -4,15 +4,15 @@ import time
 import copy
 import random
 
-from note_lengths import NoteLengths
+from source.note_lengths import NoteLengths
 from scales import Scales
 from context import Context
 from parser_my import Parser
-from evolver import Evolver
-from wobbler import Wobbler
-from midi_clock import MidiClock
+from source.evolver import Evolver
+from source.wobbler import Wobbler
+from source.midi_clock import MidiClock
 from notes import *
-from constants import *
+from source.constants import *
 from sample_frame import SampleFrame
 
 class Sequencer:

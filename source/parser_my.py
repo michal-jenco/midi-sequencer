@@ -2,7 +2,7 @@ import random
 import hashlib
 
 from scales import Scales
-from constants import *
+from source.constants import *
 
 
 class Parser:

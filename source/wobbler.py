@@ -4,7 +4,7 @@ import time
 import random
 
 from cc import CCKeys
-from constants import *
+from source.constants import *
 
 
 class Wobbler(tk.Frame):
