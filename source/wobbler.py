@@ -51,12 +51,12 @@ class Wobbler(tk.Frame):
         self.option_cc = tk.OptionMenu(self, self.strvar_option_cc, *self.cc_all)
 
         self.strvar_option_midi_channel = tk.StringVar(self, "10")
-        self.option_midi_channel = tk.OptionMenu(self, self.strvar_option_midi_channel, 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+        self.option_midi_channel = tk.OptionMenu(self, self.strvar_option_midi_channel, *range(1,17))
 
         self.intvar_check_10x = tk.IntVar(DISABLED)
         self.check_x10 = tk.Checkbutton(self, text="x10", variable=self.intvar_check_10x)
 
-        self.output_file = open(self.name + ".txt", "a")
+        self.output_file = open( "../other/" + self.name + ".txt", "a")
 
         print("%s created" % self.name)
 

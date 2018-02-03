@@ -1,4 +1,5 @@
 import tkinter as tk
+import random
 
 from source.parser_my import Parser
 from source.constants import MODE_SAMPLE
@@ -11,18 +12,53 @@ class SampleFrame(tk.Frame):
         self.context = context
 
         self.seq_entries = []
+        self.labels = []
+        self.strvars = []
 
         for i in range(0, 10):
             e = tk.Entry(self)
             e.bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
-
             self.seq_entries.append(e)
+
+            s = tk.StringVar(self, "")
+            label_font = ("Courier", "10")
+            
+            l = tk.Label(self, text=random.choice("?:_#&"), textvariable=s, font=label_font)
+            self.labels.append(l)
+            self.strvars.append(s)
+
+    def update_label_with_current_step(self, channel, step, click):
+        notes = Parser().get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)
+
+        msg = "|"
+        for i, note in enumerate(notes):
+            if i == step:
+                msg += "#"
+            else:
+                msg += " "
+
+        spac = 3
+        temp = len(str(step+1))
+        msg += "|" + (spac-temp)*" "
+
+        str_slash = str(step+1) + "/" + str(len(notes))
+        msg += str_slash
+        msg += (spac if not click else spac-1)*" "
+
+        if click:
+            msg += "X"
+
+        self.strvars[channel].set(msg)
+
 
     def display(self):
 
         offset = 5
         for i, e in enumerate(self.seq_entries):
             e.grid(row=offset + i, column=10, pady=2)
+
+        for i, l in enumerate(self.labels):
+            l.grid(row=offset + i, column=11, pady=2, sticky="w")
 
     def set_sequence(self, event, channel):
 
@@ -34,6 +70,22 @@ class SampleFrame(tk.Frame):
                 note[0] += channel
 
         print("Ch%s: (%s)\t\"%s\"" % (channel+1, len(notes), notes))
+
+        lab = self.strvars[channel]
+
+        res = "|"
+        for i in range(0, notes.__len__()):
+            res += " "
+
+        spac = 3
+        default_offset = 8
+        res += "|" + " "*spac
+        str_slash = "  /" + str(notes.__len__())
+
+        res += str_slash
+        res += " "*(default_offset - len(str_slash))
+
+        lab.set(res)
 
         self.context.sample_seqs[channel] = notes
         print("a: %s" % (self.context.sample_seqs[channel]))

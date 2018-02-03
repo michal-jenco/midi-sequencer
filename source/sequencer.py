@@ -53,7 +53,7 @@ class Sequencer:
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 4"))
 
         self.sample_frame = SampleFrame(self.root, self.context)
-        self.sample_frame.grid(row=22, column=3, sticky="", rowspan=5)
+        self.sample_frame.grid(row=22, column=3, sticky="e", rowspan=5)
         self.sample_frame.display()
 
         a = 0
@@ -102,6 +102,12 @@ class Sequencer:
         self.scale_vel_max = tk.Scale(self.frame_prob_sliders, from_=0, to=127, orient=tk.VERTICAL,
                                       variable=self.strvar_vel_max, length=150)
         self.scale_vel_max.grid(column=1, row=0)
+
+        self.strvar_prob_skip_poly = tk.StringVar(self.frame_prob_sliders)
+        self.strvar_prob_skip_poly.set("50")
+        self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
+                                      variable=self.strvar_prob_skip_poly, length=150)
+        self.scale_prob_skip_poly.grid(column=2, row=0)
 
         self.strvar_bpm = tk.StringVar(self.frame_sliders)
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=240, orient=tk.HORIZONTAL, sliderlength=30,
@@ -300,7 +306,7 @@ class Sequencer:
                         if self.context.poly:
 
                             for poly in self.context.poly:
-                                if random.random() > 0.5:
+                                if random.random() < float(int(self.strvar_prob_skip_poly.get())/100.0):
                                     self.context.midi.send_message([orig_note[0], orig_note[1]+poly, orig_note[2]])
 
                         print("orig_note: %s" % orig_note[1])
@@ -311,6 +317,8 @@ class Sequencer:
             for channel, sample_seq in enumerate(self.context.sample_seqs):
                 if sample_seq:
                     sample_idx = idx % len(sample_seq)
+                    print("Sample_idx: %s" % sample_idx)
+                    self.sample_frame.update_label_with_current_step(channel, (idx-1) % len(sample_seq), sample_seq[(idx-1) % len(sample_seq)])
 
                     if sample_seq[sample_idx]:
                         self.context.midi.send_message(sample_seq[sample_idx])
