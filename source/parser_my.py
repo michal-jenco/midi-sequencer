@@ -130,19 +130,36 @@ class Parser:
                     """
 
         elif mode == MODE_SAMPLE:
-            notes = list(text)
+            sequences = text.split()
 
-            for idx, note in enumerate(notes):
+            repetitions = 1
+            for seq in sequences:
+                if "x" in seq:
+                    x_index = seq.index("x")
+                    if seq[x_index+1:]:
+                        repetitions = int(seq[x_index+1:])
 
-                if note == "0":
-                    msg_list.append([])
+                else:
+                    repetitions = 1
 
-                elif note == "1":
-                    msg_list.append([0x90, 127, 127])
+                try:
+                    x_index
+                    notes = list(seq[:x_index])
+                except:
+                    notes = list(seq)
 
-                elif note.isdigit() and note not in {"0", "1"}:
-                    for i in range(0, int(note)):
-                        msg_list.append([])
+                for i in range(0, repetitions):
+                    for idx, note in enumerate(notes):
+
+                        if note == "0":
+                            msg_list.append([])
+
+                        elif note == "1":
+                            msg_list.append([0x90, 127, 127])
+
+                        elif note.isdigit() and note not in {"0", "1"}:
+                            for i in range(0, int(note)):
+                                msg_list.append([])
 
         print("Sequence set to: %s\n" % msg_list)
 

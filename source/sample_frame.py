@@ -16,7 +16,7 @@ class SampleFrame(tk.Frame):
         self.strvars = []
 
         for i in range(0, 10):
-            e = tk.Entry(self)
+            e = tk.Entry(self, width=40)
             e.bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
             self.seq_entries.append(e)
 
@@ -50,12 +50,11 @@ class SampleFrame(tk.Frame):
 
         self.strvars[channel].set(msg)
 
-
     def display(self):
 
         offset = 5
         for i, e in enumerate(self.seq_entries):
-            e.grid(row=offset + i, column=10, pady=2)
+            e.grid(row=offset + i, column=10, pady=2, sticky="w")
 
         for i, l in enumerate(self.labels):
             l.grid(row=offset + i, column=11, pady=2, sticky="w")
