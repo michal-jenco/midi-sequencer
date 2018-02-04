@@ -11,7 +11,7 @@ class Parser:
 
     def get_notes(self, context, text, mode=MODE_SIMPLE):
 
-        print("text inside: %s\n" % text)
+        # print("text inside: %s\n" % text)
 
         msg_list = []
         str_seq = ""

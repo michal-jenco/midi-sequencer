@@ -271,8 +271,6 @@ class Sequencer:
             if self.context.off_list:
                 loop_off_note_idx = off_note_idx % len(self.context.off_list)
 
-            print(loop_idx)
-
             note = self.context.sequence[loop_idx]
 
             orig_note = copy.copy(note)
@@ -291,8 +289,8 @@ class Sequencer:
             if random.random() > float(self.context.prob_skip_note.get())/100:
 
                 if self.context.off_list:
-                    print("Idx = %s" % idx_2)
-                    print("mod = %s" % (idx_2 % (self.context.off_list[loop_off_note_idx])))
+                    # print("Idx = %s" % idx_2)
+                    # print("mod = %s" % (idx_2 % (self.context.off_list[loop_off_note_idx])))
                     if idx_2 % (self.context.off_list[loop_off_note_idx]) == 0:
                         if idx_2 > 0:
                             self.end_all_notes()

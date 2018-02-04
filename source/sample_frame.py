@@ -70,21 +70,5 @@ class SampleFrame(tk.Frame):
 
         print("Ch%s: (%s)\t\"%s\"" % (channel+1, len(notes), notes))
 
-        lab = self.strvars[channel]
-
-        res = "|"
-        for i in range(0, notes.__len__()):
-            res += " "
-
-        spac = 3
-        default_offset = 8
-        res += "|" + " "*spac
-        str_slash = "  /" + str(notes.__len__())
-
-        res += str_slash
-        res += " "*(default_offset - len(str_slash))
-
-        lab.set(res)
-
         self.context.sample_seqs[channel] = notes
-        print("a: %s" % (self.context.sample_seqs[channel]))
+        self.update_label_with_current_step(channel, 0, False)
