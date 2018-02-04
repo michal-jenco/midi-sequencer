@@ -7,10 +7,10 @@ class NoteLengths:
         self.whole = bpm/60
         self.half = bpm/60/2
         self.quarter = bpm/60/4
-        #self.eigtht = bpm/60/8
-        #self.sixteenth = bpm/60/16
-        #self.thirtysecond = bpm/60/32
-        #self.sixtyfourth = bpm/60/64
+        self.eigtht = bpm/60/8
+        self.sixteenth = bpm/60/16
+        self.thirtysecond = bpm/60/32
+        self.sixtyfourth = bpm/60/64
 
     def get_random(self):
         note_list = sorted(list(self.__dict__.keys()))

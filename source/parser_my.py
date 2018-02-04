@@ -134,7 +134,11 @@ class Parser:
 
             repetitions = 1
             for seq in sequences:
-                if "x" in seq:
+
+                if seq == "/":
+                    break
+
+                elif "x" in seq:
                     x_index = seq.index("x")
                     if seq[x_index+1:]:
                         repetitions = int(seq[x_index+1:])
@@ -160,6 +164,10 @@ class Parser:
                         elif note.isdigit() and note not in {"0", "1"}:
                             for i in range(0, int(note)):
                                 msg_list.append([])
+
+                        else:
+                            # unknown symbol (not yet defined a use)
+                            pass
 
         print("Sequence set to: %s\n" % msg_list)
 

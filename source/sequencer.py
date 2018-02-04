@@ -64,6 +64,12 @@ class Sequencer:
             threading.Thread(target=wob.wobble).start()
             a += 1
 
+        self.strvar_tempo_multiplier = tk.StringVar(self.root, "2")
+        self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
+        self.option_tempo_multiplier.grid()
+        self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
+
+
         self.strvar_option_midi_channel = tk.StringVar(self.root, "11")
         self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel,
                                                  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
@@ -257,6 +263,12 @@ class Sequencer:
         off_note_idx = 0
         clock_division_factor = 16
 
+        ########################################################
+        ########################################################
+        ################    M A I N   L O O P   ################
+        ########################################################
+        ########################################################
+
         while True:
 
             idx += 1
@@ -286,7 +298,8 @@ class Sequencer:
             orig_note[2] = random.randint(vel_min, vel_max)
             print(orig_note)
 
-            if random.random() > float(self.context.prob_skip_note.get())/100:
+            if (random.random() > float(self.context.prob_skip_note.get())/100
+                    and idx % self.get_tempo_multiplier() == 0):
 
                 if self.context.off_list:
                     # print("Idx = %s" % idx_2)
@@ -323,7 +336,18 @@ class Sequencer:
                     if sample_seq[sample_idx]:
                         self.context.midi.send_message(sample_seq[sample_idx])
 
-            sleep_time = NoteLengths(float(self.context.bpm.get())).quarter
+            if self.get_tempo_multiplier() == 1:
+                sleep_time = NoteLengths(float(self.context.bpm.get())).quarter
+            elif self.get_tempo_multiplier() == 2:
+                sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
+            elif self.get_tempo_multiplier() == 3:
+                sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
+            elif self.get_tempo_multiplier() == 4:
+                sleep_time = NoteLengths(float(self.context.bpm.get())).sixteenth
+
+            else:
+                sleep_time = NoteLengths(float(self.context.bpm.get())).sixteenth
+
             time.sleep(sleep_time)
 
             # self.context.midi.send_message(note_off)
