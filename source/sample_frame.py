@@ -15,6 +15,8 @@ class SampleFrame(tk.Frame):
         self.labels = []
         self.strvars = []
 
+        self.parser = Parser()
+
         for i in range(0, 10):
             e = tk.Entry(self, width=40)
             e.bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
@@ -28,7 +30,7 @@ class SampleFrame(tk.Frame):
             self.strvars.append(s)
 
     def update_label_with_current_step(self, channel, step, click):
-        notes = Parser().get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)
+        notes = self.parser.get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)
 
         msg = "|"
         for i, note in enumerate(notes):
@@ -51,7 +53,6 @@ class SampleFrame(tk.Frame):
         self.strvars[channel].set(msg)
 
     def display(self):
-
         offset = 5
         for i, e in enumerate(self.seq_entries):
             e.grid(row=offset + i, column=10, pady=2, sticky="w")
@@ -60,9 +61,7 @@ class SampleFrame(tk.Frame):
             l.grid(row=offset + i, column=11, pady=2, sticky="w")
 
     def set_sequence(self, event, channel):
-
-        parser = Parser()
-        notes = parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
+        notes = self.parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
 
         for note in notes:
             if note:

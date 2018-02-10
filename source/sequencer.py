@@ -64,7 +64,7 @@ class Sequencer:
             threading.Thread(target=wob.wobble).start()
             a += 1
 
-        self.strvar_tempo_multiplier = tk.StringVar(self.root, "2")
+        self.strvar_tempo_multiplier = tk.StringVar(self.root, "1")
         self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
         self.option_tempo_multiplier.grid()
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
@@ -246,22 +246,15 @@ class Sequencer:
         self.context.midi.send_message(msg)
         print("Pitch bend sent.")
 
-
     def play_sequence(self):
-
         print("Play sequence is running.")
-
-        mc = MidiClock(self.context)
-
-        note_cnt = 0
-        drone_cnt = 0
+        # mc = MidiClock(self.context)
 
         time.sleep(0.1)
 
         idx = 0
         idx_2 = 0
         off_note_idx = 0
-        clock_division_factor = 16
 
         ########################################################
         ########################################################
@@ -270,7 +263,6 @@ class Sequencer:
         ########################################################
 
         while True:
-
             idx += 1
             idx_2 += 1
 
@@ -278,11 +270,10 @@ class Sequencer:
                 time.sleep(0.1)
                 continue
 
+            if not self.context.sequence:
+                continue
+
             loop_idx = idx % len(self.context.sequence)
-
-            if self.context.off_list:
-                loop_off_note_idx = off_note_idx % len(self.context.off_list)
-
             note = self.context.sequence[loop_idx]
 
             orig_note = copy.copy(note)
@@ -302,8 +293,8 @@ class Sequencer:
                     and idx % self.get_tempo_multiplier() == 0):
 
                 if self.context.off_list:
-                    # print("Idx = %s" % idx_2)
-                    # print("mod = %s" % (idx_2 % (self.context.off_list[loop_off_note_idx])))
+                    loop_off_note_idx = off_note_idx % len(self.context.off_list)
+
                     if idx_2 % (self.context.off_list[loop_off_note_idx]) == 0:
                         if idx_2 > 0:
                             self.end_all_notes()
@@ -316,8 +307,8 @@ class Sequencer:
                         continue
                     else:
                         self.context.midi.send_message(orig_note)
-                        if self.context.poly:
 
+                        if self.context.poly:
                             for poly in self.context.poly:
                                 if random.random() < float(int(self.strvar_prob_skip_poly.get())/100.0):
                                     self.context.midi.send_message([orig_note[0], orig_note[1]+poly, orig_note[2]])
@@ -331,52 +322,20 @@ class Sequencer:
                 if sample_seq:
                     sample_idx = idx % len(sample_seq)
                     print("Sample_idx: %s" % sample_idx)
-                    self.sample_frame.update_label_with_current_step(channel, (idx-1) % len(sample_seq), sample_seq[(idx-1) % len(sample_seq)])
+
+                    step = (idx-1) % len(sample_seq)
+                    self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
 
                     if sample_seq[sample_idx]:
                         self.context.midi.send_message(sample_seq[sample_idx])
 
-            if self.get_tempo_multiplier() == 1:
-                sleep_time = NoteLengths(float(self.context.bpm.get())).quarter
-            elif self.get_tempo_multiplier() == 2:
-                sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
-            elif self.get_tempo_multiplier() == 3:
-                sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
-            elif self.get_tempo_multiplier() == 4:
-                sleep_time = NoteLengths(float(self.context.bpm.get())).sixteenth
+            bpm = float(self.context.bpm.get())
 
+            if idx % 10 > 5:
+                sleep_time = NoteLengths(bpm).triplet
+            elif idx % 10 < 2:
+                sleep_time = NoteLengths(bpm).quintuplet
             else:
-                sleep_time = NoteLengths(float(self.context.bpm.get())).sixteenth
+                sleep_time = NoteLengths(bpm).eigtht
 
             time.sleep(sleep_time)
-
-            # self.context.midi.send_message(note_off)
-
-        # noinspection PyUnreachableCode
-        """
-        while True:
-            note_value = random.choice(scale)
-            octave = random.choice([-12, 0, 12, 24])
-            velocity = 90
-            note_value = context.root + octave + note_value
-
-            note_on = [0x90, note_value, velocity]
-            note_off = [0x80, note_value, 0]
-
-            if note_cnt % context.drone_freq.get() == 0:
-                nt = scale[context.drone_seq[(drone_cnt//context.each_drone_count) % (len(context.drone_seq))]] + context.root-12
-                print(nt)
-
-                note_on = [0x90, nt, 100]
-                #note_off = [0x80, nt, 0]
-
-                drone_cnt += 1
-
-            scale = context.scale
-
-            self.context.midi.send_message(note_on)
-            time.sleep(NoteLengths(context.bpm).get_random())
-            self.context.midi.send_message(note_off)
-
-            note_cnt += 1
-        """
