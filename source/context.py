@@ -14,6 +14,7 @@ class Context:
         self.mode = None
 
         self.poly = []
+        self.skip_notes = []
 
         self.sample_seqs = []
         for i in range(0, 10):

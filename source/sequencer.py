@@ -13,6 +13,7 @@ from source.wobbler import Wobbler
 from source.notes import *
 from source.constants import *
 from source.sample_frame import SampleFrame
+from source.helpful_functions import a, sleep_and_increase_time
 
 
 class Sequencer:
@@ -68,7 +69,6 @@ class Sequencer:
         self.option_tempo_multiplier.grid()
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
-
         self.strvar_option_midi_channel = tk.StringVar(self.root, "11")
         self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel,
                                                  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
@@ -110,7 +110,7 @@ class Sequencer:
         self.strvar_prob_skip_poly = tk.StringVar(self.frame_prob_sliders)
         self.strvar_prob_skip_poly.set("50")
         self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
-                                      variable=self.strvar_prob_skip_poly, length=150)
+                                             variable=self.strvar_prob_skip_poly, length=150)
         self.scale_prob_skip_poly.grid(column=2, row=0)
 
         self.strvar_bpm = tk.StringVar(self.frame_sliders)
@@ -202,15 +202,24 @@ class Sequencer:
         self.entry_poly.bind('<Return>', self.set_poly)
         self.entry_poly.grid(row=3, column=0, sticky='wn', pady=(2, 2), padx=10)
 
+        self.entry_skip_note = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note.bind('<Return>', self.set_skip_note)
+        self.entry_skip_note.grid(row=4, column=0, sticky='wn', pady=(2, 2), padx=10)
+
         self.frame_entries.grid(row=22, column=3, sticky="w")
+
+    def show(self):
+        self.root.mainloop()
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
         self.context.poly = list(map(int, voices))
         print("Poly: %s" % self.context.poly)
 
-    def show(self):
-        self.root.mainloop()
+    def set_skip_note(self, _):
+        skips = self.entry_skip_note.get().split()
+        self.context.skip_notes = list(map(int, skips))
+        print("Skip notes: %s" % self.context.skip_notes)
 
     def set_scale(self, scale_):
         self.context.scale = Scales().get_scale_by_name(scale_)
@@ -244,6 +253,31 @@ class Sequencer:
 
         self.context.midi.send_message(msg)
         print("Pitch bend sent.")
+
+    def skip_current_note(self, idx):
+        skip = False
+        for i in range(0, self.context.skip_notes.__len__()):
+            if idx % self.context.skip_notes[i] == 0:
+                skip = True
+        return skip
+
+    def play_poly_notes(self, note):
+        for poly in self.context.poly:
+            if a() < float(int(self.strvar_prob_skip_poly.get()) / 100.0):
+                self.context.midi.send_message(
+                    [note[0], note[1] + poly, note[2]])
+
+    def play_sample_notes(self, idx):
+        for channel, sample_seq in enumerate(self.context.sample_seqs):
+            if sample_seq:
+                sample_idx = idx % len(sample_seq)
+                print("Sample_idx: %s" % sample_idx)
+
+                step = (idx - 1) % len(sample_seq)
+                self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
+
+                if sample_seq[sample_idx]:
+                    self.context.midi.send_message(sample_seq[sample_idx])
 
     def play_sequence(self):
         print("Play sequence is running.")
@@ -286,7 +320,7 @@ class Sequencer:
             orig_note[2] = random.randint(vel_min, vel_max)
             print(orig_note)
 
-            if (random.random() > float(self.context.prob_skip_note.get())/100
+            if (a() > float(self.context.prob_skip_note.get())/100
                     and idx % self.get_tempo_multiplier() == 0):
 
                 if self.context.off_list:
@@ -303,35 +337,19 @@ class Sequencer:
                         idx -= idx % len(self.context.sequence) + 1
                         continue
                     else:
-                        self.context.midi.send_message(orig_note)
+                        if not self.context.skip_notes:
+                            self.context.midi.send_message(orig_note)
+                        elif not self.skip_current_note(idx):
+                            self.context.midi.send_message(orig_note)
 
                         if self.context.poly:
-                            for poly in self.context.poly:
-                                if random.random() < float(int(self.strvar_prob_skip_poly.get())/100.0):
-                                    self.context.midi.send_message([orig_note[0], orig_note[1]+poly, orig_note[2]])
+                            self.play_poly_notes(orig_note)
 
                         print("orig_note: %s" % orig_note[1])
 
-            note_off = copy.copy(orig_note)
-            note_off[2] = 0
-
-            for channel, sample_seq in enumerate(self.context.sample_seqs):
-                if sample_seq:
-                    sample_idx = idx % len(sample_seq)
-                    print("Sample_idx: %s" % sample_idx)
-
-                    step = (idx-1) % len(sample_seq)
-                    self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
-
-                    if sample_seq[sample_idx]:
-                        self.context.midi.send_message(sample_seq[sample_idx])
+            self.play_sample_notes(idx)
 
             bpm = float(self.context.bpm.get())
             sleep_time = NoteLengths(bpm).eigtht
 
             sleep_and_increase_time(sleep_time, elapsed_time)
-
-
-def sleep_and_increase_time(sleep_time, time_var):
-    time.sleep(sleep_time)
-    time_var += sleep_time
