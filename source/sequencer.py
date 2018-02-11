@@ -70,8 +70,7 @@ class Sequencer:
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
         self.strvar_option_midi_channel = tk.StringVar(self.root, "11")
-        self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel,
-                                                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+        self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *[x for x in range(1, 17)])
 
         self.frame_scale_buttons = tk.Frame(self.root)
         self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
@@ -177,8 +176,6 @@ class Sequencer:
                   text="Pitch bend OFF",
                   command=lambda: self.pitch_bend("off")).grid(row=9-5, column=8, padx=10)
 
-        # tk.OptionMenu(self.root, self.context.drone_freq, 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16).grid(row=10-5, column=8)
-
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
 
         self.frame_entries = tk.Frame(self.root)
@@ -254,18 +251,28 @@ class Sequencer:
         self.context.midi.send_message(msg)
         print("Pitch bend sent.")
 
+    def get_velocity_min_max(self):
+        slider_min = int(self.strvar_vel_min.get())
+        slider_max = int(self.strvar_vel_max.get())
+
+        vel_min = slider_min if slider_min < slider_max else slider_max
+        vel_max = slider_max if slider_max > slider_min else slider_min
+
+        return vel_min, vel_max
+
     def skip_current_note(self, idx):
-        skip = False
-        for i in range(0, self.context.skip_notes.__len__()):
-            if idx % self.context.skip_notes[i] == 0:
-                skip = True
-        return skip
+        if self.context.skip_notes:
+            skip = False
+            for i in range(0, self.context.skip_notes.__len__()):
+                if idx % self.context.skip_notes[i] == 0:
+                    skip = True
+            return skip
 
     def play_poly_notes(self, note):
-        for poly in self.context.poly:
-            if a() < float(int(self.strvar_prob_skip_poly.get()) / 100.0):
-                self.context.midi.send_message(
-                    [note[0], note[1] + poly, note[2]])
+        if self.context.poly:
+            for poly in self.context.poly:
+                if a() < float(int(self.strvar_prob_skip_poly.get()) / 100.0):
+                    self.context.midi.send_message([note[0], note[1] + poly, note[2]])
 
     def play_sample_notes(self, idx):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
@@ -278,6 +285,14 @@ class Sequencer:
 
                 if sample_seq[sample_idx]:
                     self.context.midi.send_message(sample_seq[sample_idx])
+
+    def get_orig_note(self, note):
+        vel_min, vel_max = self.get_velocity_min_max()
+        orig_note = copy.copy(note)
+        orig_note[0] += int(self.strvar_option_midi_channel.get()) - 1
+        orig_note[1] += self.context.root - c2
+        orig_note[2] = random.randint(vel_min, vel_max)
+        return orig_note
 
     def play_sequence(self):
         print("Play sequence is running.")
@@ -306,19 +321,7 @@ class Sequencer:
 
             loop_idx = (idx//self.get_tempo_multiplier()) % len(self.context.sequence)
             note = self.context.sequence[loop_idx]
-
-            orig_note = copy.copy(note)
-            orig_note[0] += int(self.strvar_option_midi_channel.get()) - 1
-            orig_note[1] += self.context.root-c2
-
-            slider_min = int(self.strvar_vel_min.get())
-            slider_max = int(self.strvar_vel_max.get())
-
-            vel_min = slider_min if slider_min < slider_max else slider_max
-            vel_max = slider_max if slider_max > slider_min else slider_min
-
-            orig_note[2] = random.randint(vel_min, vel_max)
-            print(orig_note)
+            orig_note = self.get_orig_note(note)
 
             if (a() > float(self.context.prob_skip_note.get())/100
                     and idx % self.get_tempo_multiplier() == 0):
@@ -336,16 +339,9 @@ class Sequencer:
                     if note[1] == GO_TO_START:
                         idx -= idx % len(self.context.sequence) + 1
                         continue
-                    else:
-                        if not self.context.skip_notes:
-                            self.context.midi.send_message(orig_note)
-                        elif not self.skip_current_note(idx):
-                            self.context.midi.send_message(orig_note)
-
-                        if self.context.poly:
-                            self.play_poly_notes(orig_note)
-
-                        print("orig_note: %s" % orig_note[1])
+                    elif not self.skip_current_note(idx):
+                        self.context.midi.send_message(orig_note)
+                        self.play_poly_notes(orig_note)
 
             self.play_sample_notes(idx)
 
