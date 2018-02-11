@@ -263,7 +263,6 @@ class Sequencer:
         elapsed_time = 0.0
 
         while True:
-
             idx += 1
             idx_2 += 1
 
