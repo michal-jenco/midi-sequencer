@@ -15,8 +15,8 @@ except:
     midi.open_port(midi_port-1)
 
 thread_keys = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
-thread_sample = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
-thread_3 = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
+# thread_sample = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
+# thread_3 = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
 
 thread_keys.start()
 # thread_sample.start()

@@ -10,7 +10,6 @@ from source.context import Context
 from source.parser_my import Parser
 from source.evolver import Evolver
 from source.wobbler import Wobbler
-from source.midi_clock import MidiClock
 from source.notes import *
 from source.constants import *
 from source.sample_frame import SampleFrame
@@ -252,28 +251,26 @@ class Sequencer:
 
         time.sleep(0.1)
 
-        idx = 0
-        idx_2 = 0
-        off_note_idx = 0
-
         ########################################################
         ########################################################
         ################    M A I N   L O O P   ################
         ########################################################
         ########################################################
 
+        idx = 0
+        idx_2 = 0
+        off_note_idx = 0
+        elapsed_time = 0.0
+
         while True:
             idx += 1
             idx_2 += 1
 
-            if not self.context.playback_on:
-                time.sleep(0.1)
+            if not self.context.playback_on or not self.context.sequence:
+                sleep_and_increase_time(0.1, elapsed_time)
                 continue
 
-            if not self.context.sequence:
-                continue
-
-            loop_idx = idx % len(self.context.sequence)
+            loop_idx = (idx//self.get_tempo_multiplier()) % len(self.context.sequence)
             note = self.context.sequence[loop_idx]
 
             orig_note = copy.copy(note)
@@ -330,12 +327,11 @@ class Sequencer:
                         self.context.midi.send_message(sample_seq[sample_idx])
 
             bpm = float(self.context.bpm.get())
+            sleep_time = NoteLengths(bpm).eigtht
 
-            if idx % 10 > 5:
-                sleep_time = NoteLengths(bpm).triplet
-            elif idx % 10 < 2:
-                sleep_time = NoteLengths(bpm).quintuplet
-            else:
-                sleep_time = NoteLengths(bpm).eigtht
+            sleep_and_increase_time(sleep_time, elapsed_time)
 
-            time.sleep(sleep_time)
+
+def sleep_and_increase_time(sleep_time, time_var):
+    time.sleep(sleep_time)
+    time_var += sleep_time
