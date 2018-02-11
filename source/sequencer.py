@@ -56,13 +56,13 @@ class Sequencer:
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=4, padx=2, pady=2)
         self.sample_frame.display()
 
-        a = 0
+        abc = 0
         for wob in self.wobblers:
-            wob.grid(row=0, column=a, padx=3, pady=5)
+            wob.grid(row=0, column=abc, padx=3, pady=5)
             wob.display()
 
             threading.Thread(target=wob.wobble).start()
-            a += 1
+            abc += 1
 
         self.strvar_tempo_multiplier = tk.StringVar(self.root, "1")
         self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
