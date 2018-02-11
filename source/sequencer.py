@@ -17,14 +17,6 @@ from source.helpful_functions import a, sleep_and_increase_time
 
 
 class Sequencer:
-    def set_sequence(self, _):
-        parser = Parser()
-        text_ = str(self.entry_sequence.get())
-        print("\"%s\"" % text_)
-        parser.get_notes(self.context, text_)
-
-        self.entry_str_seq.delete(0, tk.END)
-        self.entry_str_seq.insert(0, self.context.str_sequence)
 
     def __init__(self, midi_):
         self.root = tk.Tk()
@@ -45,7 +37,6 @@ class Sequencer:
         self.wobblers = []
 
         self.frame_wobblers = tk.Frame(self.root, bg="black")
-        self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
 
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 1"))
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 2"))
@@ -53,69 +44,45 @@ class Sequencer:
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 4"))
 
         self.sample_frame = SampleFrame(self.root, self.context)
-        self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=4, padx=2, pady=2)
-        self.sample_frame.display()
-
-        abc = 0
-        for wob in self.wobblers:
-            wob.grid(row=0, column=abc, padx=3, pady=5)
-            wob.display()
-
-            threading.Thread(target=wob.wobble).start()
-            abc += 1
 
         self.strvar_tempo_multiplier = tk.StringVar(self.root, "1")
         self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
-        self.option_tempo_multiplier.grid()
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
         self.strvar_option_midi_channel = tk.StringVar(self.root, "11")
         self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *[x for x in range(1, 17)])
 
         self.frame_scale_buttons = tk.Frame(self.root)
-        self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
-
         self.frame_sliders = tk.Frame(self.root)
-        self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-
         self.frame_roots = tk.Frame(self.root)
-        self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-
         self.frame_prob_sliders = tk.Frame(self.root)
-        self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
 
         label_font = ("Courier", "12")
         self.strvar_status_bar = tk.StringVar(self.root, "")
         self.label_status_bar = tk.Label(self.root, textvariable=self.strvar_status_bar, font=label_font)
-        self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
 
         self.strvar_prob_skip_note = tk.StringVar(self.frame_sliders)
         self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL, sliderlength=30,
                                              variable=self.context.prob_skip_note, length=500)
-        self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
 
         self.strvar_vel_min = tk.StringVar(self.frame_prob_sliders)
         self.strvar_vel_min.set("100")
         self.scale_vel_min = tk.Scale(self.frame_prob_sliders, from_=0, to=127, orient=tk.VERTICAL,
                                       variable=self.strvar_vel_min, length=150)
-        self.scale_vel_min.grid(column=0, row=0)
 
         self.strvar_vel_max = tk.StringVar(self.frame_prob_sliders)
         self.strvar_vel_max.set("127")
         self.scale_vel_max = tk.Scale(self.frame_prob_sliders, from_=0, to=127, orient=tk.VERTICAL,
                                       variable=self.strvar_vel_max, length=150)
-        self.scale_vel_max.grid(column=1, row=0)
 
         self.strvar_prob_skip_poly = tk.StringVar(self.frame_prob_sliders)
         self.strvar_prob_skip_poly.set("50")
         self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
                                              variable=self.strvar_prob_skip_poly, length=150)
-        self.scale_prob_skip_poly.grid(column=2, row=0)
 
         self.strvar_bpm = tk.StringVar(self.frame_sliders)
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=240, orient=tk.HORIZONTAL, sliderlength=30,
                                   variable=self.context.bpm, length=500)
-        self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.start()
@@ -156,6 +123,26 @@ class Sequencer:
                 row_ += 1
                 col_ = 0
 
+        self.frame_entries = tk.Frame(self.root)
+        self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
+        self.entry_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_sequence.bind('<Return>', self.set_sequence)
+        self.entry_sequence.delete(0, tk.END)
+        self.entry_sequence.insert(0, "032")
+        self.set_scale("lydian")
+        self.set_sequence(None)
+
+        self.entry_off_array = tk.Entry(self.frame_entries, width=80)
+        self.entry_off_array.bind('<Return>', self.set_off_array)
+
+        self.entry_poly = tk.Entry(self.frame_entries, width=80)
+        self.entry_poly.bind('<Return>', self.set_poly)
+
+        self.entry_skip_note = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note.bind('<Return>', self.set_skip_note)
+
+    def show(self):
+
         tk.Button(self.root,
                   text="Start sequence",
                   command=self.start_sequence).grid(row=5-5, column=8, padx=10)
@@ -176,37 +163,47 @@ class Sequencer:
                   text="Pitch bend OFF",
                   command=lambda: self.pitch_bend("off")).grid(row=9-5, column=8, padx=10)
 
+        self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
+        self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=4, padx=2, pady=2)
+        self.option_tempo_multiplier.grid()
+        self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
+        self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
+        self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
+        self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
+        self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
+        self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
+        self.scale_vel_min.grid(column=0, row=0)
+        self.scale_vel_max.grid(column=1, row=0)
+        self.scale_prob_skip_poly.grid(column=2, row=0)
+        self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
-
-        self.frame_entries = tk.Frame(self.root)
-
-        self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
         self.entry_str_seq.grid(row=1, column=0, sticky='wn', pady=(2, 2), padx=10)
-
-        self.entry_sequence = tk.Entry(self.frame_entries, width=80)
-        self.entry_sequence.bind('<Return>', self.set_sequence)
         self.entry_sequence.grid(row=0, column=0, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_sequence.delete(0, tk.END)
-        self.entry_sequence.insert(0, "032")
-        self.set_scale("lydian")
-        self.set_sequence(None)
-
-        self.entry_off_array = tk.Entry(self.frame_entries, width=80)
-        self.entry_off_array.bind('<Return>', self.set_off_array)
         self.entry_off_array.grid(row=2, column=0, sticky='wn', pady=(2, 2), padx=10)
-
-        self.entry_poly = tk.Entry(self.frame_entries, width=80)
-        self.entry_poly.bind('<Return>', self.set_poly)
         self.entry_poly.grid(row=3, column=0, sticky='wn', pady=(2, 2), padx=10)
-
-        self.entry_skip_note = tk.Entry(self.frame_entries, width=80)
-        self.entry_skip_note.bind('<Return>', self.set_skip_note)
         self.entry_skip_note.grid(row=4, column=0, sticky='wn', pady=(2, 2), padx=10)
-
         self.frame_entries.grid(row=22, column=3, sticky="w")
-
-    def show(self):
+        self.display_wobblers()
+        self.sample_frame.display()
         self.root.mainloop()
+
+    def display_wobblers(self):
+        abc = 0
+        for wob in self.wobblers:
+            wob.grid(row=0, column=abc, padx=3, pady=5)
+            wob.display()
+
+            threading.Thread(target=wob.wobble).start()
+            abc += 1
+
+    def set_sequence(self, _):
+        parser = Parser()
+        text_ = str(self.entry_sequence.get())
+        print("\"%s\"" % text_)
+        parser.get_notes(self.context, text_)
+
+        self.entry_str_seq.delete(0, tk.END)
+        self.entry_str_seq.insert(0, self.context.str_sequence)
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
