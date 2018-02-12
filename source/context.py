@@ -7,7 +7,7 @@ class Context:
         self.midi = None
 
         self.scale = None
-        self.bpm = tk.StringVar(root, "40")
+        self.bpm = tk.StringVar(root, "120")
         self.sequence = None
         self.str_sequence = None
         self.root = c3

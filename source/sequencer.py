@@ -45,7 +45,7 @@ class Sequencer:
 
         self.sample_frame = SampleFrame(self.root, self.context)
 
-        self.strvar_tempo_multiplier = tk.StringVar(self.root, "1")
+        self.strvar_tempo_multiplier = tk.StringVar(self.root, "3")
         self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
@@ -81,7 +81,7 @@ class Sequencer:
                                              variable=self.strvar_prob_skip_poly, length=150)
 
         self.strvar_bpm = tk.StringVar(self.frame_sliders)
-        self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=240, orient=tk.HORIZONTAL, sliderlength=30,
+        self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=600, orient=tk.HORIZONTAL, sliderlength=30,
                                   variable=self.context.bpm, length=500)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
@@ -312,33 +312,34 @@ class Sequencer:
             idx += 1
             idx_2 += 1
 
-            if not self.context.playback_on or not self.context.sequence:
+            if not self.context.playback_on:
                 sleep_and_increase_time(0.1, elapsed_time)
                 continue
 
-            loop_idx = (idx//self.get_tempo_multiplier()) % len(self.context.sequence)
-            note = self.context.sequence[loop_idx]
-            orig_note = self.get_orig_note(note)
+            if self.context.sequence:
+                loop_idx = (idx//self.get_tempo_multiplier()) % len(self.context.sequence)
+                note = self.context.sequence[loop_idx]
+                orig_note = self.get_orig_note(note)
 
-            if (a() > float(self.context.prob_skip_note.get())/100
-                    and idx % self.get_tempo_multiplier() == 0):
+                if (a() > float(self.context.prob_skip_note.get())/100
+                        and idx % self.get_tempo_multiplier() == 0):
 
-                if self.context.off_list:
-                    loop_off_note_idx = off_note_idx % len(self.context.off_list)
+                    if self.context.off_list:
+                        loop_off_note_idx = off_note_idx % len(self.context.off_list)
 
-                    if idx_2 % (self.context.off_list[loop_off_note_idx]) == 0:
-                        if idx_2 > 0:
-                            self.end_all_notes()
-                            off_note_idx += 1
-                            idx_2 = 0
+                        if idx_2 % (self.context.off_list[loop_off_note_idx]) == 0:
+                            if idx_2 > 0:
+                                self.end_all_notes()
+                                off_note_idx += 1
+                                idx_2 = 0
 
-                if note[1] != NOTE_PAUSE:
-                    if note[1] == GO_TO_START:
-                        idx -= idx % len(self.context.sequence) + 1
-                        continue
-                    elif not self.skip_current_note(idx):
-                        self.context.midi.send_message(orig_note)
-                        self.play_poly_notes(orig_note)
+                    if note[1] != NOTE_PAUSE:
+                        if note[1] == GO_TO_START:
+                            idx -= idx % len(self.context.sequence) + 1
+                            continue
+                        elif not self.skip_current_note(idx):
+                            self.context.midi.send_message(orig_note)
+                            self.play_poly_notes(orig_note)
 
             self.play_sample_notes(idx)
 
