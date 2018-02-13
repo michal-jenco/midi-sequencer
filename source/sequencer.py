@@ -88,6 +88,13 @@ class Sequencer:
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=600, orient=tk.HORIZONTAL, sliderlength=30,
                                   variable=self.context.bpm, length=500)
 
+        self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence")
+        self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr")
+        self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes")
+        self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony")
+        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
+        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
+
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.start()
 
@@ -141,26 +148,29 @@ class Sequencer:
         self.entry_poly = tk.Entry(self.frame_entries, width=80)
         self.entry_poly.bind('<Return>', self.set_poly)
 
-        self.entry_skip_note = tk.Entry(self.frame_entries, width=80)
-        self.entry_skip_note.bind('<Return>', self.set_skip_note)
+        self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
+
+        self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
     def show(self):
 
         tk.Button(self.root,
                   text="Start sequence",
-                  command=self.start_sequence).grid(row=5-5, column=8, padx=10)
+                  command=self.start_sequence).grid(row=0, column=8, padx=10)
 
         tk.Button(self.root,
                   text="Stop sequence",
-                  command=self.stop_sequence).grid(row=6-5, column=8, padx=10)
+                  command=self.stop_sequence).grid(row=1, column=8, padx=10)
 
         tk.Button(self.root,
                   text="All notes off",
-                  command=self.end_all_notes).grid(row=7-5, column=8, padx=10)
+                  command=self.end_all_notes).grid(row=2, column=8, padx=10)
 
         tk.Button(self.root,
                   text="Pitch bend ON",
-                  command=lambda: self.pitch_bend("on")).grid(row=8-5, column=8, padx=10)
+                  command=lambda: self.pitch_bend("on")).grid(row=3, column=8, padx=10)
 
         tk.Button(self.root,
                   text="Pitch bend OFF",
@@ -168,25 +178,37 @@ class Sequencer:
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=4, padx=2, pady=2)
-        self.option_tempo_multiplier.grid()
         self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
         self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
         self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-        self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
+        self.frame_entries.grid(row=22, column=3, sticky="w")
+
         self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
         self.scale_vel_min.grid(column=0, row=0)
+        self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
         self.scale_vel_max.grid(column=1, row=0)
         self.scale_prob_skip_poly.grid(column=2, row=0)
-        self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
+
+        self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_str_seq.grid(row=1, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_off_array.grid(row=2, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_poly.grid(row=3, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_parallel.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_sequential.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
+
+        self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
+        self.label_main_seq_len.grid(row=0, column=6)
+
+        self.label_a.grid(row=0, column=2, sticky="w")
+        self.label_b.grid(row=1, column=2, sticky="w")
+        self.label_c.grid(row=2, column=2, sticky="w")
+        self.label_d.grid(row=3, column=2, sticky="w")
+        self.label_e.grid(row=4, column=2, sticky="w")
+        self.label_f.grid(row=5, column=2, sticky="w")
+
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
-        self.entry_str_seq.grid(row=1, column=0, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_sequence.grid(row=0, column=0, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_off_array.grid(row=2, column=0, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_poly.grid(row=3, column=0, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note.grid(row=4, column=0, sticky='wn', pady=(2, 2), padx=10)
-        self.frame_entries.grid(row=22, column=3, sticky="w")
-        self.label_main_seq_len.grid(row=0, column=1)
+        self.option_tempo_multiplier.grid()
 
         self.display_wobblers()
         self.sample_frame.display()
@@ -216,10 +238,15 @@ class Sequencer:
         self.context.poly = list(map(int, voices))
         print("Poly: %s" % self.context.poly)
 
-    def set_skip_note(self, _):
-        skips = self.entry_skip_note.get().split()
-        self.context.skip_notes = list(map(int, skips))
-        print("Skip notes: %s" % self.context.skip_notes)
+    def set_skip_note_parallel(self, _):
+        skips = self.entry_skip_note_parallel.get().split()
+        self.context.skip_notes_parallel = list(map(int, skips))
+        print("Skip notes parallel: %s" % self.context.skip_notes_parallel)
+
+    def set_skip_note_sequential(self, _):
+        skips = self.entry_skip_note_sequential.get().split()
+        self.context.skip_notes_sequential = list(map(int, skips))
+        print("Skip notes sequential: %s" % self.context.skip_notes_sequential)
 
     def set_scale(self, scale_):
         self.context.scale = Scales().get_scale_by_name(scale_)
