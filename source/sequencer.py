@@ -92,8 +92,8 @@ class Sequencer:
         self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr")
         self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes")
         self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony")
-        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
-        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
+        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
+        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.start()
@@ -194,8 +194,8 @@ class Sequencer:
         self.entry_str_seq.grid(row=1, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_off_array.grid(row=2, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_poly.grid(row=3, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_parallel.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_sequential.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_sequential.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_parallel.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
@@ -291,12 +291,20 @@ class Sequencer:
         return vel_min, vel_max
 
     def skip_current_note(self, idx):
-        if self.context.skip_notes:
-            skip = False
-            for i in range(0, self.context.skip_notes.__len__()):
-                if idx % self.context.skip_notes[i] == 0:
-                    skip = True
-            return skip
+        if self.context.skip_notes_parallel:
+            for i in range(0, self.context.skip_notes_parallel.__len__()):
+                if idx % self.context.skip_notes_parallel[i] == 0:
+                    return True
+
+    def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip):
+        if self.context.skip_notes_sequential:
+            loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential)
+
+            if idx_sequential_skip % (self.context.skip_notes_sequential[loop_skip_sequential_idx]) == 0:
+                if idx_sequential_skip > 0:
+                    skip_sequential_idx += 1
+                    idx_sequential_skip = 0
+                    return True
 
     def play_poly_notes(self, note):
         if self.context.poly:
@@ -337,13 +345,21 @@ class Sequencer:
         ########################################################
 
         idx = 0
-        idx_2 = 0
+
+        idx_all_off = 0
         off_note_idx = 0
+
+        skip_sequential_idx = 0
+        idx_sequential_skip = 0
+
         elapsed_time = 0.0
 
         while True:
             idx += 1
-            idx_2 += 1
+            idx_all_off += 1
+            idx_sequential_skip += 1
+
+            skip_sequentially = False
 
             if not self.context.playback_on:
                 sleep_and_increase_time(0.1, elapsed_time)
@@ -360,17 +376,26 @@ class Sequencer:
                     if self.context.off_list:
                         loop_off_note_idx = off_note_idx % len(self.context.off_list)
 
-                        if idx_2 % (self.context.off_list[loop_off_note_idx]) == 0:
-                            if idx_2 > 0:
+                        if idx_all_off % (self.context.off_list[loop_off_note_idx]) == 0:
+                            if idx_all_off > 0:
                                 self.end_all_notes()
                                 off_note_idx += 1
-                                idx_2 = 0
+                                idx_all_off = 0
+
+                    if self.context.skip_notes_sequential:
+                        loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential)
+
+                        if idx_sequential_skip % (self.context.skip_notes_sequential[loop_skip_sequential_idx]) == 0:
+                            if idx_sequential_skip > 0:
+                                skip_sequential_idx += 1
+                                idx_sequential_skip = 0
+                                skip_sequentially = True
 
                     if note[1] != NOTE_PAUSE:
                         if note[1] == GO_TO_START:
                             idx -= idx % len(self.context.sequence) + 1
                             continue
-                        elif not self.skip_current_note(idx):
+                        elif not self.skip_current_note(idx) and not skip_sequentially:
                             self.context.midi.send_message(orig_note)
                             self.play_poly_notes(orig_note)
 
