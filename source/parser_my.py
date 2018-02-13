@@ -169,7 +169,7 @@ class Parser:
                             # unknown symbol (not yet defined a use)
                             pass
 
-        print("Sequence set to: %s\n" % msg_list)
+        # print("Sequence set to: %s\n" % msg_list)
 
         if mode == MODE_SIMPLE:
             context.sequence = msg_list

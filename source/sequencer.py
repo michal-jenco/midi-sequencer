@@ -52,6 +52,7 @@ class Sequencer:
         self.strvar_option_midi_channel = tk.StringVar(self.root, "11")
         self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *[x for x in range(1, 17)])
 
+        self.frame_entries = tk.Frame(self.root)
         self.frame_scale_buttons = tk.Frame(self.root)
         self.frame_sliders = tk.Frame(self.root)
         self.frame_roots = tk.Frame(self.root)
@@ -60,6 +61,9 @@ class Sequencer:
         label_font = ("Courier", "12")
         self.strvar_status_bar = tk.StringVar(self.root, "")
         self.label_status_bar = tk.Label(self.root, textvariable=self.strvar_status_bar, font=label_font)
+
+        self.strvar_main_seq_len = tk.StringVar(self.frame_entries, "aaaa")
+        self.label_main_seq_len = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_len, font=label_font)
 
         self.strvar_prob_skip_note = tk.StringVar(self.frame_sliders)
         self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL, sliderlength=30,
@@ -123,7 +127,6 @@ class Sequencer:
                 row_ += 1
                 col_ = 0
 
-        self.frame_entries = tk.Frame(self.root)
         self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence.bind('<Return>', self.set_sequence)
@@ -183,6 +186,8 @@ class Sequencer:
         self.entry_poly.grid(row=3, column=0, sticky='wn', pady=(2, 2), padx=10)
         self.entry_skip_note.grid(row=4, column=0, sticky='wn', pady=(2, 2), padx=10)
         self.frame_entries.grid(row=22, column=3, sticky="w")
+        self.label_main_seq_len.grid(row=0, column=1)
+
         self.display_wobblers()
         self.sample_frame.display()
         self.root.mainloop()
@@ -201,6 +206,7 @@ class Sequencer:
         text_ = str(self.entry_sequence.get())
         print("\"%s\"" % text_)
         parser.get_notes(self.context, text_)
+        self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
 
         self.entry_str_seq.delete(0, tk.END)
         self.entry_str_seq.insert(0, self.context.str_sequence)
@@ -275,7 +281,7 @@ class Sequencer:
         for channel, sample_seq in enumerate(self.context.sample_seqs):
             if sample_seq:
                 sample_idx = idx % len(sample_seq)
-                print("Sample_idx: %s" % sample_idx)
+                # print("Sample_idx: %s" % sample_idx)
 
                 step = (idx - 1) % len(sample_seq)
                 self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
