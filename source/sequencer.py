@@ -290,10 +290,10 @@ class Sequencer:
 
         return vel_min, vel_max
 
-    def skip_current_note(self, idx):
+    def skip_note_parallel(self, idx):
         if self.context.skip_notes_parallel:
             for i in range(0, self.context.skip_notes_parallel.__len__()):
-                if idx % self.context.skip_notes_parallel[i] == 0:
+                if (idx // self.get_tempo_multiplier()) % (self.context.skip_notes_parallel[i] + 1) == 0:
                     return True
 
     def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip):
@@ -302,9 +302,8 @@ class Sequencer:
 
             if idx_sequential_skip % (self.context.skip_notes_sequential[loop_skip_sequential_idx]) == 0:
                 if idx_sequential_skip > 0:
-                    skip_sequential_idx += 1
-                    idx_sequential_skip = 0
-                    return True
+                    return skip_sequential_idx + 1, 0, True
+        return skip_sequential_idx, idx_sequential_skip, False
 
     def play_poly_notes(self, note):
         if self.context.poly:
@@ -332,19 +331,24 @@ class Sequencer:
         orig_note[2] = random.randint(vel_min, vel_max)
         return orig_note
 
+    def turn_off_notes(self, off_note_idx, idx_all_off):
+        if self.context.off_list:
+            loop_off_note_idx = off_note_idx % len(self.context.off_list)
+
+            if idx_all_off % (self.context.off_list[loop_off_note_idx]) == 0:
+                if idx_all_off > 0:
+                    self.end_all_notes()
+                    return off_note_idx + 1, 0
+        return off_note_idx, idx_all_off
+
     def play_sequence(self):
         print("Play sequence is running.")
         # mc = MidiClock(self.context)
 
         time.sleep(0.1)
 
-        ########################################################
-        ########################################################
-        ################    M A I N   L O O P   ################
-        ########################################################
-        ########################################################
-
         idx = 0
+        actual_notes_played_count = 0
 
         idx_all_off = 0
         off_note_idx = 0
@@ -352,51 +356,44 @@ class Sequencer:
         skip_sequential_idx = 0
         idx_sequential_skip = 0
 
-        elapsed_time = 0.0
+        ########################################################
+        ########################################################
+        ################    M A I N   L O O P   ################
+        ########################################################
+        ########################################################
 
         while True:
             idx += 1
-            idx_all_off += 1
-            idx_sequential_skip += 1
-
-            skip_sequentially = False
 
             if not self.context.playback_on:
-                sleep_and_increase_time(0.1, elapsed_time)
+                time.sleep(0.1)
                 continue
 
             if self.context.sequence:
-                loop_idx = (idx//self.get_tempo_multiplier()) % len(self.context.sequence)
-                note = self.context.sequence[loop_idx]
-                orig_note = self.get_orig_note(note)
-
                 if (a() > float(self.context.prob_skip_note.get())/100
                         and idx % self.get_tempo_multiplier() == 0):
 
-                    if self.context.off_list:
-                        loop_off_note_idx = off_note_idx % len(self.context.off_list)
+                    loop_idx = actual_notes_played_count % len(self.context.sequence)
+                    note = self.context.sequence[loop_idx]
+                    orig_note = self.get_orig_note(note)
 
-                        if idx_all_off % (self.context.off_list[loop_off_note_idx]) == 0:
-                            if idx_all_off > 0:
-                                self.end_all_notes()
-                                off_note_idx += 1
-                                idx_all_off = 0
+                    off_note_idx, idx_all_off = self.turn_off_notes(off_note_idx, idx_all_off)
 
-                    if self.context.skip_notes_sequential:
-                        loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential)
-
-                        if idx_sequential_skip % (self.context.skip_notes_sequential[loop_skip_sequential_idx]) == 0:
-                            if idx_sequential_skip > 0:
-                                skip_sequential_idx += 1
-                                idx_sequential_skip = 0
-                                skip_sequentially = True
+                    skip_sequential_idx, idx_sequential_skip, skip_sequentially = \
+                        self.skip_note_sequentially(skip_sequential_idx, idx_sequential_skip)
 
                     if note[1] != NOTE_PAUSE:
                         if note[1] == GO_TO_START:
                             idx -= idx % len(self.context.sequence) + 1
                             continue
-                        elif not self.skip_current_note(idx) and not skip_sequentially:
+
+                        elif not self.skip_note_parallel(idx) and not skip_sequentially:
                             self.context.midi.send_message(orig_note)
+
+                            actual_notes_played_count += 1
+                            idx_sequential_skip += 1
+                            idx_all_off += 1
+
                             self.play_poly_notes(orig_note)
 
             self.play_sample_notes(idx)
@@ -404,4 +401,4 @@ class Sequencer:
             bpm = float(self.context.bpm.get())
             sleep_time = NoteLengths(bpm).eigtht
 
-            sleep_and_increase_time(sleep_time, elapsed_time)
+            time.sleep(sleep_time)
