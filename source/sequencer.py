@@ -384,7 +384,9 @@ class Sequencer:
 
                     if note[1] != NOTE_PAUSE:
                         if note[1] == GO_TO_START:
-                            idx -= idx % len(self.context.sequence) + 1
+                            # -1 because right at the start of while True there is a += 1
+                            idx = -1
+                            actual_notes_played_count = 0
                             continue
 
                         elif not self.skip_note_parallel(idx) and not skip_sequentially:
