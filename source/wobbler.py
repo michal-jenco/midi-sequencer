@@ -95,14 +95,6 @@ class Wobbler(tk.Frame):
             func_ = self.strvar_option_func.get()
 
             if func_ == "sin":
-                value1 = m.sin((loop_cnt/scale_)+1)/2
-                value2 = m.sin((loop_cnt/scale_*3)+1)/2
-                value3 = m.sin((loop_cnt/scale_*5)+1)/2
-
-                (m.cos(loop_cnt / scale_) + 1) / 2 * (max_ - min_) + min_
-
-                sum_ = value1 + value2 + value3
-
                 value = int((m.sin(loop_cnt / scale_) + 1) / 2 * (max_ - min_) + min_)
 
             elif func_ == "cos":

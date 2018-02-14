@@ -17,10 +17,12 @@ class SampleFrame(tk.Frame):
 
         self.parser = Parser()
 
-        for i in range(0, 10):
+        cnt = 10
+        for i in range(0, cnt):
             e = tk.Entry(self, width=40)
-            e.bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
             self.seq_entries.append(e)
+            self.seq_entries[i].bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
+            #self.seq_entries[i].bind('<Up>', self.seq_entries[0 if i == 0 else i-1].focus_set())
 
             s = tk.StringVar(self, "")
             label_font = ("Courier", "10")
@@ -28,6 +30,9 @@ class SampleFrame(tk.Frame):
             l = tk.Label(self, text=random.choice("?:_#&"), textvariable=s, font=label_font)
             self.labels.append(l)
             self.strvars.append(s)
+
+        #for i in range(0, cnt):
+        #   self.seq_entries[i].bind('<Down>', self.seq_entries[i if i == cnt - 1 else i + 1].focus_set())
 
     def update_label_with_current_step(self, channel, step, click):
         notes = self.parser.get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)

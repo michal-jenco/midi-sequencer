@@ -77,23 +77,23 @@ class Parser:
                 elif note == ",":
                     for i in range(0, context.comma_pause):
                         msg_list.append([0x90, NOTE_PAUSE, 0])
-                        str_seq += note
+                        str_seq += " %s " % note
 
                 elif note == ".":
                     for i in range(0, context.dot_pause):
                         msg_list.append([0x90, NOTE_PAUSE, 0])
-                        str_seq += ","
+                        str_seq += " , "
 
                 elif note == "=":
                     for i in range(0, context.dash_pause):
                         msg_list.append([0x90, NOTE_PAUSE, 0])
-                        str_seq += ","
+                        str_seq += " , "
 
                 elif note == "&":
                     count = random.randint(context.amper_min, context.amper_max)
                     for i in range(0, count):
                         msg_list.append([0x90, NOTE_PAUSE, 0])
-                        str_seq += ","
+                        str_seq += " , "
 
                 elif note == "*":
                     pass

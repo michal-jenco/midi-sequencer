@@ -84,6 +84,11 @@ class Sequencer:
         self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
                                              variable=self.strvar_prob_skip_poly, length=150)
 
+        self.strvar_prob_skip_poly_relative = tk.StringVar(self.frame_prob_sliders)
+        self.strvar_prob_skip_poly_relative.set("50")
+        self.scale_prob_skip_poly_relative = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
+                                                      variable=self.strvar_prob_skip_poly_relative, length=150)
+
         self.strvar_bpm = tk.StringVar(self.frame_sliders)
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=600, orient=tk.HORIZONTAL, sliderlength=30,
                                   variable=self.context.bpm, length=500)
@@ -92,8 +97,9 @@ class Sequencer:
         self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr")
         self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes")
         self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony")
-        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
-        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
+        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Polyphony Relative")
+        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
+        self.label_g = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.start()
@@ -148,6 +154,9 @@ class Sequencer:
         self.entry_poly = tk.Entry(self.frame_entries, width=80)
         self.entry_poly.bind('<Return>', self.set_poly)
 
+        self.entry_poly_relative = tk.Entry(self.frame_entries, width=80)
+        self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
+
         self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=80)
         self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
 
@@ -189,13 +198,15 @@ class Sequencer:
         self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
         self.scale_vel_max.grid(column=1, row=0)
         self.scale_prob_skip_poly.grid(column=2, row=0)
+        self.scale_prob_skip_poly_relative.grid(column=3, row=0)
 
         self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_str_seq.grid(row=1, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_off_array.grid(row=2, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_poly.grid(row=3, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_sequential.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_parallel.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_poly_relative.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_sequential.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_parallel.grid(row=6, column=5, sticky='wn', pady=(2, 2), padx=10)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
@@ -206,6 +217,7 @@ class Sequencer:
         self.label_d.grid(row=3, column=2, sticky="w")
         self.label_e.grid(row=4, column=2, sticky="w")
         self.label_f.grid(row=5, column=2, sticky="w")
+        self.label_g.grid(row=6, column=2, sticky="w")
 
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
         self.option_tempo_multiplier.grid()
@@ -237,6 +249,11 @@ class Sequencer:
         voices = self.entry_poly.get().split()
         self.context.poly = list(map(int, voices))
         print("Poly: %s" % self.context.poly)
+
+    def set_poly_relative(self, _):
+        voices = self.entry_poly_relative.get().split()
+        self.context.poly_relative = list(map(int, voices))
+        print("Poly relative: %s" % self.context.poly_relative)
 
     def set_skip_note_parallel(self, _):
         skips = self.entry_skip_note_parallel.get().split()
@@ -308,8 +325,20 @@ class Sequencer:
     def play_poly_notes(self, note):
         if self.context.poly:
             for poly in self.context.poly:
-                if a() < float(int(self.strvar_prob_skip_poly.get()) / 100.0):
+                if a() < int(self.strvar_prob_skip_poly.get()) / 100.0:
                     self.context.midi.send_message([note[0], note[1] + poly, note[2]])
+
+    def play_relative_poly_notes(self, note, note_entry):
+        scale = self.context.scale
+        scales = Scales()
+
+        if self.context.poly_relative:
+            for poly in self.context.poly_relative:
+                if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
+                    # THIS TOOK FUCKING FOREVER TO FIGURE OUT
+                    added = (scales.get_note_by_index_wrap(note_entry + poly, scale)
+                             - Scales().get_note_by_index_wrap(note_entry, scale))
+                    self.context.midi.send_message([note[0], note[1] + added, note[2]])
 
     def play_sample_notes(self, idx):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
@@ -382,6 +411,9 @@ class Sequencer:
                     skip_sequential_idx, idx_sequential_skip, skip_sequentially = \
                         self.skip_note_sequentially(skip_sequential_idx, idx_sequential_skip)
 
+                    if note[1] == NOTE_PAUSE:
+                        actual_notes_played_count += 1
+
                     if note[1] != NOTE_PAUSE:
                         if note[1] == GO_TO_START:
                             # -1 because right at the start of while True there is a += 1
@@ -397,6 +429,7 @@ class Sequencer:
                             idx_all_off += 1
 
                             self.play_poly_notes(orig_note)
+                            self.play_relative_poly_notes(orig_note, int(self.entry_str_seq.get().split()[loop_idx][0]))
 
             self.play_sample_notes(idx)
 

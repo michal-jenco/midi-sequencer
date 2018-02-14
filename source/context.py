@@ -1,5 +1,6 @@
-from notes import *
 import tkinter as tk
+
+from notes import *
 
 
 class Context:
@@ -14,6 +15,7 @@ class Context:
         self.mode = None
 
         self.poly = []
+        self.poly_relative = []
         self.skip_notes_parallel = []
         self.skip_notes_sequential = []
 
