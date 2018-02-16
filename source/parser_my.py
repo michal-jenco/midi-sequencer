@@ -1,5 +1,5 @@
 import random
-import hashlib
+import itertools
 
 from source.scales import Scales
 from source.constants import *
@@ -31,7 +31,18 @@ class Parser:
             notes = list(seq)
             seq_length = len(notes)
 
+            perm_char = "p"
+            skipping_permutations = False
+
             for idx, note in enumerate(notes):
+
+                if skipping_permutations:
+                    if note != perm_char:
+                        continue
+                    else:
+                        skipping_permutations = False
+                        continue
+
                 msg = [0x90]
 
                 if note.isdigit():
@@ -74,6 +85,40 @@ class Parser:
 
                     msg_list.append(msg)
 
+                elif note == perm_char:
+                    idx_end_p = notes[idx+1:].index(perm_char)
+                    perm_content = notes[idx+1:idx+1+idx_end_p]
+
+                    if ";" in perm_content:
+                        perm_content_notes = perm_content[:perm_content.index(";")]
+                        perm_content_control = "".join(perm_content[perm_content.index(";")+1:])
+                    else:
+                        perm_content_notes = perm_content
+                        perm_content_control = None
+
+                    print(type(perm_content_control))
+
+                    length = self.parse_param("l", perm_content_control)
+                    start = self.parse_param("s", perm_content_control)
+                    random_order = self.parse_param("r", perm_content_control)
+                    count_of_permutations = self.parse_param("c", perm_content_control)
+
+                    _, str_repr = self.get_notes(context, perm_content_notes, mode=MODE_SIMPLE)
+                    str_seq_internal = self.parse_permutations(str_repr.replace(" ", ""),
+                                                               random_order=random_order,
+                                                               output_length=length,
+                                                               start=start)
+                    perm_notes, str_repr = self.get_notes(context, str_seq_internal, mode=MODE_SIMPLE)
+
+                    for n in perm_notes:
+                        if n[1] != NOTE_PAUSE:
+                            msg_list.append([n[0], n[1] + self.get_octave(control), n[2]])
+                        else:
+                            msg_list.append([n[0], n[1], n[2]])
+
+                    str_seq += str_repr
+                    skipping_permutations = True
+
                 elif note == ",":
                     for i in range(0, context.comma_pause):
                         msg_list.append([0x90, NOTE_PAUSE, 0])
@@ -95,9 +140,6 @@ class Parser:
                         msg_list.append([0x90, NOTE_PAUSE, 0])
                         str_seq += " , "
 
-                elif note == "*":
-                    pass
-
                 elif note == "/":
                     msg_list.append([0x90, GO_TO_START, 0])
 
@@ -109,12 +151,6 @@ class Parser:
 
                         note_value += context.root + self.get_octave(control)
                         msg_list.append([0x90, note_value, 100])
-
-                elif note == ";":
-                    pass
-
-                elif note == "+":
-                    pass
 
                 elif note.isalpha():
                     pass
@@ -169,13 +205,56 @@ class Parser:
                             # unknown symbol (not yet defined a use)
                             pass
 
-        # print("Sequence set to: %s\n" % msg_list)
+        return msg_list, str_seq
 
-        if mode == MODE_SIMPLE:
-            context.sequence = msg_list
-            context.str_sequence = str_seq
+    @staticmethod
+    def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None):
+        individual_permutations = ["".join(x) for x in itertools.permutations(seq)]
 
-        return msg_list
+        if start is None:
+            start = 0
+
+        if random_order:
+            random.shuffle(individual_permutations)
+        else:
+            pass
+
+        if count is not None:
+            individual_permutations = individual_permutations[:count]
+
+        output_string = "".join(individual_permutations)
+
+        if not output_length:
+            output_length = len(output_string)
+
+        return output_string[start:start + output_length]
+
+    @staticmethod
+    def parse_param(param, seq):
+        repetitions = None
+
+        if not seq:
+            return None
+
+        if param in seq:
+            param_index = seq.index(param)
+            if seq[param_index + 1:] and not seq[param_index + 1].isalpha():
+
+                next_param_index = None
+
+                for i, char in enumerate(seq[param_index + 1:]):
+                    if char.isalpha():
+                        next_param_index = i + param_index + 1
+                        break
+
+                if next_param_index is None:
+                    repetitions = int(seq[param_index + 1:])
+                else:
+                    repetitions = int(seq[param_index + 1:next_param_index])
+            else:
+                repetitions = True
+
+        return repetitions
 
     @staticmethod
     def get_octave(control):

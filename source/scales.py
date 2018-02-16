@@ -79,4 +79,5 @@ class Scales:
     @staticmethod
     def get_note_by_index_wrap(idx, scale):
         scale_length = len(scale)
-        return scale[idx % scale_length]
+        octave = idx > scale_length
+        return scale[idx % scale_length] #+ (12 if octave else 0)

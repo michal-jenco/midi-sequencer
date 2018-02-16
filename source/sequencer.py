@@ -144,7 +144,7 @@ class Sequencer:
         self.entry_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence.bind('<Return>', self.set_sequence)
         self.entry_sequence.delete(0, tk.END)
-        self.entry_sequence.insert(0, "032")
+        self.entry_sequence.insert(0, "p032;p")
         self.set_scale("lydian")
         self.set_sequence(None)
 
@@ -239,11 +239,14 @@ class Sequencer:
         parser = Parser()
         text_ = str(self.entry_sequence.get())
         print("\"%s\"" % text_)
-        parser.get_notes(self.context, text_)
-        self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
 
+        notes, str_seq = parser.get_notes(self.context, text_)
+        self.context.sequence = notes
+        self.context.str_sequence = str_seq
         self.entry_str_seq.delete(0, tk.END)
         self.entry_str_seq.insert(0, self.context.str_sequence)
+
+        self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
@@ -374,8 +377,6 @@ class Sequencer:
         print("Play sequence is running.")
         # mc = MidiClock(self.context)
 
-        time.sleep(0.1)
-
         idx = 0
         actual_notes_played_count = 0
 
@@ -416,7 +417,7 @@ class Sequencer:
 
                     if note[1] != NOTE_PAUSE:
                         if note[1] == GO_TO_START:
-                            # -1 because right at the start of while True there is a += 1
+                            # -1 because right at the start of while True there is idx += 1
                             idx = -1
                             actual_notes_played_count = 0
                             continue
