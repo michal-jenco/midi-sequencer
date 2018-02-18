@@ -19,6 +19,10 @@ class Context:
         self.skip_notes_parallel = []
         self.skip_notes_sequential = []
 
+        self.tonic_sequence = []
+        self.octave_sequence = []
+        self.scale_sequence = []
+
         self.sample_seqs = []
         for i in range(0, 10):
             self.sample_seqs.append([])

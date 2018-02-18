@@ -31,6 +31,8 @@ class Sequencer:
         self.context.scale = None
         self.context.playback_on = False
 
+        self.idx = 0
+
         self.context.midi = midi_
 
         self.evolver = Evolver(self.context, self.root)
@@ -140,6 +142,7 @@ class Sequencer:
                 row_ += 1
                 col_ = 0
 
+
         self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence.bind('<Return>', self.set_sequence)
@@ -163,6 +166,15 @@ class Sequencer:
         self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=80)
         self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
+        self.entry_tonic_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_tonic_sequence.bind('<Return>', self.set_tonic_sequence)
+
+        self.entry_octave_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_octave_sequence.bind('<Return>', self.set_octave_sequence)
+
+        self.entry_scale_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_scale_sequence.bind('<Return>', self.set_scale_sequence)
+
     def show(self):
 
         tk.Button(self.root,
@@ -183,7 +195,11 @@ class Sequencer:
 
         tk.Button(self.root,
                   text="Pitch bend OFF",
-                  command=lambda: self.pitch_bend("off")).grid(row=9-5, column=8, padx=10)
+                  command=lambda: self.pitch_bend("off")).grid(row=4, column=8, padx=10)
+
+        tk.Button(self.root,
+                  text="Reset IDX",
+                  command=self.reset_idx).grid(row=5, column=8, padx=10)
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=4, padx=2, pady=2)
@@ -235,6 +251,10 @@ class Sequencer:
             threading.Thread(target=wob.wobble).start()
             abc += 1
 
+    def reset_idx(self):
+        self.actual_notes_played_count = 0
+        print("actual_notes_played_count was RESET.")
+        
     def set_sequence(self, _):
         parser = Parser()
         text_ = str(self.entry_sequence.get())
@@ -247,6 +267,15 @@ class Sequencer:
         self.entry_str_seq.insert(0, self.context.str_sequence)
 
         self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
+
+    def set_tonic_sequence(self, _):
+        self.context.tonic_sequence = Parser().parse_tonic_sequence
+
+    def set_octave_sequence(self, _):
+        self.context.octave_sequence = Parser().parse_octave_sequence
+
+    def set_scale_sequence(self, _):
+        self.context.scale_sequence = Parser().parse_scale_sequence
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
@@ -377,8 +406,7 @@ class Sequencer:
         print("Play sequence is running.")
         # mc = MidiClock(self.context)
 
-        idx = 0
-        actual_notes_played_count = 0
+        self.actual_notes_played_count = 0
 
         idx_all_off = 0
         off_note_idx = 0
@@ -393,7 +421,7 @@ class Sequencer:
         ########################################################
 
         while True:
-            idx += 1
+            self.idx += 1
 
             if not self.context.playback_on:
                 time.sleep(0.1)
@@ -401,9 +429,9 @@ class Sequencer:
 
             if self.context.sequence:
                 if (a() > float(self.context.prob_skip_note.get())/100
-                        and idx % self.get_tempo_multiplier() == 0):
+                        and self.idx % self.get_tempo_multiplier() == 0):
 
-                    loop_idx = actual_notes_played_count % len(self.context.sequence)
+                    loop_idx = self.actual_notes_played_count % len(self.context.sequence)
                     note = self.context.sequence[loop_idx]
                     orig_note = self.get_orig_note(note)
 
@@ -413,26 +441,31 @@ class Sequencer:
                         self.skip_note_sequentially(skip_sequential_idx, idx_sequential_skip)
 
                     if note[1] == NOTE_PAUSE:
-                        actual_notes_played_count += 1
+                        self.actual_notes_played_count += 1
 
                     if note[1] != NOTE_PAUSE:
                         if note[1] == GO_TO_START:
                             # -1 because right at the start of while True there is idx += 1
-                            idx = -1
-                            actual_notes_played_count = 0
+                            self.idx = -1
+                            self.actual_notes_played_count = 0
                             continue
 
-                        elif not self.skip_note_parallel(idx) and not skip_sequentially:
+                        elif not self.skip_note_parallel(self.idx) and not skip_sequentially:
                             self.context.midi.send_message(orig_note)
 
-                            actual_notes_played_count += 1
+                            self.actual_notes_played_count += 1
                             idx_sequential_skip += 1
                             idx_all_off += 1
 
                             self.play_poly_notes(orig_note)
-                            self.play_relative_poly_notes(orig_note, int(self.entry_str_seq.get().split()[loop_idx][0]))
 
-            self.play_sample_notes(idx)
+                            try:
+                                param = int(self.entry_str_seq.get().split()[loop_idx][0])
+                                self.play_relative_poly_notes(orig_note, param)
+                            except:
+                                pass
+
+            self.play_sample_notes(self.idx)
 
             bpm = float(self.context.bpm.get())
             sleep_time = NoteLengths(bpm).eigtht

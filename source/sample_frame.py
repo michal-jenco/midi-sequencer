@@ -22,7 +22,6 @@ class SampleFrame(tk.Frame):
             e = tk.Entry(self, width=40)
             self.seq_entries.append(e)
             self.seq_entries[i].bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
-            #self.seq_entries[i].bind('<Up>', self.seq_entries[0 if i == 0 else i-1].focus_set())
 
             s = tk.StringVar(self, "")
             label_font = ("Courier", "10")
@@ -31,11 +30,8 @@ class SampleFrame(tk.Frame):
             self.labels.append(l)
             self.strvars.append(s)
 
-        #for i in range(0, cnt):
-        #   self.seq_entries[i].bind('<Down>', self.seq_entries[i if i == cnt - 1 else i + 1].focus_set())
-
     def update_label_with_current_step(self, channel, step, click):
-        notes = self.parser.get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)
+        notes, str_seq = self.parser.get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)
 
         msg = "|"
         for i, note in enumerate(notes):
@@ -66,7 +62,7 @@ class SampleFrame(tk.Frame):
             l.grid(row=offset + i, column=11, pady=2, sticky="w")
 
     def set_sequence(self, event, channel):
-        notes = self.parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
+        notes, str_seq = self.parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
 
         for note in notes:
             if note:

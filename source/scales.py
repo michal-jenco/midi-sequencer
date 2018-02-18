@@ -57,6 +57,12 @@ class Scales:
         # self.gypsy_major = self.x2_harmonic_major
         # self.gypsy_minor = self.hungarian_minor
 
+        for scale in self.get_all():
+            scale = self.get_scale_by_name(scale)
+            for octave in range(0, 2):
+                for tone in range(1, len(scale)):
+                    scale.append(scale[tone] + (octave+1)*12)
+
     def get_random(self):
         scale_list = sorted(list(self.__dict__.keys()))
         chosen_scale = random.choice(scale_list)

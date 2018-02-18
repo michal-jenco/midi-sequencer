@@ -75,7 +75,7 @@ class Parser:
                     elif oct_ == 12:
                         add = "+"
 
-                    note_value = random.choice(context.scale)
+                    note_value = random.choice(context.scale[:9])
                     str_seq += str(context.scale.index(note_value)) + add + \
                                ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " "
 
@@ -102,12 +102,14 @@ class Parser:
                     start = self.parse_param("s", perm_content_control)
                     random_order = self.parse_param("r", perm_content_control)
                     count_of_permutations = self.parse_param("c", perm_content_control)
+                    perm_len = self.parse_param("L", perm_content_control)
 
                     _, str_repr = self.get_notes(context, perm_content_notes, mode=MODE_SIMPLE)
                     str_seq_internal = self.parse_permutations(str_repr.replace(" ", ""),
                                                                random_order=random_order,
                                                                output_length=length,
-                                                               start=start)
+                                                               start=start,
+                                                               perm_len=perm_len)
                     perm_notes, str_repr = self.get_notes(context, str_seq_internal, mode=MODE_SIMPLE)
 
                     for n in perm_notes:
@@ -205,11 +207,11 @@ class Parser:
                             # unknown symbol (not yet defined a use)
                             pass
 
-        return msg_list, str_seq
+        return msg_list, str_seq.replace("  ", " ")
 
     @staticmethod
-    def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None):
-        individual_permutations = ["".join(x) for x in itertools.permutations(seq)]
+    def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None, perm_len=None):
+        individual_permutations = ["".join(x) for x in itertools.permutations(seq, perm_len)]
 
         if start is None:
             start = 0
@@ -255,6 +257,37 @@ class Parser:
                 repetitions = True
 
         return repetitions
+
+    def parse_octave_sequence(self, context, text):
+        result = []
+
+        sequences = list(text.split())
+
+        for seq in sequences:
+            times = self.parse_param("x", str(seq))
+
+            result = [*range(0, times)]
+            print(result)
+
+            for i in range(0, times):
+                result.append(int(seq[0]))
+
+        context._sequence = result
+
+    def parse_tonic_sequence(self, context, text):
+        result = []
+
+
+
+        context._sequence = result
+
+    def parse_scale_sequence(self, context, text):
+        result = []
+
+
+
+        context._sequence = result
+
 
     @staticmethod
     def get_octave(control):
