@@ -26,7 +26,7 @@ class Evolver:
         self.prob_prob_octave_one_up = .1
         self.prob_prob_octave_one_down = .1
         self.prob_prob_octave_two_up = .1
-        self.prob_prob_octave_two_up = .1
+        self.prob_prob_octave_two_down = .1
         self.prob_ = .1
 
         self.min_replace_notes = 1

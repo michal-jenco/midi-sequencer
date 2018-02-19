@@ -13,7 +13,8 @@ from source.wobbler import Wobbler
 from source.notes import *
 from source.constants import *
 from source.sample_frame import SampleFrame
-from source.helpful_functions import a, sleep_and_increase_time
+from source.delay import Delay
+from source.helpful_functions import a
 
 
 class Sequencer:
@@ -32,8 +33,15 @@ class Sequencer:
         self.context.playback_on = False
 
         self.idx = 0
+        self.actual_notes_played_count = 0
 
         self.context.midi = midi_
+
+        self.bpm = float(self.context.bpm.get())
+
+        self.d = Delay(self.context)
+        self.df = DelayFunctions()
+        self.dc = DelayConstants()
 
         self.evolver = Evolver(self.context, self.root)
         self.wobblers = []
@@ -51,7 +59,7 @@ class Sequencer:
         self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
-        self.strvar_option_midi_channel = tk.StringVar(self.root, "11")
+        self.strvar_option_midi_channel = tk.StringVar(self.root, "12")
         self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *[x for x in range(1, 17)])
 
         self.frame_entries = tk.Frame(self.root)
@@ -64,8 +72,12 @@ class Sequencer:
         self.strvar_status_bar = tk.StringVar(self.root, "")
         self.label_status_bar = tk.Label(self.root, textvariable=self.strvar_status_bar, font=label_font)
 
-        self.strvar_main_seq_len = tk.StringVar(self.frame_entries, "aaaa")
+        self.strvar_main_seq_len = tk.StringVar(self.frame_entries)
         self.label_main_seq_len = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_len, font=label_font)
+
+        self.strvar_main_seq_current_idx = tk.StringVar(self.frame_entries, "aaaa")
+        self.label_main_seq_current_idx = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_current_idx,
+                                                   font=label_font)
 
         self.strvar_prob_skip_note = tk.StringVar(self.frame_sliders)
         self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL, sliderlength=30,
@@ -142,12 +154,11 @@ class Sequencer:
                 row_ += 1
                 col_ = 0
 
-
         self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence.bind('<Return>', self.set_sequence)
         self.entry_sequence.delete(0, tk.END)
-        self.entry_sequence.insert(0, "p032;p")
+        self.entry_sequence.insert(0, "p0321645798+;L5l100rp")
         self.set_scale("lydian")
         self.set_sequence(None)
 
@@ -226,6 +237,7 @@ class Sequencer:
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
+        self.label_main_seq_current_idx.grid(row=1, column=6)
 
         self.label_a.grid(row=0, column=2, sticky="w")
         self.label_b.grid(row=1, column=2, sticky="w")
@@ -251,8 +263,12 @@ class Sequencer:
             threading.Thread(target=wob.wobble).start()
             abc += 1
 
+    def set_current_note_idx(self, idx):
+        self.strvar_main_seq_current_idx.set(str(idx + 1))
+
     def reset_idx(self):
         self.actual_notes_played_count = 0
+        self.set_current_note_idx(self.actual_notes_played_count)
         print("actual_notes_played_count was RESET.")
         
     def set_sequence(self, _):
@@ -406,8 +422,6 @@ class Sequencer:
         print("Play sequence is running.")
         # mc = MidiClock(self.context)
 
-        self.actual_notes_played_count = 0
-
         idx_all_off = 0
         off_note_idx = 0
 
@@ -435,6 +449,8 @@ class Sequencer:
                     note = self.context.sequence[loop_idx]
                     orig_note = self.get_orig_note(note)
 
+                    self.set_current_note_idx(loop_idx)
+
                     off_note_idx, idx_all_off = self.turn_off_notes(off_note_idx, idx_all_off)
 
                     skip_sequential_idx, idx_sequential_skip, skip_sequentially = \
@@ -453,6 +469,15 @@ class Sequencer:
                         elif not self.skip_note_parallel(self.idx) and not skip_sequentially:
                             self.context.midi.send_message(orig_note)
 
+                            x = lambda: self.d.run_delay_with_note(orig_note,
+                                                                   60 / self.bpm / random.choice([8, 16, 24]) * 8*4,
+                                                                   self.df.functions[self.dc.CONSTANT_DECAY],
+                                                                   -5)
+
+                            time.sleep(5)
+
+                            Delay(self.context).create_thread_for_function(x)
+
                             self.actual_notes_played_count += 1
                             idx_sequential_skip += 1
                             idx_all_off += 1
@@ -467,7 +492,6 @@ class Sequencer:
 
             self.play_sample_notes(self.idx)
 
-            bpm = float(self.context.bpm.get())
-            sleep_time = NoteLengths(bpm).eigtht
 
+            sleep_time = NoteLengths(self.bpm).eigtht
             time.sleep(sleep_time)

@@ -57,13 +57,26 @@ def parse_octave_sequence(_, text):
 # print(parse_octave_sequence("", "0 1 -1 0 2 x12, 4 5 6 x3"))
 
 
-def parse_function_sequence(text):
-    pass
+import tkinter as tk
+import rtmidi
+import time
+from source.delay import Delay
+from source.context import Context
 
+root = tk.Tk()
+context = Context(root)
 
-def generate_sequence_function(func, length, granularity, min=0, max=None, combination=1):
+context.midi = rtmidi.MidiOut()
+context.midi.open_port(0)
 
-    seq = [func(x/granularity) for x in range(0, length)]
+note = [0x90, 60, 127]
+scale = [0, 2, 3, 5, 7, 9, 10, 12]
+notes = []
 
-    return seq
+for i in range(0, 8):
+    notes.append([note[0], note[1]+scale[i], note[2]])
 
+for n in notes:
+    x = lambda: Delay(context).run_delay_with_note(n, random.random(), None)
+    Delay(context).create_thread_for_function(x)
+    time.sleep(random.random())
