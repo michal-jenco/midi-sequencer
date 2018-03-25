@@ -404,7 +404,7 @@ class Sequencer:
         vel_min, vel_max = self.get_velocity_min_max()
         orig_note = copy.copy(note)
         orig_note[0] += int(self.strvar_option_midi_channel.get()) - 1
-        orig_note[1] += self.context.root - c2
+        orig_note[1] += self.context.root - c2 - 4
         orig_note[2] = random.randint(vel_min, vel_max)
         return orig_note
 
@@ -469,14 +469,14 @@ class Sequencer:
                         elif not self.skip_note_parallel(self.idx) and not skip_sequentially:
                             self.context.midi.send_message(orig_note)
 
-                            x = lambda: self.d.run_delay_with_note(orig_note,
-                                                                   60 / self.bpm / random.choice([8, 16, 24]) * 8*4,
-                                                                   self.df.functions[self.dc.CONSTANT_DECAY],
-                                                                   -5)
+                            #x = lambda: self.d.run_delay_with_note(orig_note,
+                            #                                       60 / self.bpm / random.choice([8, 16, 24]) * 8*4,
+                            #                                       self.df.functions[self.dc.CONSTANT_DECAY],
+                            #                                       -5)
+#
+                            #time.sleep(5)
 
-                            time.sleep(5)
-
-                            Delay(self.context).create_thread_for_function(x)
+                            # Delay(self.context).create_thread_for_function(x)
 
                             self.actual_notes_played_count += 1
                             idx_sequential_skip += 1
@@ -492,6 +492,5 @@ class Sequencer:
 
             self.play_sample_notes(self.idx)
 
-
-            sleep_time = NoteLengths(self.bpm).eigtht
+            sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
             time.sleep(sleep_time)

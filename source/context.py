@@ -11,7 +11,7 @@ class Context:
         self.bpm = tk.StringVar(root, "160")
         self.sequence = None
         self.str_sequence = None
-        self.root = c3
+        self.root = None
         self.mode = None
 
         self.poly = []
