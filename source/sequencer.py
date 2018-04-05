@@ -114,6 +114,9 @@ class Sequencer:
         self.label_e = tk.Label(self.frame_entries, font=label_font, text="Polyphony Relative")
         self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
         self.label_g = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
+        self.label_h = tk.Label(self.frame_entries, font=label_font, text="Octave Sequence")
+        self.label_i = tk.Label(self.frame_entries, font=label_font, text="Root Sequence")
+        self.label_j = tk.Label(self.frame_entries, font=label_font, text="Scale Sequence")
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.start()
@@ -177,8 +180,8 @@ class Sequencer:
         self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=80)
         self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
-        self.entry_tonic_sequence = tk.Entry(self.frame_entries, width=80)
-        self.entry_tonic_sequence.bind('<Return>', self.set_tonic_sequence)
+        self.entry_root_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_root_sequence.bind('<Return>', self.set_root_sequence)
 
         self.entry_octave_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_octave_sequence.bind('<Return>', self.set_octave_sequence)
@@ -234,6 +237,9 @@ class Sequencer:
         self.entry_poly_relative.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_skip_note_sequential.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
         self.entry_skip_note_parallel.grid(row=6, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_octave_sequence.grid(row=7, column=5, sticky="wn", pady=(2, 2), padx=10)
+        self.entry_root_sequence.grid(row=8, column=5, sticky="wn", pady=(2, 2), padx=10)
+        self.entry_scale_sequence.grid(row=9, column=5, sticky="wn", pady=(2, 2), padx=10)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
@@ -246,6 +252,9 @@ class Sequencer:
         self.label_e.grid(row=4, column=2, sticky="w")
         self.label_f.grid(row=5, column=2, sticky="w")
         self.label_g.grid(row=6, column=2, sticky="w")
+        self.label_h.grid(row=7, column=2, sticky="w")
+        self.label_i.grid(row=8, column=2, sticky="w")
+        self.label_j.grid(row=9, column=2, sticky="w")
 
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
         self.option_tempo_multiplier.grid()
@@ -270,7 +279,7 @@ class Sequencer:
         self.actual_notes_played_count = 0
         self.set_current_note_idx(self.actual_notes_played_count)
         print("actual_notes_played_count was RESET.")
-        
+
     def set_sequence(self, _):
         parser = Parser()
         text_ = str(self.entry_sequence.get())
@@ -284,14 +293,24 @@ class Sequencer:
 
         self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
 
-    def set_tonic_sequence(self, _):
-        self.context.tonic_sequence = Parser().parse_tonic_sequence
+    def set_root_sequence(self, _):
+        text = self.entry_root_sequence.get()
+        self.context.root_sequence = Parser().parse_root_sequence(self.context, text)
+
+        print("Root sequence set to: %s" % text)
 
     def set_octave_sequence(self, _):
-        self.context.octave_sequence = Parser().parse_octave_sequence
+        text = self.entry_octave_sequence.get()
+        seq = Parser().parse_octave_sequence(self.context, text)
+        self.context.octave_sequence = seq
+
+        print("Octave sequence set to: %s" % seq)
 
     def set_scale_sequence(self, _):
-        self.context.scale_sequence = Parser().parse_scale_sequence
+        text = self.entry_scale_sequence.get()
+        self.context.scale_sequence = Parser().parse_scale_sequence(self.context, text)
+
+        print("Scale sequence set to: %s" % text)
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
@@ -400,12 +419,15 @@ class Sequencer:
                 if sample_seq[sample_idx]:
                     self.context.midi.send_message(sample_seq[sample_idx])
 
-    def get_orig_note(self, note):
+    def get_orig_note(self, note, octave_idx):
         vel_min, vel_max = self.get_velocity_min_max()
+        octave_offset = 0 if not self.context.octave_sequence else self.context.octave_sequence[octave_idx]
+
         orig_note = copy.copy(note)
         orig_note[0] += int(self.strvar_option_midi_channel.get()) - 1
-        orig_note[1] += self.context.root - c2 - 4
+        orig_note[1] += self.context.root - c2 - 4 + octave_offset
         orig_note[2] = random.randint(vel_min, vel_max)
+
         return orig_note
 
     def turn_off_notes(self, off_note_idx, idx_all_off):
@@ -446,8 +468,14 @@ class Sequencer:
                         and self.idx % self.get_tempo_multiplier() == 0):
 
                     loop_idx = self.actual_notes_played_count % len(self.context.sequence)
+
+                    try:
+                        octave_idx = self.actual_notes_played_count % len(self.context.octave_sequence)
+                    except:
+                        octave_idx = 0
+
                     note = self.context.sequence[loop_idx]
-                    orig_note = self.get_orig_note(note)
+                    orig_note = self.get_orig_note(note, octave_idx)
 
                     self.set_current_note_idx(loop_idx)
 
@@ -473,7 +501,7 @@ class Sequencer:
                             #                                       60 / self.bpm / random.choice([8, 16, 24]) * 8*4,
                             #                                       self.df.functions[self.dc.CONSTANT_DECAY],
                             #                                       -5)
-#
+                            #
                             #time.sleep(5)
 
                             # Delay(self.context).create_thread_for_function(x)
@@ -487,8 +515,9 @@ class Sequencer:
                             try:
                                 param = int(self.entry_str_seq.get().split()[loop_idx][0])
                                 self.play_relative_poly_notes(orig_note, param)
-                            except:
-                                pass
+
+                            except Exception as e:
+                                print("There was this exception: %s" % e)
 
             self.play_sample_notes(self.idx)
 

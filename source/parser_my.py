@@ -256,37 +256,41 @@ class Parser:
             else:
                 repetitions = True
 
+        elif param == "x" and param not in seq:
+            repetitions = 1
+
         return repetitions
 
     def parse_octave_sequence(self, context, text):
         result = []
-
         sequences = list(text.split())
 
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
-            result = [*range(0, times)]
-            print(result)
-
             for i in range(0, times):
-                result.append(int(seq[0]))
+                if seq.startswith(("+", "-")):
+                    result.append(int(seq[0:2])*12)
+                else:
+                    result.append(int(seq[0])*12)
 
-        context._sequence = result
+        return result
 
-    def parse_tonic_sequence(self, context, text):
+
+    def parse_root_sequence(self, context, text):
         result = []
 
 
 
-        context._sequence = result
+        return result
+
 
     def parse_scale_sequence(self, context, text):
         result = []
 
 
 
-        context._sequence = result
+        return result
 
 
     @staticmethod

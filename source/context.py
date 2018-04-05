@@ -19,8 +19,8 @@ class Context:
         self.skip_notes_parallel = []
         self.skip_notes_sequential = []
 
-        self.tonic_sequence = []
         self.octave_sequence = []
+        self.root_sequence = []
         self.scale_sequence = []
 
         self.sample_seqs = []
