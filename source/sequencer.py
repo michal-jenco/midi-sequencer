@@ -295,22 +295,24 @@ class Sequencer:
 
     def set_root_sequence(self, _):
         text = self.entry_root_sequence.get()
-        self.context.root_sequence = Parser().parse_root_sequence(self.context, text)
+        seq = Parser().parse_root_sequence(text)
+        self.context.root_sequence = seq
 
-        print("Root sequence set to: %s" % text)
+        print("Root sequence set to: %s" % seq)
 
     def set_octave_sequence(self, _):
         text = self.entry_octave_sequence.get()
-        seq = Parser().parse_octave_sequence(self.context, text)
+        seq = Parser().parse_octave_sequence(text)
         self.context.octave_sequence = seq
 
         print("Octave sequence set to: %s" % seq)
 
     def set_scale_sequence(self, _):
         text = self.entry_scale_sequence.get()
-        self.context.scale_sequence = Parser().parse_scale_sequence(self.context, text)
+        seq = Parser().parse_scale_sequence(self.context, text)
+        self.context.scale_sequence = seq
 
-        print("Scale sequence set to: %s" % text)
+        print("Scale sequence set to: %s" % seq)
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
@@ -473,6 +475,12 @@ class Sequencer:
                         octave_idx = self.actual_notes_played_count % len(self.context.octave_sequence)
                     except:
                         octave_idx = 0
+
+                    try:
+                        root_idx = self.actual_notes_played_count % len(self.context.root_sequence)
+                        self.context.root = self.context.root_sequence[root_idx]
+                    except:
+                        pass
 
                     note = self.context.sequence[loop_idx]
                     orig_note = self.get_orig_note(note, octave_idx)
