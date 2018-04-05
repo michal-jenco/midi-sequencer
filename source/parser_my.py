@@ -318,17 +318,23 @@ class Parser:
     def parse_scale_sequence(self, context, text):
         result = []
         sequences = list(text.split())
+        available_scales = Scales().get_all()
 
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
-            for i in range(0, times):
-                pass
+            if "x" in seq:
+                idx = seq.index("x")
+                seq = seq[0:idx]
 
+            if seq in available_scales:
+                for i in range(0, times):
+                    result.append(seq)
 
+            else:
+                print("Scale %s does not exist." % seq)
 
         return result
-
 
     @staticmethod
     def get_octave(control):

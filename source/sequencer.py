@@ -488,6 +488,20 @@ class Sequencer:
                             self.context.root = self.context.root_sequence[root_idx]
 
                             print("Root changed to: %s" % self.context.root_sequence[root_idx])
+                    except:
+                        pass
+
+                    # TODO make this a function
+                    try:
+                        sc = Scales()
+                        scale_idx = self.actual_notes_played_count % len(self.context.scale_sequence)
+
+                        if self.context.scale != sc.get_scale_by_name(self.context.scale_sequence[scale_idx]):
+                            self.end_all_notes()
+                            self.context.scale = sc.get_scale_by_name(self.context.scale_sequence[scale_idx])
+                            self.set_sequence(None)
+
+                            print("Scale changed to: %s" % self.context.scale_sequence[scale_idx])
 
                     except:
                         pass
