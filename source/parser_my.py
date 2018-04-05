@@ -97,8 +97,6 @@ class Parser:
                         perm_content_notes = perm_content
                         perm_content_control = None
 
-                    print(type(perm_content_control))
-
                     length = self.parse_param("l", perm_content_control)
                     start = self.parse_param("s", perm_content_control)
                     random_order = self.parse_param("r", perm_content_control)
@@ -315,7 +313,7 @@ class Parser:
 
         return result
 
-    def parse_scale_sequence(self, context, text):
+    def parse_scale_sequence(self, text):
         result = []
         sequences = list(text.split())
         available_scales = Scales().get_all()

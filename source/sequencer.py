@@ -309,7 +309,7 @@ class Sequencer:
 
     def set_scale_sequence(self, _):
         text = self.entry_scale_sequence.get()
-        seq = Parser().parse_scale_sequence(self.context, text)
+        seq = Parser().parse_scale_sequence(text)
         self.context.scale_sequence = seq
 
         print("Scale sequence set to: %s" % seq)

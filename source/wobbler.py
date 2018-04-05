@@ -57,7 +57,7 @@ class Wobbler(tk.Frame):
         self.strvar_option_cc = tk.StringVar(self, self.cc_all[0])
         self.option_cc = tk.OptionMenu(self, self.strvar_option_cc, *self.cc_all)
 
-        self.strvar_option_midi_channel = tk.StringVar(self, "11")
+        self.strvar_option_midi_channel = tk.StringVar(self, "12")
         self.option_midi_channel = tk.OptionMenu(self, self.strvar_option_midi_channel, *range(1,17))
 
         self.intvar_check_10x = tk.IntVar(DISABLED)
