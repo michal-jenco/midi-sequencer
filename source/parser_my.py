@@ -262,6 +262,22 @@ class Parser:
 
         return repetitions
 
+    def parse_off_array(self, text):
+        result = []
+        sequences = list(text.split())
+
+        for seq in sequences:
+            times = self.parse_param("x", str(seq))
+
+            if "x" in seq:
+                idx = seq.index("x")
+                seq = seq[0:idx]
+
+            for i in range(0, times):
+                result.append(int(seq))
+
+        return result
+
     def parse_octave_sequence(self, text):
         result = []
         sequences = list(text.split())
@@ -282,7 +298,7 @@ class Parser:
         sequences = list(text.split())
 
         note_dict = {"c": c2, "cs": cs2, "d": d2, "ds": ds2, "e": e2, "f": f2, "fs": fs2, "g": g2, "gs": gs2,
-                     "a": a2, "as": as2, "b": b2, "df": cs2, "ef": ds2, "gf": fs2, "af": gs2, "bf": as2}
+                     "a": a2, "as": as2, "h": b2, "b": b2, "df": cs2, "ef": ds2, "gf": fs2, "af": gs2, "bf": as2}
 
         for seq in sequences:
             times = self.parse_param("x", str(seq))

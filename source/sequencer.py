@@ -341,8 +341,10 @@ class Sequencer:
         # self.end_all_notes()
 
     def set_off_array(self, _):
-        indices = self.entry_off_array.get().split()
-        self.context.off_list = list(map(int, indices))
+        text = self.entry_off_array.get()
+        seq = Parser().parse_off_array(text)
+        self.context.off_list = seq
+
         print("Off list: %s" % self.context.off_list)
 
     def stop_sequence(self):
@@ -471,14 +473,22 @@ class Sequencer:
 
                     loop_idx = self.actual_notes_played_count % len(self.context.sequence)
 
+                    # TODO make this a function
                     try:
                         octave_idx = self.actual_notes_played_count % len(self.context.octave_sequence)
                     except:
                         octave_idx = 0
 
+                    # TODO make this a function
                     try:
                         root_idx = self.actual_notes_played_count % len(self.context.root_sequence)
-                        self.context.root = self.context.root_sequence[root_idx]
+
+                        if self.context.root_sequence[root_idx] != self.context.root:
+                            self.end_all_notes()
+                            self.context.root = self.context.root_sequence[root_idx]
+
+                            print("Root changed to: %s" % self.context.root_sequence[root_idx])
+
                     except:
                         pass
 
