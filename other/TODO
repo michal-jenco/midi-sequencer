@@ -4,7 +4,7 @@
 - DONE - Wobbler class derived from tk.Frame
 - DONE - polyphony
 - TODO - all notes off on exit
--
+- TODO - scale sequence recreates random notes
 
 
 """
