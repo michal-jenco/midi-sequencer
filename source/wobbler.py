@@ -2,8 +2,9 @@ import tkinter as tk
 import math as m
 import time
 import random
+from collections import OrderedDict
 
-from source.cc import CCKeys
+from source.cc import CCKeys, CCFM, CCKick, CCSample
 from source.constants import *
 
 
@@ -13,8 +14,10 @@ class Wobbler(tk.Frame):
 
         self.name = name_
         self.context = context
+        self.parent = parent
 
-        self.cc_keys = CCKeys()
+        self.cc = None
+        self.volcas = OrderedDict((("Keys", CCKeys), ("FM", CCFM), ("Sample", CCSample), ("Kick", CCKeys)))
 
         self.control_change = None
         self.function = None
@@ -43,22 +46,38 @@ class Wobbler(tk.Frame):
 
         self.button_toggle = tk.Button(self, text="Start", command=self.toggle)
 
+        self.strvar_option_volca = tk.StringVar(self, list(self.volcas.keys())[0])
+        self.option_volca = tk.OptionMenu(self, self.strvar_option_volca, *self.volcas.keys(), command=self.update_cc_list)
+        self.cc = self.volcas[self.strvar_option_volca.get()]()
+
         self.strvar_option_func = tk.StringVar(self, "sin")
         self.option_func = tk.OptionMenu(self, self.strvar_option_func, "sin", "cos", "rand", "min_max")
 
-        self.cc_all = self.cc_keys.get_all()
+        self.cc_all = self.cc.get_all()
         self.strvar_option_cc = tk.StringVar(self, self.cc_all[0])
         self.option_cc = tk.OptionMenu(self, self.strvar_option_cc, *self.cc_all)
 
-        self.strvar_option_midi_channel = tk.StringVar(self, "10")
+        self.strvar_option_midi_channel = tk.StringVar(self, "11")
         self.option_midi_channel = tk.OptionMenu(self, self.strvar_option_midi_channel, *range(1,17))
 
         self.intvar_check_10x = tk.IntVar(DISABLED)
         self.check_x10 = tk.Checkbutton(self, text="x10", variable=self.intvar_check_10x)
 
-        self.output_file = open( "../other/" + self.name + ".txt", "a")
+        self.output_file = open("../other/" + self.name + ".txt", "a")
 
         print("%s created" % self.name)
+
+    def update_cc_list(self, _):
+        menu = self.option_cc["menu"]
+        menu.delete(0, "end")
+
+        all_ccs = self.volcas[self.strvar_option_volca.get()]().get_all()
+
+        for string in all_ccs:
+            menu.add_command(label=string,
+                             command=lambda value=string: self.strvar_option_cc.set(value))
+
+        self.strvar_option_cc.set(all_ccs[0])
 
     def display(self):
         # self.label_name.grid(row=0, column=0, columnspan=2)
@@ -71,6 +90,7 @@ class Wobbler(tk.Frame):
 
         self.button_toggle.grid(row=7, column=20, pady=1)
 
+        self.option_volca.grid(row=4, column=20, pady=1)
         self.option_func.grid(row=6, column=20, pady=1)
         self.option_cc.grid(row=5, column=20, pady=1)
         self.option_midi_channel.grid(row=9, column=20, pady=1)
@@ -109,9 +129,8 @@ class Wobbler(tk.Frame):
                 else:
                     value = max_
 
-            cc = self.cc_keys.get_cc_by_name(self.strvar_option_cc.get())
-
-            msg = [0xb0 + int(self.strvar_option_midi_channel.get()), cc, value]
+            cc = self.cc.get_cc_by_name(self.strvar_option_cc.get())
+            msg = [0xb0 + int(self.strvar_option_midi_channel.get() - 1), cc, value]
 
             print(msg)
 
@@ -133,12 +152,14 @@ class Wobbler(tk.Frame):
             self.running = False
             self.button_toggle["text"] = "Start"
             self["bg"] = "darkblue"
+
         else:
             self.running = True
             self.button_toggle["text"] = "Stop"
             self["bg"] = "gold"
 
-    def stretch(self, value, min_, max_):
+    @staticmethod
+    def stretch( value, min_, max_):
         return value * (max_ - min_) + min_
 
 

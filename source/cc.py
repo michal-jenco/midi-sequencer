@@ -1,4 +1,7 @@
 class CC(object):
+    def __init__(self):
+        pass
+
     def get_all(self):
         return sorted(list(self.__dict__.keys()))
 
@@ -8,6 +11,8 @@ class CC(object):
 
 class CCKeys(CC):
     def __init__(self):
+        super(CC, self).__init__()
+
         self.portamento = 5
         self.expression = 11
         self.voice = 40
@@ -28,6 +33,8 @@ class CCKeys(CC):
 
 class CCFM(CC):
     def __init__(self):
+        super(CC, self).__init__()
+
         self.transpose = 40
         self.velocity = 41
         self.mod_attack = 42
@@ -43,6 +50,8 @@ class CCFM(CC):
 
 class CCSample(CC):
     def __init__(self):
+        super(CC, self).__init__()
+
         self.level = 7
         self.pan = 10
         self.start_point = 40
@@ -56,8 +65,11 @@ class CCSample(CC):
         self.amp_delay = 48
 
 
+
 class CCKick(CC):
     def __init__(self):
+        super(CC, self).__init__()
+
         self.pulse_color = 40
         self.pulse_level = 41
         self.amp_attack = 42
