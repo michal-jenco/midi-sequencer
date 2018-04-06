@@ -27,7 +27,7 @@ class Parser:
                 seq = text
                 control = None
 
-            print("Control: %s" % control)
+            # print("Control: %s" % control)
 
             notes = list(seq)
             seq_length = len(notes)
@@ -87,8 +87,8 @@ class Parser:
                     msg_list.append(msg)
 
                 elif note == perm_char:
-                    idx_end_p = notes[idx+1:].index(perm_char)
-                    perm_content = notes[idx+1:idx+1+idx_end_p]
+                    idx_end_p = notes[idx + 1:].index(perm_char)
+                    perm_content = notes[idx + 1: idx + idx_end_p + 1]
 
                     if ";" in perm_content:
                         perm_content_notes = perm_content[:perm_content.index(";")]

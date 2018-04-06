@@ -1,6 +1,5 @@
 import tkinter as tk
 
-from notes import *
 from source.scales import Scales
 from source.parser_my import Parser
 from source.constants import SetSequenceModes

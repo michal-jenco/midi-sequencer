@@ -65,7 +65,6 @@ class CCSample(CC):
         self.amp_delay = 48
 
 
-
 class CCKick(CC):
     def __init__(self):
         super(CC, self).__init__()
