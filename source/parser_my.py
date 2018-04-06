@@ -157,7 +157,7 @@ class Parser:
                     pass
                     """
                     idx = ord(hashlib.sha256(note.encode('utf-8')).hexdigest()[0])
-                    note_value = Scales().get_note_by_index_wrap(idx, context.scale)
+                    note_value = context.scales.get_note_by_index_wrap(idx, context.scale)
                     str_seq += str(context.scale.index(note_value)) + " "
 
                     print("%s: %s" % (note, str(note_value)))
@@ -238,7 +238,7 @@ class Parser:
             return None
 
         if param in seq:
-            param_index = seq.index(param)
+            param_index = seq.rindex(param)
             if seq[param_index + 1:] and not seq[param_index + 1].isalpha():
 
                 next_param_index = None
@@ -313,16 +313,16 @@ class Parser:
 
         return result
 
-    def parse_scale_sequence(self, text):
+    def parse_scale_sequence(self, context, text):
         result = []
         sequences = list(text.split())
-        available_scales = Scales().get_all()
+        available_scales = context.scales.get_all()
 
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
             if "x" in seq:
-                idx = seq.index("x")
+                idx = seq.rindex("x")
                 seq = seq[0:idx]
 
             if seq in available_scales:

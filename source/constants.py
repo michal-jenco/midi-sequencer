@@ -22,3 +22,9 @@ class DelayConstants:
 
     UP = 1
     DOWN = -1
+
+
+class SetSequenceModes:
+    def __init__(self):
+        self.regenerate = "regenerate"
+        self.dont_regenerate = "don't regenerate"

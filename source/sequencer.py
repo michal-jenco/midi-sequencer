@@ -32,6 +32,8 @@ class Sequencer:
         self.context.scale = None
         self.context.playback_on = False
 
+        self.set_sequence_modes = SetSequenceModes()
+
         self.idx = 0
         self.actual_notes_played_count = 0
 
@@ -140,8 +142,8 @@ class Sequencer:
         wrap = 8
         row_ = 0
         col_ = 0
-        for scale in Scales().get_all():
-            scale_name = Scales().get_display_scale_name(scale)
+        for scale in self.context.scales.get_all():
+            scale_name = self.context.scales.get_display_scale_name(scale)
 
             tk.Button(self.frame_scale_buttons,
                       text=scale_name,
@@ -280,14 +282,20 @@ class Sequencer:
         self.set_current_note_idx(self.actual_notes_played_count)
         print("actual_notes_played_count was RESET.")
 
-    def set_sequence(self, _):
-        parser = Parser()
+    def set_sequence(self, _, mode=None):
+        parser = self.context.parser
         text_ = str(self.entry_sequence.get())
         print("\"%s\"" % text_)
 
-        notes, str_seq = parser.get_notes(self.context, text_)
+        if mode is None:
+            notes, str_seq = parser.get_notes(self.context, text_)
+            self.context.str_sequence = str_seq
+
+        elif mode is self.context.set_sequence_modes.dont_regenerate:
+            print("self.context.str_sequence is %s" % self.context.str_sequence)
+            notes, str_seq = parser.get_notes(self.context, self.context.str_sequence.replace(" ", ""))
+
         self.context.sequence = notes
-        self.context.str_sequence = str_seq
         self.entry_str_seq.delete(0, tk.END)
         self.entry_str_seq.insert(0, self.context.str_sequence)
 
@@ -295,21 +303,21 @@ class Sequencer:
 
     def set_root_sequence(self, _):
         text = self.entry_root_sequence.get()
-        seq = Parser().parse_root_sequence(text)
+        seq = self.context.parser.parse_root_sequence(text)
         self.context.root_sequence = seq
 
         print("Root sequence set to: %s" % seq)
 
     def set_octave_sequence(self, _):
         text = self.entry_octave_sequence.get()
-        seq = Parser().parse_octave_sequence(text)
+        seq = self.context.parser.parse_octave_sequence(text)
         self.context.octave_sequence = seq
 
         print("Octave sequence set to: %s" % seq)
 
     def set_scale_sequence(self, _):
         text = self.entry_scale_sequence.get()
-        seq = Parser().parse_scale_sequence(text)
+        seq = self.context.parser.parse_scale_sequence(self.context, text)
         self.context.scale_sequence = seq
 
         print("Scale sequence set to: %s" % seq)
@@ -335,14 +343,14 @@ class Sequencer:
         print("Skip notes sequential: %s" % self.context.skip_notes_sequential)
 
     def set_scale(self, scale_):
-        self.context.scale = Scales().get_scale_by_name(scale_)
-        print("Scale: %s" % Scales().get_display_scale_name(scale_))
-        self.strvar_status_bar.set("%s --- %s" % (Scales().get_display_scale_name(scale_), self.context.scale))
+        self.context.scale = self.context.scales.get_scale_by_name(scale_)
+        print("Scale: %s" % self.context.scales.get_display_scale_name(scale_))
+        self.strvar_status_bar.set("%s --- %s" % (self.context.scales.get_display_scale_name(scale_), self.context.scale))
         # self.end_all_notes()
 
     def set_off_array(self, _):
         text = self.entry_off_array.get()
-        seq = Parser().parse_off_array(text)
+        seq = self.context.parser.parse_off_array(text)
         self.context.off_list = seq
 
         print("Off list: %s" % self.context.off_list)
@@ -401,14 +409,14 @@ class Sequencer:
 
     def play_relative_poly_notes(self, note, note_entry):
         scale = self.context.scale
-        scales = Scales()
+        scales = self.context.scales
 
         if self.context.poly_relative:
             for poly in self.context.poly_relative:
                 if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
                     # THIS TOOK FUCKING FOREVER TO FIGURE OUT
                     added = (scales.get_note_by_index_wrap(note_entry + poly, scale)
-                             - Scales().get_note_by_index_wrap(note_entry, scale))
+                             - scales.get_note_by_index_wrap(note_entry, scale))
                     self.context.midi.send_message([note[0], note[1] + added, note[2]])
 
     def play_sample_notes(self, idx):
@@ -493,20 +501,24 @@ class Sequencer:
 
                     # TODO make this a function
                     try:
-                        sc = Scales()
+                        sc = self.context.scales
                         scale_idx = self.actual_notes_played_count % len(self.context.scale_sequence)
 
                         if self.context.scale != sc.get_scale_by_name(self.context.scale_sequence[scale_idx]):
                             self.end_all_notes()
                             self.context.scale = sc.get_scale_by_name(self.context.scale_sequence[scale_idx])
-                            self.set_sequence(None)
+                            self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
 
                             print("Scale changed to: %s" % self.context.scale_sequence[scale_idx])
 
                     except:
                         pass
 
-                    note = self.context.sequence[loop_idx]
+                    try:
+                        note = self.context.sequence[loop_idx]
+                    except:
+                        continue
+
                     orig_note = self.get_orig_note(note, octave_idx)
 
                     self.set_current_note_idx(loop_idx)

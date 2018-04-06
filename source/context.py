@@ -1,6 +1,9 @@
 import tkinter as tk
 
 from notes import *
+from source.scales import Scales
+from source.parser_my import Parser
+from source.constants import SetSequenceModes
 
 
 class Context:
@@ -13,6 +16,10 @@ class Context:
         self.str_sequence = None
         self.root = None
         self.mode = None
+
+        self.scales = Scales()
+        self.parser = Parser()
+        self.set_sequence_modes = SetSequenceModes()
 
         self.poly = []
         self.poly_relative = []

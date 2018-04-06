@@ -1,7 +1,6 @@
 import tkinter as tk
 import random
 
-from source.parser_my import Parser
 from source.constants import MODE_SAMPLE
 
 
@@ -15,7 +14,7 @@ class SampleFrame(tk.Frame):
         self.labels = []
         self.strvars = []
 
-        self.parser = Parser()
+        self.parser = context.parser
 
         cnt = 10
         for i in range(0, cnt):
@@ -41,12 +40,12 @@ class SampleFrame(tk.Frame):
                 msg += " "
 
         spac = 3
-        temp = len(str(step+1))
-        msg += "|" + (spac-temp)*" "
+        temp = len(str(step + 1))
+        msg += "|" + (spac - temp)*" "
 
-        str_slash = str(step+1) + "/" + str(len(notes))
+        str_slash = str(step + 1) + "/" + str(len(notes))
         msg += str_slash
-        msg += (spac if not click else spac-1)*" "
+        msg += (spac if not click else spac - 1)*" "
 
         if click:
             msg += "X"
