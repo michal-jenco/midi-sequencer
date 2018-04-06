@@ -366,7 +366,7 @@ class Sequencer:
     def end_all_notes(self):
         msg = [0b10110000 + int(self.strvar_option_midi_channel.get()) - 1, 123, 0]
         self.context.midi.send_message(msg)
-        print("All notes off.")
+        # print("All notes off.")
 
     def pitch_bend(self, what):
         if what == "on":
@@ -446,10 +446,12 @@ class Sequencer:
         if self.context.off_list:
             loop_off_note_idx = off_note_idx % len(self.context.off_list)
 
+            # TODO - fix integer modulo by 0
             if idx_all_off % (self.context.off_list[loop_off_note_idx]) == 0:
                 if idx_all_off > 0:
                     self.end_all_notes()
                     return off_note_idx + 1, 0
+
         return off_note_idx, idx_all_off
 
     def play_sequence(self):
