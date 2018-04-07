@@ -6,11 +6,11 @@ from source.constants import SetSequenceModes
 
 
 class Context:
-    def __init__(self, root):
+    def __init__(self, root, sequencer):
         self.midi = None
 
         self.scale = None
-        self.bpm = tk.StringVar(root, "160")
+        self.bpm = tk.StringVar(root, "150")
         self.sequence = None
         self.str_sequence = None
         self.root = None
@@ -18,6 +18,8 @@ class Context:
 
         self.memory_sequences = {}
         self.memory_sequences["main melody"] = []
+
+        self.get_delay_multiplier = sequencer.strvar_delay_multiplier.get
 
         self.scales = Scales()
         self.parser = Parser()

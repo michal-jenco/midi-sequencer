@@ -21,10 +21,21 @@ class Sequencer:
     def __init__(self, midi_):
         self.root = tk.Tk()
         self.root.title("MIDI Sequencer")
-        self.root["bg"] = "grey"
+        self.root["bg"] = random.choice(COLORS)
         self.root.geometry('+0+0')
 
-        self.context = Context(self.root)
+        self.frame_delay = tk.Frame(self.root)
+        self.frame_delay["bg"] = "yellow"
+        self.strvar_delay_multiplier = tk.StringVar(self.frame_delay)
+        self.scale_delay_multiplier = tk.Scale(self.frame_delay, from_=0.1, to=10.0, orient=tk.HORIZONTAL,
+                                               sliderlength=30, resolution=0.1,
+                                               variable=self.strvar_delay_multiplier, length=500)
+
+        self.intvar_checkbox_state = tk.IntVar(self.root)
+        self.check_delay_is_on = tk.Checkbutton(self.frame_delay, text="D e  l   a    y      o  n ?", variable=self.intvar_checkbox_state)
+        self.delay_is_on = lambda: True if self.intvar_checkbox_state.get() == 1 else False
+
+        self.context = Context(self.root, self)
         self.context.drone_seq = [0, 1, -2, -3]
         self.context.each_drone_count = 8
         self.context.root = e2
@@ -69,6 +80,7 @@ class Sequencer:
         self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *[x for x in range(1, 17)])
 
         self.frame_entries = tk.Frame(self.root)
+        self.frame_entries["bg"] = "purple"
         self.frame_scale_buttons = tk.Frame(self.root)
         self.frame_sliders = tk.Frame(self.root)
         self.frame_roots = tk.Frame(self.root)
@@ -113,17 +125,17 @@ class Sequencer:
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=600, orient=tk.HORIZONTAL, sliderlength=30,
                                   variable=self.context.bpm, length=500)
 
-        self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence")
-        self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence")
-        self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr")
-        self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes")
-        self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony")
-        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Polyphony Relative")
-        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq")
-        self.label_g = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par")
-        self.label_h = tk.Label(self.frame_entries, font=label_font, text="Octave Sequence")
-        self.label_i = tk.Label(self.frame_entries, font=label_font, text="Root Sequence")
-        self.label_j = tk.Label(self.frame_entries, font=label_font, text="Scale Sequence")
+        self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence".ljust(20))
+        self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence".ljust(20))
+        self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr".ljust(20))
+        self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes".ljust(20))
+        self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony".ljust(20))
+        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Polyphony Relative".ljust(20))
+        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq".ljust(20))
+        self.label_g = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par".ljust(20))
+        self.label_h = tk.Label(self.frame_entries, font=label_font, text="Octave Sequence".ljust(20))
+        self.label_i = tk.Label(self.frame_entries, font=label_font, text="Root Sequence".ljust(20))
+        self.label_j = tk.Label(self.frame_entries, font=label_font, text="Scale Sequence".ljust(20))
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.start()
@@ -232,7 +244,8 @@ class Sequencer:
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
         self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
         self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-        self.frame_entries.grid(row=22, column=3, sticky="w")
+        self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=5, ipady=5)
+        self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=5, ipady=5)
 
         self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
         self.scale_vel_min.grid(column=0, row=0)
@@ -240,6 +253,7 @@ class Sequencer:
         self.scale_vel_max.grid(column=1, row=0)
         self.scale_prob_skip_poly.grid(column=2, row=0)
         self.scale_prob_skip_poly_relative.grid(column=3, row=0)
+        self.scale_delay_multiplier.grid(column=10, row=10)
 
         init_row = 0
         self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=(2, 2), padx=10)
@@ -258,17 +272,19 @@ class Sequencer:
         self.label_main_seq_len.grid(row=0, column=6)
         self.label_main_seq_current_idx.grid(row=1, column=6)
 
-        self.label_a.grid(row=0, column=2, sticky="w")
-        self.label_a2.grid(row=1, column=2, sticky="w")
-        self.label_b.grid(row=1+1, column=2, sticky="w")
-        self.label_c.grid(row=2+1, column=2, sticky="w")
-        self.label_d.grid(row=3+1, column=2, sticky="w")
-        self.label_e.grid(row=4+1, column=2, sticky="w")
-        self.label_f.grid(row=5+1, column=2, sticky="w")
-        self.label_g.grid(row=6+1, column=2, sticky="w")
-        self.label_h.grid(row=7+1, column=2, sticky="w")
-        self.label_i.grid(row=8+1, column=2, sticky="w")
-        self.label_j.grid(row=9+1, column=2, sticky="w")
+        self.label_a.grid(row=0, column=2, sticky="w", padx=(10, 0))
+        self.label_a2.grid(row=1, column=2, sticky="w", padx=(10, 0))
+        self.label_b.grid(row=1+1, column=2, sticky="w", padx=(10, 0))
+        self.label_c.grid(row=2+1, column=2, sticky="w", padx=(10, 0))
+        self.label_d.grid(row=3+1, column=2, sticky="w", padx=(10, 0))
+        self.label_e.grid(row=4+1, column=2, sticky="w", padx=(10, 0))
+        self.label_f.grid(row=5+1, column=2, sticky="w", padx=(10, 0))
+        self.label_g.grid(row=6+1, column=2, sticky="w", padx=(10, 0))
+        self.label_h.grid(row=7+1, column=2, sticky="w", padx=(10, 0))
+        self.label_i.grid(row=8+1, column=2, sticky="w", padx=(10, 0))
+        self.label_j.grid(row=9+1, column=2, sticky="w", padx=(10, 0))
+
+        self.check_delay_is_on.grid(row=11, column=10)
 
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
         self.option_tempo_multiplier.grid(row=8, column=8)
@@ -491,6 +507,9 @@ class Sequencer:
                 if sample_seq[sample_idx]:
                     self.context.midi.send_message(sample_seq[sample_idx])
 
+    def get_delay_multiplier(self):
+            return float(self.context.get_delay_multiplier())
+
     def get_orig_note(self, note, octave_idx):
         vel_min, vel_max = self.get_velocity_min_max()
         octave_offset = 0 if not self.context.octave_sequence else self.context.octave_sequence[octave_idx]
@@ -603,14 +622,13 @@ class Sequencer:
                         elif not self.skip_note_parallel(self.idx) and not skip_sequentially:
                             self.context.midi.send_message(orig_note)
 
-                            #x = lambda: self.d.run_delay_with_note(orig_note,
-                            #                                       60 / self.bpm / random.choice([8, 16, 24]) * 8*4,
-                            #                                       self.df.functions[self.dc.CONSTANT_DECAY],
-                            #                                       -5)
-                            #
-                            #time.sleep(5)
+                            if self.delay_is_on():
+                                x = lambda: self.d.run_delay_with_note(orig_note,
+                                                                       60 / self.bpm / self.get_delay_multiplier(),
+                                                                       self.df.functions[self.dc.CONSTANT_DECAY],
+                                                                       -25)
 
-                            # Delay(self.context).create_thread_for_function(x)
+                                Delay(self.context).create_thread_for_function(x)
 
                             self.actual_notes_played_count += 1
                             idx_sequential_skip += 1
