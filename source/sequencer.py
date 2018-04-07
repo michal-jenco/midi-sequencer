@@ -113,6 +113,7 @@ class Sequencer:
                                   variable=self.context.bpm, length=500)
 
         self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence")
+        self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence")
         self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr")
         self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes")
         self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony")
@@ -170,6 +171,9 @@ class Sequencer:
         self.entry_sequence.insert(0, "p0321645798+;L5l100rp")
         self.set_scale("lydian")
         self.set_sequence(None)
+
+        self.entry_memory_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_memory_sequence.bind('<Return>', self.set_memory_sequence)
 
         self.entry_off_array = tk.Entry(self.frame_entries, width=80)
         self.entry_off_array.bind('<Return>', self.set_off_array)
@@ -236,31 +240,34 @@ class Sequencer:
         self.scale_prob_skip_poly.grid(column=2, row=0)
         self.scale_prob_skip_poly_relative.grid(column=3, row=0)
 
+        init_row = 0
         self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_str_seq.grid(row=1, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_off_array.grid(row=2, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_poly.grid(row=3, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_poly_relative.grid(row=4, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_sequential.grid(row=5, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_parallel.grid(row=6, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_octave_sequence.grid(row=7, column=5, sticky="wn", pady=(2, 2), padx=10)
-        self.entry_root_sequence.grid(row=8, column=5, sticky="wn", pady=(2, 2), padx=10)
-        self.entry_scale_sequence.grid(row=9, column=5, sticky="wn", pady=(2, 2), padx=10)
+        self.entry_memory_sequence.grid(row=init_row+1, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_str_seq.grid(row=init_row+2, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_off_array.grid(row=init_row+3, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_poly.grid(row=init_row+4, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_poly_relative.grid(row=init_row+5, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_sequential.grid(row=init_row+6, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_skip_note_parallel.grid(row=init_row+7, column=5, sticky='wn', pady=(2, 2), padx=10)
+        self.entry_octave_sequence.grid(row=init_row+8, column=5, sticky="wn", pady=(2, 2), padx=10)
+        self.entry_root_sequence.grid(row=init_row+9, column=5, sticky="wn", pady=(2, 2), padx=10)
+        self.entry_scale_sequence.grid(row=init_row+10, column=5, sticky="wn", pady=(2, 2), padx=10)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
         self.label_main_seq_current_idx.grid(row=1, column=6)
 
         self.label_a.grid(row=0, column=2, sticky="w")
-        self.label_b.grid(row=1, column=2, sticky="w")
-        self.label_c.grid(row=2, column=2, sticky="w")
-        self.label_d.grid(row=3, column=2, sticky="w")
-        self.label_e.grid(row=4, column=2, sticky="w")
-        self.label_f.grid(row=5, column=2, sticky="w")
-        self.label_g.grid(row=6, column=2, sticky="w")
-        self.label_h.grid(row=7, column=2, sticky="w")
-        self.label_i.grid(row=8, column=2, sticky="w")
-        self.label_j.grid(row=9, column=2, sticky="w")
+        self.label_a2.grid(row=1, column=2, sticky="w")
+        self.label_b.grid(row=1+1, column=2, sticky="w")
+        self.label_c.grid(row=2+1, column=2, sticky="w")
+        self.label_d.grid(row=3+1, column=2, sticky="w")
+        self.label_e.grid(row=4+1, column=2, sticky="w")
+        self.label_f.grid(row=5+1, column=2, sticky="w")
+        self.label_g.grid(row=6+1, column=2, sticky="w")
+        self.label_h.grid(row=7+1, column=2, sticky="w")
+        self.label_i.grid(row=8+1, column=2, sticky="w")
+        self.label_j.grid(row=9+1, column=2, sticky="w")
 
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
         self.option_tempo_multiplier.grid()
@@ -309,6 +316,29 @@ class Sequencer:
         self.entry_str_seq.insert(0, self.context.str_sequence)
 
         self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
+
+    def set_memory_sequence(self, _):
+        parser = self.context.parser
+        text_ = str(self.entry_memory_sequence.get())
+        self.context.str_sequence = ""
+
+        result = parser.parse_memory_sequence(text_)
+
+        running_seq = []
+        for idx in result:
+            str_seq = self.memories[0].get_by_index(idx)
+
+            if str_seq is not None:
+                notes, str_seq = parser.get_notes(self.context, str_seq)
+                running_seq += notes
+                self.context.str_sequence += str_seq
+
+        self.entry_str_seq.delete(0, tk.END)
+        self.entry_str_seq.insert(0, self.context.str_sequence)
+        self.context.memory_sequences["main melody"] = running_seq
+        self.context.sequence = running_seq
+
+        log("Sequence set to: %s" % running_seq)
 
     def add_seq_to_memory(self, typ):
         text_ = str(self.entry_sequence.get())

@@ -278,6 +278,10 @@ class Parser:
 
     def parse_octave_sequence(self, text):
         result = []
+
+        if not text:
+            return []
+
         sequences = list(text.split())
 
         for seq in sequences:
@@ -288,6 +292,22 @@ class Parser:
                     result.append(int(seq[0:2])*12)
                 else:
                     result.append(int(seq[0])*12)
+
+        return result
+
+    def parse_memory_sequence(self, text):
+        result = []
+
+        if not text:
+            return []
+
+        sequences = list(text.split())
+
+        for seq in sequences:
+            times = self.parse_param("x", str(seq))
+
+            for i in range(0, times):
+                result.append(int(seq[0]))
 
         return result
 

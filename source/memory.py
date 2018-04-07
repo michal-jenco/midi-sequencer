@@ -24,15 +24,6 @@ class Memory(tk.Frame):
         self.listbox_sequences.bind('<Delete>', self._delete_selection)
         self.listbox_sequences.bind('<MouseWheel>', self._scroll_both_mouse)
 
-    def _scroll_both(self, *args):
-        self.listbox_indices.yview(*args)
-        self.listbox_sequences.yview(*args)
-
-    def _scroll_both_mouse(self, event):
-        arg = -event.delta // 120, "units"
-        self.listbox_indices.yview_scroll(*arg)
-        self.listbox_sequences.yview_scroll(*arg)
-
     def show(self):
         self.listbox_indices.grid(row=5, column=4, pady=2)
         self.listbox_sequences.grid(row=5, column=5, pady=2)
@@ -50,12 +41,22 @@ class Memory(tk.Frame):
         self.listbox_indices.delete(0, tk.END)
 
     def get_all(self):
-        return "Not implemented yet."
+        size = self.listbox_sequences.size()
+        result = [self.listbox_sequences.get(i, i)[0] for i in range(0, size)]
+        return result
 
-    def save(self):
+    def get_by_index(self, idx):
+        try:
+            result = str(self.listbox_sequences.get(idx, idx)[0])
+        except:
+            result = None
+
+        return result
+
+    def save(self, f):
         pass
 
-    def load(self):
+    def load(self, f):
         pass
 
     def _regenerate_indices(self):
@@ -72,4 +73,13 @@ class Memory(tk.Frame):
             self.listbox_sequences.delete(idx, idx)
 
         self._regenerate_indices()
+
+    def _scroll_both(self, *args):
+        self.listbox_indices.yview(*args)
+        self.listbox_sequences.yview(*args)
+
+    def _scroll_both_mouse(self, event):
+        arg = -event.delta // 120, "units"
+        self.listbox_indices.yview_scroll(*arg)
+        self.listbox_sequences.yview_scroll(*arg)
 
