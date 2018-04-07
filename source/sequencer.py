@@ -313,19 +313,19 @@ class Sequencer:
     def reset_idx(self):
         self.actual_notes_played_count = 0
         self.set_current_note_idx(self.actual_notes_played_count)
-        log("actual_notes_played_count was RESET.")
+        log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
     def set_sequence(self, _, mode=None):
         parser = self.context.parser
         text_ = str(self.entry_sequence.get())
 
         if mode is None:
-            log("\"%s\"" % text_)
+            log(logfile=self.context.logfile, msg="\"%s\"" % text_)
             notes, str_seq = parser.get_notes(self.context, text_)
             self.context.str_sequence = str_seq
 
         elif mode is self.context.set_sequence_modes.dont_regenerate:
-            # log("self.context.str_sequence is %s" % self.context.str_sequence)
+            # log(logfile=self.context.logfile, msg="self.context.str_sequence is %s" % self.context.str_sequence)
             notes, str_seq = parser.get_notes(self.context, self.context.str_sequence.replace(" ", ""))
 
         self.context.sequence = notes
@@ -371,7 +371,7 @@ class Sequencer:
         self.context.memory_sequences["main melody"] = running_seq
         self.context.sequence = running_seq
 
-        log("Sequence set to: %s" % running_seq)
+        log(logfile=self.context.logfile, msg="Sequence set to: %s" % running_seq)
 
     def add_seq_to_memory(self, typ):
         text_ = str(self.entry_sequence.get())
@@ -382,45 +382,45 @@ class Sequencer:
         seq = self.context.parser.parse_root_sequence(text)
         self.context.root_sequence = seq
 
-        log("Root sequence set to: %s" % seq)
+        log(logfile=self.context.logfile, msg="Root sequence set to: %s" % seq)
 
     def set_octave_sequence(self, _):
         text = self.entry_octave_sequence.get()
         seq = self.context.parser.parse_octave_sequence(text)
         self.context.octave_sequence = seq
 
-        log("Octave sequence set to: %s" % seq)
+        log(logfile=self.context.logfile, msg="Octave sequence set to: %s" % seq)
 
     def set_scale_sequence(self, _):
         text = self.entry_scale_sequence.get()
         seq = self.context.parser.parse_scale_sequence(self.context, text)
         self.context.scale_sequence = seq
 
-        log("Scale sequence set to: %s" % seq)
+        log(logfile=self.context.logfile, msg="Scale sequence set to: %s" % seq)
 
     def set_poly(self, _):
         voices = self.entry_poly.get().split()
         self.context.poly = list(map(int, voices))
-        log("Poly: %s" % self.context.poly)
+        log(logfile=self.context.logfile, msg="Poly: %s" % self.context.poly)
 
     def set_poly_relative(self, _):
         voices = self.entry_poly_relative.get().split()
         self.context.poly_relative = list(map(int, voices))
-        log("Poly relative: %s" % self.context.poly_relative)
+        log(logfile=self.context.logfile, msg="Poly relative: %s" % self.context.poly_relative)
 
     def set_skip_note_parallel(self, _):
         skips = self.entry_skip_note_parallel.get().split()
         self.context.skip_notes_parallel = list(map(int, skips))
-        log("Skip notes parallel: %s" % self.context.skip_notes_parallel)
+        log(logfile=self.context.logfile, msg="Skip notes parallel: %s" % self.context.skip_notes_parallel)
 
     def set_skip_note_sequential(self, _):
         skips = self.entry_skip_note_sequential.get().split()
         self.context.skip_notes_sequential = list(map(int, skips))
-        log("Skip notes sequential: %s" % self.context.skip_notes_sequential)
+        log(logfile=self.context.logfile, msg="Skip notes sequential: %s" % self.context.skip_notes_sequential)
 
     def set_scale(self, scale_):
         self.context.scale = self.context.scales.get_scale_by_name(scale_)
-        log("Scale: %s" % self.context.scales.get_display_scale_name(scale_))
+        log(logfile=self.context.logfile, msg="Scale: %s" % self.context.scales.get_display_scale_name(scale_))
         self.strvar_status_bar.set("%s --- %s" % (self.context.scales.get_display_scale_name(scale_), self.context.scale))
         # self.end_all_notes()
 
@@ -429,20 +429,20 @@ class Sequencer:
         seq = self.context.parser.parse_off_array(text)
         self.context.off_list = seq
 
-        log("Off list: %s" % self.context.off_list)
+        log(logfile=self.context.logfile, msg="Off list: %s" % self.context.off_list)
 
     def stop_sequence(self):
         self.context.playback_on = False
-        log("Sequence stopped.")
+        log(logfile=self.context.logfile, msg="Sequence stopped.")
 
     def start_sequence(self):
         self.context.playback_on = True
-        log("Sequence started.")
+        log(logfile=self.context.logfile, msg="Sequence started.")
 
     def end_all_notes(self):
         msg = [0b10110000 + int(self.strvar_option_midi_channel.get()) - 1, 123, 0]
         self.context.midi.send_message(msg)
-        # log("All notes off.")
+        # log(logfile=self.context.logfile, msg="All notes off.")
 
     def pitch_bend(self, what):
         if what == "on":
@@ -451,7 +451,7 @@ class Sequencer:
             msg = [0b11100000 + int(self.strvar_option_midi_channel.get()) - 1, 0b0, 0b1000000]
 
         self.context.midi.send_message(msg)
-        log("Pitch bend sent.")
+        log(logfile=self.context.logfile, msg="Pitch bend sent.")
 
     def get_velocity_min_max(self):
         slider_min = int(self.strvar_vel_min.get())
@@ -499,7 +499,7 @@ class Sequencer:
         for channel, sample_seq in enumerate(self.context.sample_seqs):
             if sample_seq:
                 sample_idx = idx % len(sample_seq)
-                # log("Sample_idx: %s" % sample_idx)
+                # log(logfile=self.context.logfile, msg="Sample_idx: %s" % sample_idx)
 
                 step = (idx - 1) % len(sample_seq)
                 self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
@@ -534,7 +534,7 @@ class Sequencer:
         return off_note_idx, idx_all_off
 
     def play_sequence(self):
-        log("Play sequence is running.")
+        log(logfile=self.context.logfile, msg="Play sequence is running.")
         # mc = MidiClock(self.context)
 
         idx_all_off = 0
@@ -576,7 +576,7 @@ class Sequencer:
                             self.end_all_notes()
                             self.context.root = self.context.root_sequence[root_idx]
 
-                            log("Root changed to: %s" % self.context.root_sequence[root_idx])
+                            log(logfile=self.context.logfile, msg="Root changed to: %s" % self.context.root_sequence[root_idx])
                     except:
                         pass
 
@@ -590,7 +590,7 @@ class Sequencer:
                             self.context.scale = sc.get_scale_by_name(self.context.scale_sequence[scale_idx])
                             self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
 
-                            log("Scale changed to: %s" % self.context.scale_sequence[scale_idx])
+                            log(logfile=self.context.logfile, msg="Scale changed to: %s" % self.context.scale_sequence[scale_idx])
 
                     except:
                         pass
@@ -641,7 +641,7 @@ class Sequencer:
                                 self.play_relative_poly_notes(orig_note, param)
 
                             except Exception as e:
-                                log("There was this exception: %s" % e)
+                                log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
             self.play_sample_notes(self.idx)
 

@@ -19,6 +19,8 @@ class Context:
         self.memory_sequences = {}
         self.memory_sequences["main melody"] = []
 
+        self.logfile = open("../other/logfile.txt", "a")
+
         self.get_delay_multiplier = sequencer.strvar_delay_multiplier.get
 
         self.scales = Scales()
