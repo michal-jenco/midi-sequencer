@@ -16,6 +16,9 @@ class Context:
         self.root = None
         self.mode = None
 
+        self.memory_sequences = {}
+        self.memory_sequences["main melody"] = []
+
         self.scales = Scales()
         self.parser = Parser()
         self.set_sequence_modes = SetSequenceModes()

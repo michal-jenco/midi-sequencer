@@ -31,6 +31,10 @@ class Sequencer:
         self.context.scale = None
         self.context.playback_on = False
 
+        self.frame_memories = tk.Frame(self.root)
+        self.memories = []
+        self.memories.append(Memory(self.frame_memories, self.context, MemoryType().melody))
+
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
@@ -161,6 +165,7 @@ class Sequencer:
         self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_sequence.bind('<Return>', self.set_sequence)
+        self.entry_sequence.bind('<Control-Return>', lambda typ=MemoryType().melody: self.add_seq_to_memory(typ))
         self.entry_sequence.delete(0, tk.END)
         self.entry_sequence.insert(0, "p0321645798+;L5l100rp")
         self.set_scale("lydian")
@@ -260,6 +265,11 @@ class Sequencer:
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
         self.option_tempo_multiplier.grid()
 
+        self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=2)
+        for i, mem in enumerate(self.memories):
+            mem.show()
+            mem.grid()
+
         self.display_wobblers()
         self.sample_frame.display()
         self.root.mainloop()
@@ -299,6 +309,10 @@ class Sequencer:
         self.entry_str_seq.insert(0, self.context.str_sequence)
 
         self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
+
+    def add_seq_to_memory(self, typ):
+        text_ = str(self.entry_sequence.get())
+        self.memories[0].add_seq(text_)
 
     def set_root_sequence(self, _):
         text = self.entry_root_sequence.get()
