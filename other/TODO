@@ -1,10 +1,16 @@
 - DONE - ak je index noty v stupnici mimo, spraviť zalomenie
-- TODO - evolve sequence
-- TODO - Clock
 - DONE - Wobbler class derived from tk.Frame
 - DONE - polyphony
+- DONE - scale sequence recreates random notes
+
+- TODO - evolve sequence
+- TODO - Clock
 - TODO - all notes off on exit
-- TODO - scale sequence recreates random notes
+- TODO - wobble wobbler
+- TODO - combine multiple sine functions in wobbler
+- TODO - save and restore memory sequences/all app state
+- TODO - specify multiple channels for notes
+- TODO - wrap midi send function so it saves them to midi file
 
 
 """
