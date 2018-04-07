@@ -22,6 +22,7 @@ class Sequencer:
         self.root = tk.Tk()
         self.root.title("MIDI Sequencer")
         self.root["bg"] = "grey"
+        self.root.geometry('+0+0')
 
         self.context = Context(self.root)
         self.context.drone_seq = [0, 1, -2, -3]
@@ -270,7 +271,7 @@ class Sequencer:
         self.label_j.grid(row=9+1, column=2, sticky="w")
 
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
-        self.option_tempo_multiplier.grid()
+        self.option_tempo_multiplier.grid(row=8, column=8)
 
         self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=2)
         for i, mem in enumerate(self.memories):
