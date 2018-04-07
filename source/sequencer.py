@@ -325,13 +325,29 @@ class Sequencer:
         result = parser.parse_memory_sequence(text_)
 
         running_seq = []
+
+        prev = None
+        prev_notes = None
+        prev_str_seq = None
         for idx in result:
             str_seq = self.memories[0].get_by_index(idx)
 
-            if str_seq is not None:
-                notes, str_seq = parser.get_notes(self.context, str_seq)
-                running_seq += notes
-                self.context.str_sequence += str_seq
+            if prev == idx and prev is not None:
+                notes = prev_notes
+                str_seq = prev_str_seq
+
+            else:
+                if str_seq is not None:
+                    notes, str_seq = parser.get_notes(self.context, str_seq)
+                else:
+                    notes, str_seq = [], ""
+
+            running_seq += notes
+            self.context.str_sequence += str_seq
+
+            prev = idx
+            prev_notes = notes
+            prev_str_seq = str_seq
 
         self.entry_str_seq.delete(0, tk.END)
         self.entry_str_seq.insert(0, self.context.str_sequence)

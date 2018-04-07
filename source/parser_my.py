@@ -306,8 +306,12 @@ class Parser:
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
+            if "x" in seq:
+                idx = seq.index("x")
+                seq = seq[0:idx]
+
             for i in range(0, times):
-                result.append(int(seq[0]))
+                result.append(int(seq))
 
         return result
 
