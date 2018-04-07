@@ -11,6 +11,7 @@
 - TODO - save and restore memory sequences/all app state
 - TODO - specify multiple channels for notes
 - TODO - wrap midi send function so it saves them to midi file
+- TODO - implement logical functions (and or nor xor xnor nand) and binary counters to use with rhythm
 
 
 """
