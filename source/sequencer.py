@@ -21,7 +21,7 @@ class Sequencer:
     def __init__(self, midi_):
         self.root = tk.Tk()
         self.root.title("MIDI Sequencer")
-        self.root["bg"] = random.choice(COLORS)
+        self.root["bg"] = "black"#random.choice(COLORS)
         self.root.geometry('+0+0')
 
         self.frame_delay = tk.Frame(self.root)
@@ -32,7 +32,9 @@ class Sequencer:
                                                variable=self.strvar_delay_multiplier, length=500)
 
         self.intvar_checkbox_state = tk.IntVar(self.root)
-        self.check_delay_is_on = tk.Checkbutton(self.frame_delay, text="D e  l   a    y      o  n ?", variable=self.intvar_checkbox_state)
+        self.check_delay_is_on = tk.Checkbutton(self.frame_delay,
+                                                text="D e  l   a    y      o  n ?",
+                                                variable=self.intvar_checkbox_state)
         self.delay_is_on = lambda: True if self.intvar_checkbox_state.get() == 1 else False
 
         self.context = Context(self.root, self)

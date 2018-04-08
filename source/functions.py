@@ -9,3 +9,12 @@ def log(logfile=None, msg=""):
         logfile.flush()
 
     print(result)
+
+
+def get_date_string(type):
+    result = ""
+
+    if type == "filename":
+        result = str(datetime.datetime.now()).split(".")[0].replace(":", "-").replace(" ", "-")
+
+    return result

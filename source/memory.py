@@ -1,11 +1,15 @@
 import tkinter as tk
+import os
 
 from source.constants import MemoryType
+from source.functions import get_date_string, log
 
 
 class Memory(tk.Frame):
     def __init__(self, parent, context, typ):
         tk.Frame.__init__(self, parent, padx=5, pady=5)
+
+        self["bg"] = "gray"
 
         self.context = context
         self.memory_types = MemoryType()
@@ -27,12 +31,24 @@ class Memory(tk.Frame):
         self.listbox_sequences.bind('<Delete>', self._delete_selection)
         self.listbox_sequences.bind('<MouseWheel>', self._scroll_all_mouse)
 
+        self.frame_buttons = tk.Frame(self)
+
+        self.button_save = tk.Button(self.frame_buttons, text="  S a v e  ", command=self.save)
+        self.button_load = tk.Button(self.frame_buttons, text="  L o a d  ", command=self.load)
+        self.button_clear_all = tk.Button(self.frame_buttons, text="  C l e a r  ", command=self.clear_all)
+
     def show(self):
         self.listbox_indices.grid(row=5, column=4, pady=2)
         self.listbox_sequences.grid(row=5, column=5, pady=2)
         self.listbox_lengths.grid(row=5, column=6, pady=2)
 
         self.scrollbar.grid(row=5, column=7, sticky="ens")
+
+        self.frame_buttons.grid(row=15, column=4, columnspan=3, sticky="w", padx=5, pady=2)
+
+        self.button_save.grid(row=10, column=10, sticky="w", padx=5, pady=2)
+        self.button_load.grid(row=10, column=20, sticky="w", padx=5, pady=2)
+        self.button_clear_all.grid(row=10, column=30, sticky="w", padx=5, pady=2)
 
     def add_seq(self, seq):
         self.listbox_sequences.insert(tk.END, seq)
@@ -57,10 +73,25 @@ class Memory(tk.Frame):
 
         return result
 
-    def save(self, f):
-        pass
+    def save(self):
+        datestring = get_date_string(type="filename")
+        filename = "-".join(datestring.split("-")[0:3]) + ".memory"
+        time_ = ":".join(datestring.split("-")[3:])
+        abspath = os.path.join(self.context.memory_filepath, filename)
 
-    def load(self, f):
+        try:
+            with open(abspath, "a") as f:
+                for seq in self.get_all():
+                    f.write(time_ + " " + seq + "\n")
+                f.flush()
+
+        except Exception as e:
+            log("Saving memory sequences failed, because: %s" % e)
+
+        else:
+            log(msg="Sequences saved to file %s" % abspath)
+
+    def load(self):
         pass
 
     def _regenerate_indices(self):
@@ -73,8 +104,7 @@ class Memory(tk.Frame):
         self.listbox_lengths.delete(0, tk.END)
 
         for i in range(0, self.listbox_sequences.size()):
-            notes, _ = self.context.parser.get_notes(self.context, str(self.listbox_sequences.get(i)))
-            self.listbox_lengths.insert(tk.END, str(len(notes)))
+            self.listbox_lengths.insert(tk.END, str(len(self.listbox_sequences.get(i))))
 
     def _delete_selection(self, _):
         items = self.listbox_sequences.curselection()

@@ -18,6 +18,7 @@ class Context:
 
         self.memory_sequences = {}
         self.memory_sequences["main melody"] = []
+        self.memory_filepath = "../memory/"
 
         self.logfile = open("../other/logfile.txt", "a")
 
