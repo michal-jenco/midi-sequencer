@@ -7,6 +7,7 @@ from source.constants import MODE_SAMPLE
 class SampleFrame(tk.Frame):
     def __init__(self, parent, context):
         tk.Frame.__init__(self, parent, padx=5, pady=5)
+        self["bg"] = "darkred"
 
         self.context = context
 
