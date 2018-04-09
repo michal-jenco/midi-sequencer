@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import filedialog
 import os
 
 from source.constants import MemoryType
@@ -86,13 +87,26 @@ class Memory(tk.Frame):
                 f.flush()
 
         except Exception as e:
-            log("Saving memory sequences failed, because: %s" % e)
+            log(logfile=self.context.logfile, msg="Saving memory sequences failed, because: %s" % e)
 
         else:
-            log(msg="Sequences saved to file %s" % abspath)
+            log(logfile=self.context.logfile, msg="Sequences saved to file %s" % abspath)
 
     def load(self):
-        pass
+        print(os.getcwd())
+        filename = filedialog.askopenfilename(initialdir=r"I:\Pycharm projects\MIDI\memory", title="Select file",
+                                              filetypes=(("memory files", "*.memory"), ("all files", "*.*")))
+
+        self.clear_all()
+
+        count = 0
+        with open(filename, "r") as f:
+            for line in f:
+                timestamp, sequence = line.split()
+                self.add_seq(sequence)
+                count += 1
+
+        log(logfile=self.context.logfile, msg="Loaded %s sequences from %s" % (count, filename))
 
     def _regenerate_indices(self):
         self.listbox_indices.delete(0, tk.END)
