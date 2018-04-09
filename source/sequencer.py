@@ -99,11 +99,12 @@ class Sequencer(tk.Frame):
         self.label_status_bar = tk.Label(self.root, textvariable=self.strvar_status_bar, font=label_font)
 
         self.strvar_main_seq_len = tk.StringVar(self.frame_entries)
-        self.label_main_seq_len = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_len, font=label_font)
+        self.label_main_seq_len = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_len,
+                                           font=label_font, width=4)
 
         self.strvar_main_seq_current_idx = tk.StringVar(self.frame_entries, "aaaa")
         self.label_main_seq_current_idx = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_current_idx,
-                                                   font=label_font)
+                                                   font=label_font, width=4)
 
         self.strvar_prob_skip_note = tk.StringVar(self.frame_sliders)
         self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL, sliderlength=30,
@@ -651,7 +652,7 @@ class Sequencer(tk.Frame):
                                 x = lambda: self.d.run_delay_with_note(orig_note,
                                                                        60 / self.bpm / self.get_delay_multiplier(),
                                                                        self.df.functions[self.dc.CONSTANT_DECAY],
-                                                                       -25)
+                                                                       -10)
 
                                 Delay(self.context).create_thread_for_function(x)
 

@@ -83,7 +83,7 @@ class Memory(tk.Frame):
         try:
             with open(abspath, "a") as f:
                 for seq in self.get_all():
-                    f.write(time_ + " " + seq + "\n")
+                    f.write(time_ + "\t" + seq + "\n")
                 f.flush()
 
         except Exception as e:
@@ -101,16 +101,21 @@ class Memory(tk.Frame):
             log(logfile=self.context.logfile, msg="Could not open file dialog, because: %s" % e)
 
         else:
-            self.clear_all()
+            # self.clear_all()
 
             count = 0
-            with open(filename, "r") as f:
-                for line in f:
-                    timestamp, sequence = line.split()
-                    self.add_seq(sequence)
-                    count += 1
+            try:
+                with open(filename, "r") as f:
+                    for line in f:
+                        timestamp, sequence = line.split("\t")
+                        self.add_seq(sequence)
+                        count += 1
 
-            log(logfile=self.context.logfile, msg="Loaded %s sequences from %s" % (count, filename))
+            except Exception as e:
+                log(msg="Exception: %s" % e)
+
+            else:
+                log(logfile=self.context.logfile, msg="Loaded %s sequences from %s" % (count, filename))
 
     def _regenerate_indices(self):
         self.listbox_indices.delete(0, tk.END)

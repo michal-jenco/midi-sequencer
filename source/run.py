@@ -1,6 +1,7 @@
 from source.sequencer import Sequencer
 import threading
 import rtmidi
+import time
 
 midi = rtmidi.MidiOut()
 available_ports = midi.get_ports()
@@ -8,12 +9,13 @@ available_ports = midi.get_ports()
 print("Available MIDI devices:")
 for dev in available_ports:
     print("\t%s" % dev)
+time.sleep(0.1)
 
 midi_port = 1
 
 try:
     midi.open_port(midi_port)
-except Exception as e:
+except:
     midi.open_port(midi_port-1)
 
 thread_keys = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
