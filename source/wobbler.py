@@ -81,7 +81,7 @@ class Wobbler(tk.Frame):
 
     def display(self):
         # self.label_name.grid(row=0, column=0, columnspan=2)
-        self.label_value.grid(row=0, column=0, columnspan=2)
+        self.label_value.grid(row=5, column=0, pady=(0, 10))
 
         self.scale_min.grid(row=5, column=0, rowspan=7, padx=2)
         self.scale_max.grid(row=5, column=1, rowspan=7, padx=2)

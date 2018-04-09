@@ -21,7 +21,7 @@ class Memory(tk.Frame):
 
         self.scrollbar = tk.Scrollbar(self, command=self._scroll_all)
 
-        self.height = 16
+        self.height = 14
         self.listbox_indices = tk.Listbox(self, width=2, height=self.height,
                                           selectmode=tk.EXTENDED, yscrollcommand=self.scrollbar.set)
         self.listbox_sequences = tk.Listbox(self, width=35, height=self.height,
@@ -93,20 +93,24 @@ class Memory(tk.Frame):
             log(logfile=self.context.logfile, msg="Sequences saved to file %s" % abspath)
 
     def load(self):
-        print(os.getcwd())
-        filename = filedialog.askopenfilename(initialdir=r"I:\Pycharm projects\MIDI\memory", title="Select file",
-                                              filetypes=(("memory files", "*.memory"), ("all files", "*.*")))
+        try:
+            filename = filedialog.askopenfilename(initialdir=self.context.memory_dir, title="Select file",
+                                                  filetypes=(("memory files", "*.memory"), ("all files", "*.*")))
 
-        self.clear_all()
+        except Exception as e:
+            log(logfile=self.context.logfile, msg="Could not open file dialog, because: %s" % e)
 
-        count = 0
-        with open(filename, "r") as f:
-            for line in f:
-                timestamp, sequence = line.split()
-                self.add_seq(sequence)
-                count += 1
+        else:
+            self.clear_all()
 
-        log(logfile=self.context.logfile, msg="Loaded %s sequences from %s" % (count, filename))
+            count = 0
+            with open(filename, "r") as f:
+                for line in f:
+                    timestamp, sequence = line.split()
+                    self.add_seq(sequence)
+                    count += 1
+
+            log(logfile=self.context.logfile, msg="Loaded %s sequences from %s" % (count, filename))
 
     def _regenerate_indices(self):
         self.listbox_indices.delete(0, tk.END)

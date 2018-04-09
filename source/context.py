@@ -19,6 +19,7 @@ class Context:
         self.memory_sequences = {}
         self.memory_sequences["main melody"] = []
         self.memory_filepath = "../memory/"
+        self.memory_dir = r"I:\Pycharm projects\MIDI\memory"
 
         self.logfile = open("../other/logfile.txt", "a")
 

@@ -1,5 +1,7 @@
 import random
 
+from source.functions import log
+
 
 class Scales:
     def __init__(self):
@@ -12,7 +14,7 @@ class Scales:
         self.gypsy = [0, 2, 3, 6, 7, 8, 11, 12]
         self.octatonic = [0, 1, 3, 4, 6, 7, 9, 10, 12]
 
-        self.chromatic = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        # self.chromatic = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
         self.pentatonic = [0, 3, 5, 7, 10, 12]
         self.wholetone = [0, 2, 4, 6, 8, 10, 12]
@@ -61,15 +63,16 @@ class Scales:
 
         for scale in self.get_all():
             scale = self.get_scale_by_name(scale)
+            orig_len = len(scale)
             for octave in range(0, 2):
-                for tone in range(1, len(scale)):
+                for tone in range(1, orig_len):
                     scale.append(scale[tone] + (octave+1)*12)
 
     def get_random(self):
         scale_list = sorted(list(self.__dict__.keys()))
         chosen_scale = random.choice(scale_list)
 
-        print("Random scale: \"%s\"" % chosen_scale)
+        log(msg="Random scale: \"%s\"" % chosen_scale)
 
         return self.__dict__[chosen_scale]
 

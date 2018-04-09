@@ -241,13 +241,13 @@ class Sequencer:
                   command=self.reset_idx).grid(row=5, column=8, padx=10)
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
-        self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=4, padx=2, pady=2)
+        self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=1, padx=2, pady=2)
         self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
-        self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-        self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-        self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=5, columnspan=3)
-        self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=5, ipady=5)
-        self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=5, ipady=5)
+        self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
+        self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
+        self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
+        self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2)
+        self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
 
         self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
         self.scale_vel_min.grid(column=0, row=0)
@@ -258,19 +258,20 @@ class Sequencer:
         self.scale_delay_multiplier.grid(column=10, row=10)
 
         init_row = 0
-        self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_memory_sequence.grid(row=init_row+1, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_str_seq.grid(row=init_row+2, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_off_array.grid(row=init_row+3, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_poly.grid(row=init_row+4, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_poly_relative.grid(row=init_row+5, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_sequential.grid(row=init_row+6, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_skip_note_parallel.grid(row=init_row+7, column=5, sticky='wn', pady=(2, 2), padx=10)
-        self.entry_octave_sequence.grid(row=init_row+8, column=5, sticky="wn", pady=(2, 2), padx=10)
-        self.entry_root_sequence.grid(row=init_row+9, column=5, sticky="wn", pady=(2, 2), padx=10)
-        self.entry_scale_sequence.grid(row=init_row+10, column=5, sticky="wn", pady=(2, 2), padx=10)
+        self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_memory_sequence.grid(row=init_row+1, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_str_seq.grid(row=init_row+2, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_off_array.grid(row=init_row+3, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_poly.grid(row=init_row+4, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_poly_relative.grid(row=init_row+5, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_skip_note_sequential.grid(row=init_row+6, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_skip_note_parallel.grid(row=init_row+7, column=5, sticky='wn', pady=1, padx=10)
+        self.entry_octave_sequence.grid(row=init_row+8, column=5, sticky="wn", pady=1, padx=10)
+        self.entry_root_sequence.grid(row=init_row+9, column=5, sticky="wn", pady=1, padx=10)
+        self.entry_scale_sequence.grid(row=init_row+10, column=5, sticky="wn", pady=1, padx=10)
+        del init_row
 
-        self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=(5, 5), padx=10)
+        self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=1, padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
         self.label_main_seq_current_idx.grid(row=1, column=6)
 
@@ -291,7 +292,7 @@ class Sequencer:
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
         self.option_tempo_multiplier.grid(row=8, column=8)
 
-        self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=2)
+        self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1)
         for i, mem in enumerate(self.memories):
             mem.show()
             mem.grid()
