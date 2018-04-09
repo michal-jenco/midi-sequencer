@@ -78,17 +78,15 @@ class Scales:
 
     def get_all(self):
         all_scales = sorted(list(self.__dict__.keys()))
-
         return all_scales
 
     def get_scale_by_name(self, name_):
         return self.__getattribute__(name_)
 
-    def get_display_scale_name(self, scale):
+    @staticmethod
+    def get_display_scale_name(scale):
         return scale.replace("_", " ").capitalize()
 
     @staticmethod
     def get_note_by_index_wrap(idx, scale):
-        scale_length = len(scale)
-        octave = idx > scale_length
-        return scale[idx % scale_length] #+ (12 if octave else 0)
+        return scale[idx % len(scale)]

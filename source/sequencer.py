@@ -16,13 +16,19 @@ from source.functions import log
 from source.memory import Memory
 
 
-class Sequencer:
+class Sequencer(tk.Frame):
 
     def __init__(self, midi_):
         self.root = tk.Tk()
+        tk.Frame.__init__(self, self.root, bg="darkblue", padx=5, pady=5)
+
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         self.root.title("MIDI Sequencer")
         self.root["bg"] = "black"#random.choice(COLORS)
         self.root.geometry('+0+0')
+
+        self.threads = []
 
         self.frame_delay = tk.Frame(self.root)
         self.frame_delay["bg"] = "yellow"
@@ -140,6 +146,8 @@ class Sequencer:
         self.label_j = tk.Label(self.frame_entries, font=label_font, text="Scale Sequence".ljust(20))
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
+        self.thread_seq.daemon = True
+        self.threads.append(self.thread_seq)
         self.thread_seq.start()
 
         roots = [(c2, "C"), (cs2, "C#"), (d2, "D"), (ds2, "Eb"),
@@ -213,6 +221,11 @@ class Sequencer:
 
         self.entry_scale_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_scale_sequence.bind('<Return>', self.set_scale_sequence)
+
+    def on_closing(self):
+        log(msg="Window will be destroyed.")
+        self.root.quit()
+        self.root.destroy()
 
     def show(self):
 
@@ -307,7 +320,10 @@ class Sequencer:
             wob.grid(row=0, column=abc, padx=3, pady=5)
             wob.display()
 
-            threading.Thread(target=wob.wobble).start()
+            thread_wobbler = threading.Thread(target=wob.wobble)
+            thread_wobbler.daemon = True
+            self.threads.append(thread_wobbler)
+            thread_wobbler.start()
             abc += 1
 
     def set_current_note_idx(self, idx):
