@@ -577,13 +577,13 @@ class Sequencer(tk.Frame):
         log(logfile=self.context.logfile, msg="Sequence started.")
 
     def end_all_notes(self, i=None):
-        print("ending all notes, i=%s" % i)
+        # print("ending all notes, i=%s" % i)
         if i is None:
             for j in range(16):
                 self.context.midi.send_message([0xb0 + j, 123, 0])
         else:
             for chan in self.context.midi_channels[i]:
-                print("Sending stop note to channel %s" % chan)
+                # print("Sending stop note to channel %s" % chan)
                 self.context.midi.send_message([0xb0 + chan, 123, 0])
 
     def pitch_bend(self, what):
@@ -630,8 +630,9 @@ class Sequencer(tk.Frame):
                         self.context.midi.send_message([note[0], note[1] + poly, note[2]])
 
     def play_relative_poly_notes(self, note, note_entry, i):
-        if not str(note_entry).isalnum():
+        if not str(note_entry).isdigit():
             return
+
         try:
             scale = self.context.scale_sequences[i]
         except:
@@ -766,9 +767,10 @@ class Sequencer(tk.Frame):
 
                             try:
                                 for j, channel in enumerate(valid_channels):
-                                    param = int(self.context.str_sequences[i][loop_idx])
-                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                    self.play_relative_poly_notes(orig_note, param, i)
+                                    if self.context.str_sequences[i][loop_idx].isdigit():
+                                        param = int(self.context.str_sequences[i][loop_idx])
+                                        orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                        self.play_relative_poly_notes(orig_note, param, i)
 
                             except Exception as e:
                                 log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
