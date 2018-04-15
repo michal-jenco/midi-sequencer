@@ -295,6 +295,9 @@ class Parser:
 
         return result
 
+    def parse_midi_channels(self, text):
+        return list(map(int, text.split()))
+
     def parse_memory_sequence(self, text):
         result = []
 

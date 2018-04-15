@@ -39,6 +39,8 @@ class Context:
         self.scale_sequences = []
         self.off_sequences = []
 
+        self.midi_channels = []
+
         self.poly = []
         self.poly_relative = []
         self.skip_notes_parallel = []

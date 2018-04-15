@@ -151,6 +151,7 @@ class Sequencer(tk.Frame):
         self.label_h = tk.Label(self.frame_entries, font=label_font, text="Octave Sequence".ljust(20), height=1)
         self.label_i = tk.Label(self.frame_entries, font=label_font, text="Root Sequence".ljust(20), height=1)
         self.label_j = tk.Label(self.frame_entries, font=label_font, text="Scale Sequence".ljust(20), height=1)
+        self.label_k = tk.Label(self.frame_entries, font=label_font, text="MIDI Channels".ljust(20), height=1)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.daemon = True
@@ -198,7 +199,7 @@ class Sequencer(tk.Frame):
         self.entry_sequence.bind('<Return>', self.set_sequence)
         self.entry_sequence.bind('<Control-Return>', lambda typ=MemoryType().melody: self.add_seq_to_memory(typ))
         self.entry_sequence.delete(0, tk.END)
-        self.entry_sequence.insert(0, "p0321645798+;L5l100rp")
+        self.entry_sequence.insert(0, "054")
         self.set_scale("lydian")
         self.set_sequence(None)
 
@@ -209,36 +210,38 @@ class Sequencer(tk.Frame):
         self.entry_memory_sequence2.bind('<Return>', self.set_memory_sequence)
 
         self.entry_off_array = tk.Entry(self.frame_entries, width=80)
-        self.entry_off_array.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_off_array.bind('<Return>', self.set_off_array)
 
         self.entry_poly = tk.Entry(self.frame_entries, width=80)
-        self.entry_poly.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_poly.bind('<Return>', self.set_poly)
 
         self.entry_poly_relative = tk.Entry(self.frame_entries, width=80)
-        self.entry_poly_relative.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
 
         self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=80)
-        self.entry_skip_note_parallel.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
 
         self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=80)
-        self.entry_skip_note_sequential.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
         self.entry_root_sequence = tk.Entry(self.frame_entries, width=80)
-        self.entry_root_sequence.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_root_sequence.bind('<Return>', self.set_root_sequence)
 
         self.entry_octave_sequence = tk.Entry(self.frame_entries, width=80)
-        self.entry_octave_sequence.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_octave_sequence.bind('<Return>', self.set_octave_sequence)
 
         self.entry_scale_sequence = tk.Entry(self.frame_entries, width=80)
-        self.entry_scale_sequence.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_scale_sequence.bind('<Return>', self.set_scale_sequence)
+
+        self.entry_midi_channels = tk.Entry(self.frame_entries, width=80)
+        self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
+
+        self.entry_boxes = [self.entry_off_array, self.entry_poly, self.entry_poly_relative,
+                            self.entry_skip_note_parallel, self.entry_skip_note_sequential, self.entry_midi_channels,
+                            self.entry_root_sequence, self.entry_octave_sequence, self.entry_scale_sequence]
+
+        for entry in self.entry_boxes:
+            entry.insert(0, self.string_constants.initial_empty_sequences)
 
     def on_closing(self):
         log(msg="Window will be destroyed.")
@@ -300,6 +303,7 @@ class Sequencer(tk.Frame):
         self.entry_octave_sequence.grid(row=init_row+9, column=5, sticky="wn", pady=1, padx=10)
         self.entry_root_sequence.grid(row=init_row+10, column=5, sticky="wn", pady=1, padx=10)
         self.entry_scale_sequence.grid(row=init_row+11, column=5, sticky="wn", pady=1, padx=10)
+        self.entry_midi_channels.grid(row=init_row+12, column=5, sticky="wn", pady=1, padx=10)
         del init_row
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=1, padx=10)
@@ -317,6 +321,7 @@ class Sequencer(tk.Frame):
         self.label_h.grid(row=7+2, column=2, sticky="w", padx=(10, 0), pady=1)
         self.label_i.grid(row=8+2, column=2, sticky="w", padx=(10, 0), pady=1)
         self.label_j.grid(row=9+2, column=2, sticky="w", padx=(10, 0), pady=1)
+        self.label_k.grid(row=10+2, column=2, sticky="w", padx=(10, 0), pady=1)
 
         self.check_delay_is_on.grid(row=11, column=10)
 
@@ -463,6 +468,7 @@ class Sequencer(tk.Frame):
             sequences=text)
 
         self.context.poly_sequences = [list(map(int, voices.split())) for voices in individual_sequences]
+        self.context.poly = self.context.poly_sequences[0]
 
         log(logfile=self.context.logfile, msg="Poly: %s" % self.context.poly_sequences)
 
@@ -475,6 +481,7 @@ class Sequencer(tk.Frame):
             sequences=text)
 
         self.context.poly_relative_sequences = [list(map(int, voices.split())) for voices in individual_sequences]
+        self.context.poly_relative = self.context.poly_relative_sequences[0]
 
         log(logfile=self.context.logfile, msg="Poly relative: %s" % self.context.poly_relative_sequences)
 
@@ -519,10 +526,23 @@ class Sequencer(tk.Frame):
             sequences=text)
 
         parsed_individual_sequences = [parser.parse_off_array(seq) for seq in individual_sequences]
-        self.context.off_list = parsed_individual_sequences[0]
         self.context.off_sequences = parsed_individual_sequences
+        self.context.off_list = parsed_individual_sequences[0]
 
         log(logfile=self.context.logfile, msg="Off lists: %s" % self.context.off_sequences)
+
+    def set_midi_channels(self, _):
+        parser = self.context.parser
+        text = self.entry_midi_channels.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        parsed_individual_sequences = [parser.parse_midi_channels(seq) for seq in individual_sequences]
+        self.context.midi_channels = parsed_individual_sequences
+
+        log(logfile=self.context.logfile, msg="MIDI Channels: %s" % self.context.midi_channels)
 
     def stop_sequence(self):
         self.context.playback_on = False
@@ -626,6 +646,12 @@ class Sequencer(tk.Frame):
 
         return off_note_idx, idx_all_off
 
+    def play_midi_notes(self):
+        valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
+
+        for valid_channel in valid_midi_channels:
+            pass
+
     def play_sequence(self):
         log(logfile=self.context.logfile, msg="Play sequence is running.")
         # mc = MidiClock(self.context)
@@ -646,7 +672,7 @@ class Sequencer(tk.Frame):
             self.idx += 1
 
             if not self.context.playback_on:
-                time.sleep(0.1)
+                time.sleep(0.02)
                 continue
 
             if self.context.sequence:
@@ -691,6 +717,7 @@ class Sequencer(tk.Frame):
                     try:
                         note = self.context.sequence[loop_idx]
                     except:
+                        time.sleep(0.02)
                         continue
 
                     orig_note = self.get_orig_note(note, octave_idx)
@@ -718,8 +745,7 @@ class Sequencer(tk.Frame):
                             if self.delay_is_on():
                                 x = lambda: self.d.run_delay_with_note(orig_note,
                                                                        60 / self.bpm / self.get_delay_multiplier(),
-                                                                       self.df.functions[self.dc.CONSTANT_DECAY],
-                                                                       -10)
+                                                                       self.df.functions[self.dc.CONSTANT_DECAY], -10)
 
                                 Delay(self.context).create_thread_for_function(x)
 
