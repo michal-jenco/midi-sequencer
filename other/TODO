@@ -15,29 +15,86 @@
 
 
 """
-        while True:
-            note_value = random.choice(scale)
-            octave = random.choice([-12, 0, 12, 24])
-            velocity = 90
-            note_value = context.root + octave + note_value
+while True:
+    note_value = random.choice(scale)
+    octave = random.choice([-12, 0, 12, 24])
+    velocity = 90
+    note_value = context.root + octave + note_value
 
-            note_on = [0x90, note_value, velocity]
-            note_off = [0x80, note_value, 0]
+    note_on = [0x90, note_value, velocity]
+    note_off = [0x80, note_value, 0]
 
-            if note_cnt % context.drone_freq.get() == 0:
-                nt = scale[context.drone_seq[(drone_cnt//context.each_drone_count) % (len(context.drone_seq))]] + context.root-12
-                print(nt)
+    if note_cnt % context.drone_freq.get() == 0:
+        nt = scale[context.drone_seq[(drone_cnt//context.each_drone_count) % (len(context.drone_seq))]] + context.root-12
+        print(nt)
 
-                note_on = [0x90, nt, 100]
-                #note_off = [0x80, nt, 0]
+        note_on = [0x90, nt, 100]
+        #note_off = [0x80, nt, 0]
 
-                drone_cnt += 1
+        drone_cnt += 1
 
-            scale = context.scale
+    scale = context.scale
 
-            self.context.midi.send_message(note_on)
-            time.sleep(NoteLengths(context.bpm).get_random())
-            self.context.midi.send_message(note_off)
+    self.context.midi.send_message(note_on)
+    time.sleep(NoteLengths(context.bpm).get_random())
+    self.context.midi.send_message(note_off)
 
-            note_cnt += 1
-        """
+    note_cnt += 1
+"""
+
+"""
+if self.context.sequence:
+    if (a() > float(self.context.prob_skip_note.get())/100
+            and self.idx % self.get_tempo_multiplier() == 0):
+
+        loop_idx = self.actual_notes_played_count % len(self.context.sequence)
+        octave_idx = self.get_octave_idx()
+        self.manage_root_sequence()
+        self.manage_scale_sequence()
+
+        try:
+            note = self.context.sequence[loop_idx]
+        except:
+            time.sleep(0.02)
+            continue
+
+        orig_note = self.get_orig_note(note, octave_idx)
+        self.set_current_note_idx(loop_idx)
+        off_note_idx, idx_all_off = self.turn_off_notes(off_note_idx, idx_all_off)
+
+        skip_sequential_idx, idx_sequential_skip, skip_sequentially = \
+            self.skip_note_sequentially(skip_sequential_idx, idx_sequential_skip)
+
+        if note[1] == NOTE_PAUSE:
+            self.actual_notes_played_count += 1
+
+        if note[1] != NOTE_PAUSE:
+            if note[1] == GO_TO_START:
+                # -1 because right at the start of while True there is idx += 1
+                self.idx = -1
+                self.actual_notes_played_count = 0
+                continue
+
+            elif not self.skip_note_parallel(self.idx) and not skip_sequentially:
+                self.context.midi.send_message(orig_note)
+
+                if self.delay_is_on():
+                    x = lambda: self.d.run_delay_with_note(orig_note,
+                                                           60 / self.bpm / self.get_delay_multiplier(),
+                                                           self.df.functions[self.dc.CONSTANT_DECAY], -10)
+
+                    Delay(self.context).create_thread_for_function(x)
+
+                self.actual_notes_played_count += 1
+                idx_sequential_skip += 1
+                idx_all_off += 1
+
+                self.play_poly_notes(orig_note)
+
+                try:
+                    param = int(self.entry_str_seq.get().split()[loop_idx][0])
+                    self.play_relative_poly_notes(orig_note, param)
+
+                except Exception as e:
+                    log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
+"""
