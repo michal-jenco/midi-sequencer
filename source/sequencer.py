@@ -57,11 +57,14 @@ class Sequencer(tk.Frame):
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
         self.memories.append(Memory(self.frame_memories, self.context, MemoryType().melody))
+        self.memories[0].add_seq("031")
+        self.memories[0].add_seq("032")
+        self.memories[0].add_seq("034")
 
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
-        self.actual_notes_played_count = 0
+        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0]
 
         self.context.midi = midi_
 
@@ -236,15 +239,20 @@ class Sequencer(tk.Frame):
         self.entry_midi_channels = tk.Entry(self.frame_entries, width=80)
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
 
-        self.entry_boxes = [self.entry_off_array, self.entry_poly, self.entry_poly_relative,
+        self.entry_boxes = [self.entry_off_array, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequence,
                             self.entry_skip_note_parallel, self.entry_skip_note_sequential, self.entry_midi_channels,
                             self.entry_root_sequence, self.entry_octave_sequence, self.entry_scale_sequence]
 
         for entry in self.entry_boxes:
+            entry.delete(0, tk.END)
             entry.insert(0, self.string_constants.initial_empty_sequences)
+
+        self.entry_midi_channels.delete(0, tk.END)
+        self.entry_midi_channels.insert(0, "10|11|||")
 
     def on_closing(self):
         log(msg="Window will be destroyed.")
+        self.end_all_notes()
         self.root.quit()
         self.root.destroy()
 
@@ -354,8 +362,10 @@ class Sequencer(tk.Frame):
         self.strvar_main_seq_current_idx.set(str(idx + 1))
 
     def reset_idx(self):
-        self.actual_notes_played_count = 0
-        self.set_current_note_idx(self.actual_notes_played_count)
+        for i in self.actual_notes_played_counts:
+            self.actual_notes_played_counts[i] = 0
+
+        self.set_current_note_idx(0)
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
     def set_sequence(self, _, mode=None):
@@ -379,42 +389,48 @@ class Sequencer(tk.Frame):
 
     def set_memory_sequence(self, _):
         parser = self.context.parser
-        text_ = str(self.entry_memory_sequence.get())
+        text = str(self.entry_memory_sequence.get())
         self.context.str_sequence = ""
+        self.context.note_sequences = []
 
-        result = parser.parse_memory_sequence(text_)
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
 
-        running_seq = []
+        for i, result in enumerate(individual_sequences):
+            result = parser.parse_memory_sequence(result)
+            running_seq = []
 
-        prev = None
-        prev_notes = None
-        prev_str_seq = None
-        for idx in result:
-            str_seq = self.memories[0].get_by_index(idx)
+            prev = None
+            prev_notes = None
+            prev_str_seq = None
+            for idx in result:
+                str_seq = self.memories[0].get_by_index(idx)
 
-            if prev == idx and prev is not None:
-                notes = prev_notes
-                str_seq = prev_str_seq
+                if prev == idx and prev is not None:
+                    notes = prev_notes
+                    str_seq = prev_str_seq
 
-            else:
-                if str_seq is not None:
-                    notes, str_seq = parser.get_notes(self.context, str_seq)
                 else:
-                    notes, str_seq = [], ""
+                    if str_seq is not None:
+                        notes, str_seq = parser.get_notes(self.context, str_seq)
+                    else:
+                        notes, str_seq = [], ""
 
-            running_seq += notes
-            self.context.str_sequence += str_seq
+                running_seq += notes
+                self.context.str_sequence += str_seq
 
-            prev = idx
-            prev_notes = notes
-            prev_str_seq = str_seq
+                prev = idx
+                prev_notes = notes
+                prev_str_seq = str_seq
 
-        self.entry_str_seq.delete(0, tk.END)
-        self.entry_str_seq.insert(0, self.context.str_sequence)
-        self.context.memory_sequences["main melody"] = running_seq
-        self.context.sequence = running_seq
+            self.entry_str_seq.delete(0, tk.END)
+            self.entry_str_seq.insert(0, self.context.str_sequence)
+            self.context.note_sequences.append(running_seq)
 
-        log(logfile=self.context.logfile, msg="Sequence set to: %s" % running_seq)
+            log(logfile=self.context.logfile, msg="Sequence %s set to: %s" % (i, running_seq))
+
+        self.context.sequence = self.context.note_sequences[0]
 
     def add_seq_to_memory(self, typ):
         text_ = str(self.entry_sequence.get())
@@ -552,10 +568,15 @@ class Sequencer(tk.Frame):
         self.context.playback_on = True
         log(logfile=self.context.logfile, msg="Sequence started.")
 
-    def end_all_notes(self):
-        msg = [0b10110000 + int(self.strvar_option_midi_channel.get()) - 1, 123, 0]
-        self.context.midi.send_message(msg)
-        # log(logfile=self.context.logfile, msg="All notes off.")
+    def end_all_notes(self, i=None):
+        if i is None:
+            for i in range(16):
+                msg = [0b10110000 + i, 123, 0]
+                self.context.midi.send_message(msg)
+        else:
+            for chan in self.context.midi_channels[i]:
+                msg = [0b10110000 + chan, 123, 0]
+                self.context.midi.send_message(msg)
 
     def pitch_bend(self, what):
         if what == "on":
@@ -575,46 +596,55 @@ class Sequencer(tk.Frame):
 
         return vel_min, vel_max
 
-    def skip_note_parallel(self, idx):
-        if self.context.skip_notes_parallel:
-            for i in range(0, self.context.skip_notes_parallel.__len__()):
-                if (idx // self.get_tempo_multiplier()) % (self.context.skip_notes_parallel[i] + 1) == 0:
-                    return True
+    def skip_note_parallel(self, idx, j):
+        if self.context.skip_note_parallel_sequences:
+            if self.context.skip_note_parallel_sequences[j]:
+                for i in range(0, self.context.skip_note_parallel_sequences[j].__len__()):
+                    if (idx // self.get_tempo_multiplier()) % (self.context.skip_note_parallel_sequences[j][i] + 1) == 0:
+                        return True
 
-    def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip):
-        if self.context.skip_notes_sequential:
-            loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential)
+    def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip, i):
+        if self.context.skip_notes_sequential_sequences:
+            if self.context.skip_notes_sequential_sequences[i]:
+                loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential_sequences[i])
 
-            if idx_sequential_skip % (self.context.skip_notes_sequential[loop_skip_sequential_idx]) == 0:
-                if idx_sequential_skip > 0:
-                    return skip_sequential_idx + 1, 0, True
+                if idx_sequential_skip % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
+                    if idx_sequential_skip > 0:
+                        return skip_sequential_idx + 1, 0, True
+
         return skip_sequential_idx, idx_sequential_skip, False
 
-    def play_poly_notes(self, note):
-        if self.context.poly:
-            for poly in self.context.poly:
-                if a() < int(self.strvar_prob_skip_poly.get()) / 100.0:
-                    self.context.midi.send_message([note[0], note[1] + poly, note[2]])
+    def play_poly_notes(self, note, i):
+        if self.context.poly_sequences:
+            if self.context.poly_sequences[i]:
+                for poly in self.context.poly_sequences[i]:
+                    if a() < int(self.strvar_prob_skip_poly.get()) / 100.0:
+                        self.context.midi.send_message([note[0], note[1] + poly, note[2]])
 
-    def play_relative_poly_notes(self, note, note_entry):
+    def play_relative_poly_notes(self, note, note_entry, i):
         scale = self.context.scale
         scales = self.context.scales
 
-        if self.context.poly_relative:
-            for poly in self.context.poly_relative:
-                if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
-                    # THIS TOOK FUCKING FOREVER TO FIGURE OUT
-                    added = (scales.get_note_by_index_wrap(note_entry + poly, scale)
-                             - scales.get_note_by_index_wrap(note_entry, scale))
-                    self.context.midi.send_message([note[0], note[1] + added, note[2]])
+        if self.context.poly_relative_sequences:
 
-    def play_sample_notes(self, idx):
+            try:
+                if self.context.poly_relative_sequences[i]:
+                    for poly in self.context.poly_relative_sequences[i]:
+                        if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
+                            # THIS TOOK FUCKING FOREVER TO FIGURE OUT
+                            added = (scales.get_note_by_index_wrap(note_entry + poly, scale)
+                                     - scales.get_note_by_index_wrap(note_entry, scale))
+                            self.context.midi.send_message([note[0], note[1] + added, note[2]])
+            except:
+                pass
+
+    def play_sample_notes(self):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
             if sample_seq:
-                sample_idx = idx % len(sample_seq)
+                sample_idx = self.idx % len(sample_seq)
                 # log(logfile=self.context.logfile, msg="Sample_idx: %s" % sample_idx)
 
-                step = (idx - 1) % len(sample_seq)
+                step = (self.idx - 1) % len(sample_seq)
                 self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
 
                 if sample_seq[sample_idx]:
@@ -623,80 +653,154 @@ class Sequencer(tk.Frame):
     def get_delay_multiplier(self):
         return float(self.context.get_delay_multiplier())
 
-    def get_orig_note(self, note, octave_idx):
+    def get_orig_note(self, note, octave_idx, i, j=0):
         vel_min, vel_max = self.get_velocity_min_max()
-        octave_offset = 0 if not self.context.octave_sequence else self.context.octave_sequence[octave_idx]
+
+        octave_offset = 0
+        if self.context.octave_sequences:
+            octave_offset = 0 if not self.context.octave_sequences[i] else self.context.octave_sequences[i][octave_idx]
 
         orig_note = copy.copy(note)
-        orig_note[0] += int(self.strvar_option_midi_channel.get()) - 1
-        orig_note[1] += self.context.root - c2 - 4 + octave_offset
+        orig_note[0] += int(self.context.midi_channels[i][j])
+
+        if orig_note[1] not in {NOTE_PAUSE, GO_TO_START}:
+            orig_note[1] += self.context.root - c2 - 4 + octave_offset
+
         orig_note[2] = random.randint(vel_min, vel_max)
 
         return orig_note
 
-    def turn_off_notes(self, off_note_idx, idx_all_off):
-        if self.context.off_list:
-            loop_off_note_idx = off_note_idx % len(self.context.off_list)
+    def turn_off_notes(self, off_note_idx, idx_all_off, i):
+        if self.context.off_sequences:
+            loop_off_note_idx = off_note_idx % len(self.context.off_sequences[i])
 
             # TODO - fix integer modulo by 0
-            if idx_all_off % (self.context.off_list[loop_off_note_idx]) == 0:
+            if idx_all_off % (self.context.off_sequences[i][loop_off_note_idx]) == 0:
                 if idx_all_off > 0:
-                    self.end_all_notes()
+                    self.end_all_notes(i)
                     return off_note_idx + 1, 0
 
         return off_note_idx, idx_all_off
 
-    def play_midi_notes(self):
+    def play_midi_notes(self, idx_all_off, off_note_idx, skip_sequential_idx, idx_sequential_skip):
+        self.idx += 1
+
+        if not self.context.playback_on:
+            time.sleep(0.02)
+            return
+
+        if not self.context.note_sequences:
+            return
+
         valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
 
-        for valid_channel in valid_midi_channels:
-            pass
+        for i, valid_channels in enumerate(valid_midi_channels):
+            if self.context.note_sequences[i]:
+                if (a() > float(self.context.prob_skip_note.get())/100
+                        and self.idx % self.get_tempo_multiplier() == 0):
 
-    def get_octave_idx(self):
+                    loop_idx = self.actual_notes_played_counts[i] % len(self.context.note_sequences[i])
+                    octave_idx = self.get_octave_idx(i)
+                    self.manage_root_sequence(i)
+                    self.manage_scale_sequence(i)
+
+                    try:
+                        note = self.context.note_sequences[i][loop_idx]
+                    except:
+                        time.sleep(0.02)
+                        continue
+
+                    orig_note = self.get_orig_note(note, octave_idx, i, 0)
+
+                    self.set_current_note_idx(loop_idx)
+                    off_note_idx, idx_all_off = self.turn_off_notes(off_note_idx, idx_all_off, i)
+
+                    skip_sequential_idx, idx_sequential_skip, skip_sequentially = \
+                        self.skip_note_sequentially(skip_sequential_idx, idx_sequential_skip, i)
+
+                    if orig_note[1] == NOTE_PAUSE:
+                        self.actual_notes_played_counts[i] += 1
+                        continue
+
+                    if orig_note[1] != NOTE_PAUSE:
+                        if orig_note[1] == GO_TO_START:
+                            self.idx = -1
+                            self.actual_notes_played_counts[i] = 0
+                            continue
+
+                        elif not self.skip_note_parallel(self.idx, i) and not skip_sequentially:
+                            for j, channel in enumerate(valid_channels):
+                                orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                self.context.midi.send_message(orig_note)
+                                # print("%s: Sent MIDI note %s to channel: %s" % (time.time(),orig_note, orig_note[0]-0x90))
+
+                            for j, channel in enumerate(valid_channels):
+                                orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                if self.delay_is_on():
+                                    x = lambda: self.d.run_delay_with_note(orig_note,
+                                                                           60 / self.bpm / self.get_delay_multiplier(),
+                                                                           self.df.functions[self.dc.CONSTANT_DECAY], -10)
+
+                                    Delay(self.context).create_thread_for_function(x)
+
+                            self.actual_notes_played_counts[i] += 1
+                            idx_sequential_skip += 1
+                            idx_all_off += 1
+
+                            for j, channel in enumerate(valid_channels):
+                                orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                self.play_poly_notes(orig_note, i)
+
+                            try:
+                                param = int(self.entry_str_seq.get().split()[loop_idx][0])
+                                for j, channel in enumerate(valid_channels):
+                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                    self.play_relative_poly_notes(orig_note, param, i)
+
+                            except Exception as e:
+                                log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
+
+    def get_octave_idx(self, i):
         try:
-            octave_idx = self.actual_notes_played_count % len(self.context.octave_sequence)
+            octave_idx = self.actual_notes_played_counts[i] % len(self.context.octave_sequences[i])
         except:
             octave_idx = 0
 
         return octave_idx
 
-    def manage_root_sequence(self):
+    def manage_root_sequence(self, i):
         try:
-            root_idx = self.actual_notes_played_count % len(self.context.root_sequence)
+            root_idx = self.actual_notes_played_counts[i] % len(self.context.root_sequences[i])
 
-            if self.context.root_sequence[root_idx] != self.context.root:
-                self.end_all_notes()
-                self.context.root = self.context.root_sequence[root_idx]
+            if self.context.root_sequences[i][root_idx] != self.context.root:
+                self.end_all_notes(i)
+                self.context.root = self.context.root_sequences[i][root_idx]
 
                 log(logfile=self.context.logfile,
-                    msg="Root changed to: %s" % self.context.root_sequence[root_idx])
+                    msg="Root changed to: %s" % self.context.root_sequences[i][root_idx])
         except:
             pass
 
-    def manage_scale_sequence(self):
+    def manage_scale_sequence(self, i):
         try:
             sc = self.context.scales
-            scale_idx = self.actual_notes_played_count % len(self.context.scale_sequence)
+            scale_idx = self.actual_notes_played_counts[i] % len(self.context.scale_sequences[i])
 
-            if self.context.scale != sc.get_scale_by_name(self.context.scale_sequence[scale_idx]):
-                self.end_all_notes()
-                self.context.scale = sc.get_scale_by_name(self.context.scale_sequence[scale_idx])
+            if self.context.scale != sc.get_scale_by_name(self.context.scale_sequences[i][scale_idx]):
+                self.end_all_notes(i)
+                self.context.scale = sc.get_scale_by_name(self.context.scale_sequences[i][scale_idx])
                 self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
 
-                log(logfile=self.context.logfile, msg="Scale changed to: %s" % self.context.scale_sequence[scale_idx])
+                log(logfile=self.context.logfile,
+                    msg="Scale changed to: %s" % self.context.scale_sequences[i][scale_idx])
 
         except:
             pass
 
     def play_sequence(self):
         log(logfile=self.context.logfile, msg="Play sequence is running.")
+
         # mc = MidiClock(self.context)
-
-        idx_all_off = 0
-        off_note_idx = 0
-
-        skip_sequential_idx = 0
-        idx_sequential_skip = 0
 
         ########################################################
         ########################################################
@@ -704,13 +808,16 @@ class Sequencer(tk.Frame):
         ########################################################
         ########################################################
 
+        idx_all_off = 0
+        off_note_idx = 0
+
+        skip_sequential_idx = 0
+        idx_sequential_skip = 0
+
         while True:
-            self.idx += 1
+            self.play_midi_notes(idx_all_off, off_note_idx, skip_sequential_idx, idx_sequential_skip)
 
-            if not self.context.playback_on:
-                time.sleep(0.02)
-                continue
-
+            """
             if self.context.sequence:
                 if (a() > float(self.context.prob_skip_note.get())/100
                         and self.idx % self.get_tempo_multiplier() == 0):
@@ -765,8 +872,9 @@ class Sequencer(tk.Frame):
 
                             except Exception as e:
                                 log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
+            """
 
-            self.play_sample_notes(self.idx)
+            self.play_sample_notes()
 
             sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
             time.sleep(sleep_time)
