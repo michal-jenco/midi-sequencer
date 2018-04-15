@@ -29,6 +29,16 @@ class Context:
         self.parser = Parser()
         self.set_sequence_modes = SetSequenceModes()
 
+        self.note_sequences = []
+        self.poly_sequences = []
+        self.poly_relative_sequences = []
+        self.skip_notes_sequential_sequences = []
+        self.skip_note_parallel_sequences = []
+        self.octave_sequences = []
+        self.root_sequences = []
+        self.scale_sequences = []
+        self.off_sequences = []
+
         self.poly = []
         self.poly_relative = []
         self.skip_notes_parallel = []
@@ -43,17 +53,8 @@ class Context:
             self.sample_seqs.append([])
 
         self.playback_on = False
-
         self.off_list = []
-
         self.prob_skip_note = tk.StringVar(root)
-
-        self.drone_seq = []
-        self.each_drone_count = 2*2
-        self.drone_freq = tk.IntVar(root)
-        self.drone_freq.set(8)
-
-        self.scale_freq = 8
 
         self.comma_pause = 1
         self.dot_pause = 2

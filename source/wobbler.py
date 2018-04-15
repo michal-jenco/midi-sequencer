@@ -132,13 +132,11 @@ class Wobbler(tk.Frame):
             cc = self.cc.get_cc_by_name(self.strvar_option_cc.get())
             msg = [0xb0 + int(self.strvar_option_midi_channel.get()) - 1, cc, value]
 
-            print(msg)
-
             self.context.midi.send_message(msg)
             self.strvar_label_value.set("Value: %s" % value)
-            self.output_file.write("%s %s\n" % (time.time(), value))
+            # self.output_file.write("%s %s\n" % (time.time(), value))
 
-            sleep_time = float(self.strvar_scale_wait_time.get()) / 1000
+            sleep_time = float(self.strvar_scale_wait_time.get()) * 0.001
 
             if self.intvar_check_10x.get() == ENABLED:
                 sleep_time *= 10

@@ -14,6 +14,7 @@ from source.delay import Delay
 from source.helpful_functions import a
 from source.functions import log
 from source.memory import Memory
+from source.string_constants import StringConstants
 
 
 class Sequencer(tk.Frame):
@@ -25,8 +26,10 @@ class Sequencer(tk.Frame):
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.root.title("MIDI Sequencer")
-        self.root["bg"] = "black"#random.choice(COLORS)
+        self.root["bg"] = "black"
         self.root.geometry('+0+0')
+
+        self.string_constants = StringConstants()
 
         self.threads = []
 
@@ -85,7 +88,10 @@ class Sequencer(tk.Frame):
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
         self.strvar_option_midi_channel = tk.StringVar(self.root, "12")
-        self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *[x for x in range(1, 17)])
+        self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *range(17))
+
+        self.strvar_option_midi_channel2 = tk.StringVar(self.root, "11")
+        self.option_midi_channel2 = tk.OptionMenu(self.root, self.strvar_option_midi_channel2, *range(17))
 
         self.frame_entries = tk.Frame(self.root)
         self.frame_entries["bg"] = "purple"
@@ -102,7 +108,7 @@ class Sequencer(tk.Frame):
         self.label_main_seq_len = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_len,
                                            font=label_font, width=4)
 
-        self.strvar_main_seq_current_idx = tk.StringVar(self.frame_entries, "aaaa")
+        self.strvar_main_seq_current_idx = tk.StringVar(self.frame_entries, "")
         self.label_main_seq_current_idx = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_current_idx,
                                                    font=label_font, width=4)
 
@@ -135,8 +141,7 @@ class Sequencer(tk.Frame):
                                   variable=self.context.bpm, length=500)
 
         self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence".ljust(20), height=1)
-        self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence 1".ljust(20), height=1)
-        self.label_a3 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence 2".ljust(20), height=1)
+        self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence".ljust(20), height=1)
         self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr".ljust(20), height=1)
         self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes".ljust(20), height=1)
         self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony".ljust(20), height=1)
@@ -204,27 +209,35 @@ class Sequencer(tk.Frame):
         self.entry_memory_sequence2.bind('<Return>', self.set_memory_sequence)
 
         self.entry_off_array = tk.Entry(self.frame_entries, width=80)
+        self.entry_off_array.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_off_array.bind('<Return>', self.set_off_array)
 
         self.entry_poly = tk.Entry(self.frame_entries, width=80)
+        self.entry_poly.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_poly.bind('<Return>', self.set_poly)
 
         self.entry_poly_relative = tk.Entry(self.frame_entries, width=80)
+        self.entry_poly_relative.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
 
         self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note_parallel.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
 
         self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note_sequential.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
         self.entry_root_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_root_sequence.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_root_sequence.bind('<Return>', self.set_root_sequence)
 
         self.entry_octave_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_octave_sequence.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_octave_sequence.bind('<Return>', self.set_octave_sequence)
 
         self.entry_scale_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_scale_sequence.insert(0, self.string_constants.initial_empty_sequences)
         self.entry_scale_sequence.bind('<Return>', self.set_scale_sequence)
 
     def on_closing(self):
@@ -278,7 +291,6 @@ class Sequencer(tk.Frame):
         init_row = 0
         self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=1, padx=10)
         self.entry_memory_sequence.grid(row=init_row+1, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_memory_sequence2.grid(row=init_row+2, column=5, sticky='wn', pady=1, padx=10)
         self.entry_str_seq.grid(row=init_row+3, column=5, sticky='wn', pady=1, padx=10)
         self.entry_off_array.grid(row=init_row+4, column=5, sticky='wn', pady=1, padx=10)
         self.entry_poly.grid(row=init_row+5, column=5, sticky='wn', pady=1, padx=10)
@@ -296,7 +308,6 @@ class Sequencer(tk.Frame):
 
         self.label_a.grid(row=0, column=2, sticky="w", padx=(10, 0), pady=1)
         self.label_a2.grid(row=1, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_a3.grid(row=2, column=2, sticky="w", padx=(10, 0), pady=1)
         self.label_b.grid(row=1+2, column=2, sticky="w", padx=(10, 0), pady=1)
         self.label_c.grid(row=2+2, column=2, sticky="w", padx=(10, 0), pady=1)
         self.label_d.grid(row=3+2, column=2, sticky="w", padx=(10, 0), pady=1)
@@ -310,6 +321,7 @@ class Sequencer(tk.Frame):
         self.check_delay_is_on.grid(row=11, column=10)
 
         self.option_midi_channel.grid(row=11-5, column=8, pady=1)
+        self.option_midi_channel2.grid(row=11-4, column=8, pady=1)
         self.option_tempo_multiplier.grid(row=8, column=8)
 
         self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1)
@@ -404,45 +416,93 @@ class Sequencer(tk.Frame):
         self.memories[0].add_seq(text_)
 
     def set_root_sequence(self, _):
+        parser = self.context.parser
         text = self.entry_root_sequence.get()
-        seq = self.context.parser.parse_root_sequence(text)
-        self.context.root_sequence = seq
 
-        log(logfile=self.context.logfile, msg="Root sequence set to: %s" % seq)
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.root_sequences = [parser.parse_root_sequence(seq) for seq in individual_sequences]
+        self.context.root_sequence = self.context.root_sequences[0]
+
+        log(logfile=self.context.logfile, msg="Root sequences set to: %s" % self.context.root_sequences)
 
     def set_octave_sequence(self, _):
+        parser = self.context.parser
         text = self.entry_octave_sequence.get()
-        seq = self.context.parser.parse_octave_sequence(text)
-        self.context.octave_sequence = seq
 
-        log(logfile=self.context.logfile, msg="Octave sequence set to: %s" % seq)
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.octave_sequences = [parser.parse_octave_sequence(seq) for seq in individual_sequences]
+        self.context.octave_sequence = self.context.octave_sequences[0]
+
+        log(logfile=self.context.logfile, msg="Octave sequences set to: %s" % self.context.octave_sequences)
 
     def set_scale_sequence(self, _):
+        parser = self.context.parser
         text = self.entry_scale_sequence.get()
-        seq = self.context.parser.parse_scale_sequence(self.context, text)
-        self.context.scale_sequence = seq
 
-        log(logfile=self.context.logfile, msg="Scale sequence set to: %s" % seq)
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.scale_sequences = [parser.parse_scale_sequence(self.context, seq) for seq in individual_sequences]
+        self.context.scale_sequence = self.context.scale_sequences[0]
+
+        log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
     def set_poly(self, _):
-        voices = self.entry_poly.get().split()
-        self.context.poly = list(map(int, voices))
-        log(logfile=self.context.logfile, msg="Poly: %s" % self.context.poly)
+        parser = self.context.parser
+        text = self.entry_poly.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.poly_sequences = [list(map(int, voices.split())) for voices in individual_sequences]
+
+        log(logfile=self.context.logfile, msg="Poly: %s" % self.context.poly_sequences)
 
     def set_poly_relative(self, _):
-        voices = self.entry_poly_relative.get().split()
-        self.context.poly_relative = list(map(int, voices))
-        log(logfile=self.context.logfile, msg="Poly relative: %s" % self.context.poly_relative)
+        parser = self.context.parser
+        text = self.entry_poly_relative.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.poly_relative_sequences = [list(map(int, voices.split())) for voices in individual_sequences]
+
+        log(logfile=self.context.logfile, msg="Poly relative: %s" % self.context.poly_relative_sequences)
 
     def set_skip_note_parallel(self, _):
-        skips = self.entry_skip_note_parallel.get().split()
-        self.context.skip_notes_parallel = list(map(int, skips))
-        log(logfile=self.context.logfile, msg="Skip notes parallel: %s" % self.context.skip_notes_parallel)
+        parser = self.context.parser
+        text = self.entry_skip_note_parallel.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.skip_note_parallel_sequences = [list(map(int, skips.split())) for skips in individual_sequences]
+        self.context.skip_notes_parallel = self.context.skip_note_parallel_sequences[0]
+
+        log(logfile=self.context.logfile, msg="Skip notes parallel: %s" % self.context.skip_note_parallel_sequences)
 
     def set_skip_note_sequential(self, _):
-        skips = self.entry_skip_note_sequential.get().split()
-        self.context.skip_notes_sequential = list(map(int, skips))
-        log(logfile=self.context.logfile, msg="Skip notes sequential: %s" % self.context.skip_notes_sequential)
+        parser = self.context.parser
+        text = self.entry_skip_note_sequential.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        self.context.skip_notes_sequential_sequences = [list(map(int, skips.split())) for skips in individual_sequences]
+        self.context.skip_notes_sequential = self.context.skip_notes_sequential_sequences[0]
+
+        log(logfile=self.context.logfile, msg="Skip notes sequential: %s" % self.context.skip_notes_sequential_sequences)
 
     def set_scale(self, scale_):
         self.context.scale = self.context.scales.get_scale_by_name(scale_)
@@ -451,11 +511,18 @@ class Sequencer(tk.Frame):
         # self.end_all_notes()
 
     def set_off_array(self, _):
+        parser = self.context.parser
         text = self.entry_off_array.get()
-        seq = self.context.parser.parse_off_array(text)
-        self.context.off_list = seq
 
-        log(logfile=self.context.logfile, msg="Off list: %s" % self.context.off_list)
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        parsed_individual_sequences = [parser.parse_off_array(seq) for seq in individual_sequences]
+        self.context.off_list = parsed_individual_sequences[0]
+        self.context.off_sequences = parsed_individual_sequences
+
+        log(logfile=self.context.logfile, msg="Off lists: %s" % self.context.off_sequences)
 
     def stop_sequence(self):
         self.context.playback_on = False
@@ -534,7 +601,7 @@ class Sequencer(tk.Frame):
                     self.context.midi.send_message(sample_seq[sample_idx])
 
     def get_delay_multiplier(self):
-            return float(self.context.get_delay_multiplier())
+        return float(self.context.get_delay_multiplier())
 
     def get_orig_note(self, note, octave_idx):
         vel_min, vel_max = self.get_velocity_min_max()

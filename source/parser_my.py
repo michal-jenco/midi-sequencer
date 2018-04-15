@@ -425,3 +425,16 @@ class Parser:
             offset = 0
 
         return offset
+
+    def parse_multiple_sequences_separated(self, separator, sequences):
+        if separator not in sequences:
+            return [sequences]
+
+        else:
+            try:
+                result = sequences.split(separator)
+                return result
+
+            except Exception as e:
+                print("Could not parse_multiple_sequences_separated(self, separator, sequences), because: %s" % e)
+                return []
