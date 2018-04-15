@@ -10,7 +10,7 @@ class Context:
         self.midi = None
 
         self.scale = None
-        self.bpm = tk.StringVar(root, "150")
+        self.bpm = tk.StringVar(root, "120")
         self.sequence = None
         self.str_sequence = None
         self.root = None
@@ -30,6 +30,7 @@ class Context:
         self.set_sequence_modes = SetSequenceModes()
 
         self.note_sequences = []
+        self.str_sequences = [0, 0, 0, 0, 0, 0, 0]
         self.poly_sequences = []
         self.poly_relative_sequences = []
         self.skip_notes_sequential_sequences = []

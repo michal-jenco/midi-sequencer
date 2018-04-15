@@ -363,7 +363,10 @@ class Sequencer(tk.Frame):
 
     def reset_idx(self):
         for i in self.actual_notes_played_counts:
-            self.actual_notes_played_counts[i] = 0
+            try:
+                self.actual_notes_played_counts[i] = 0
+            except:
+                pass
 
         self.set_current_note_idx(0)
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
@@ -400,6 +403,7 @@ class Sequencer(tk.Frame):
         for i, result in enumerate(individual_sequences):
             result = parser.parse_memory_sequence(result)
             running_seq = []
+            str_seq = ""
 
             prev = None
             prev_notes = None
@@ -423,6 +427,10 @@ class Sequencer(tk.Frame):
                 prev = idx
                 prev_notes = notes
                 prev_str_seq = str_seq
+
+            self.context.str_sequences[i] = str_seq
+
+            print("Str sequence for idx %s set to: %s" % (i, self.context.str_sequences[i]))
 
             self.entry_str_seq.delete(0, tk.END)
             self.entry_str_seq.insert(0, self.context.str_sequence)
@@ -622,11 +630,14 @@ class Sequencer(tk.Frame):
                         self.context.midi.send_message([note[0], note[1] + poly, note[2]])
 
     def play_relative_poly_notes(self, note, note_entry, i):
-        scale = self.context.scale
+        try:
+            scale = self.context.scale_sequences[i]
+        except:
+            scale = self.context.scale
+
         scales = self.context.scales
 
         if self.context.poly_relative_sequences:
-
             try:
                 if self.context.poly_relative_sequences[i]:
                     for poly in self.context.poly_relative_sequences[i]:
@@ -635,8 +646,9 @@ class Sequencer(tk.Frame):
                             added = (scales.get_note_by_index_wrap(note_entry + poly, scale)
                                      - scales.get_note_by_index_wrap(note_entry, scale))
                             self.context.midi.send_message([note[0], note[1] + added, note[2]])
-            except:
-                pass
+
+            except Exception as e:
+                print("Exception in function play_relative_poly_notes: %s" % e)
 
     def play_sample_notes(self):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
@@ -752,8 +764,8 @@ class Sequencer(tk.Frame):
                                 self.play_poly_notes(orig_note, i)
 
                             try:
-                                param = int(self.entry_str_seq.get().split()[loop_idx][0])
                                 for j, channel in enumerate(valid_channels):
+                                    param = int(self.context.str_sequences[i].split()[loop_idx])
                                     orig_note = self.get_orig_note(note, octave_idx, i, j)
                                     self.play_relative_poly_notes(orig_note, param, i)
 
