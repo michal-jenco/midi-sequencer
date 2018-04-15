@@ -652,6 +652,42 @@ class Sequencer(tk.Frame):
         for valid_channel in valid_midi_channels:
             pass
 
+    def get_octave_idx(self):
+        try:
+            octave_idx = self.actual_notes_played_count % len(self.context.octave_sequence)
+        except:
+            octave_idx = 0
+
+        return octave_idx
+
+    def manage_root_sequence(self):
+        try:
+            root_idx = self.actual_notes_played_count % len(self.context.root_sequence)
+
+            if self.context.root_sequence[root_idx] != self.context.root:
+                self.end_all_notes()
+                self.context.root = self.context.root_sequence[root_idx]
+
+                log(logfile=self.context.logfile,
+                    msg="Root changed to: %s" % self.context.root_sequence[root_idx])
+        except:
+            pass
+
+    def manage_scale_sequence(self):
+        try:
+            sc = self.context.scales
+            scale_idx = self.actual_notes_played_count % len(self.context.scale_sequence)
+
+            if self.context.scale != sc.get_scale_by_name(self.context.scale_sequence[scale_idx]):
+                self.end_all_notes()
+                self.context.scale = sc.get_scale_by_name(self.context.scale_sequence[scale_idx])
+                self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
+
+                log(logfile=self.context.logfile, msg="Scale changed to: %s" % self.context.scale_sequence[scale_idx])
+
+        except:
+            pass
+
     def play_sequence(self):
         log(logfile=self.context.logfile, msg="Play sequence is running.")
         # mc = MidiClock(self.context)
@@ -680,39 +716,9 @@ class Sequencer(tk.Frame):
                         and self.idx % self.get_tempo_multiplier() == 0):
 
                     loop_idx = self.actual_notes_played_count % len(self.context.sequence)
-
-                    # TODO make this a function
-                    try:
-                        octave_idx = self.actual_notes_played_count % len(self.context.octave_sequence)
-                    except:
-                        octave_idx = 0
-
-                    # TODO make this a function
-                    try:
-                        root_idx = self.actual_notes_played_count % len(self.context.root_sequence)
-
-                        if self.context.root_sequence[root_idx] != self.context.root:
-                            self.end_all_notes()
-                            self.context.root = self.context.root_sequence[root_idx]
-
-                            log(logfile=self.context.logfile, msg="Root changed to: %s" % self.context.root_sequence[root_idx])
-                    except:
-                        pass
-
-                    # TODO make this a function
-                    try:
-                        sc = self.context.scales
-                        scale_idx = self.actual_notes_played_count % len(self.context.scale_sequence)
-
-                        if self.context.scale != sc.get_scale_by_name(self.context.scale_sequence[scale_idx]):
-                            self.end_all_notes()
-                            self.context.scale = sc.get_scale_by_name(self.context.scale_sequence[scale_idx])
-                            self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
-
-                            log(logfile=self.context.logfile, msg="Scale changed to: %s" % self.context.scale_sequence[scale_idx])
-
-                    except:
-                        pass
+                    octave_idx = self.get_octave_idx()
+                    self.manage_root_sequence()
+                    self.manage_scale_sequence()
 
                     try:
                         note = self.context.sequence[loop_idx]
@@ -721,9 +727,7 @@ class Sequencer(tk.Frame):
                         continue
 
                     orig_note = self.get_orig_note(note, octave_idx)
-
                     self.set_current_note_idx(loop_idx)
-
                     off_note_idx, idx_all_off = self.turn_off_notes(off_note_idx, idx_all_off)
 
                     skip_sequential_idx, idx_sequential_skip, skip_sequentially = \
