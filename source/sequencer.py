@@ -248,7 +248,7 @@ class Sequencer(tk.Frame):
             entry.insert(0, self.string_constants.initial_empty_sequences)
 
         self.entry_midi_channels.delete(0, tk.END)
-        self.entry_midi_channels.insert(0, "10|11|||")
+        self.entry_midi_channels.insert(0, "10|11|12|13|")
 
     def on_closing(self):
         log(msg="Window will be destroyed.")
@@ -362,11 +362,13 @@ class Sequencer(tk.Frame):
         self.strvar_main_seq_current_idx.set(str(idx + 1))
 
     def reset_idx(self):
-        for i in self.actual_notes_played_counts:
+        for i, _ in enumerate(self.actual_notes_played_counts):
             try:
                 self.actual_notes_played_counts[i] = 0
             except:
                 pass
+
+        self.idx = 0
 
         self.set_current_note_idx(0)
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
@@ -404,10 +406,12 @@ class Sequencer(tk.Frame):
             result = parser.parse_memory_sequence(result)
             running_seq = []
             str_seq = ""
+            aaaaaaaaa = ""
 
             prev = None
             prev_notes = None
             prev_str_seq = None
+
             for idx in result:
                 str_seq = self.memories[0].get_by_index(idx)
 
@@ -423,12 +427,13 @@ class Sequencer(tk.Frame):
 
                 running_seq += notes
                 self.context.str_sequence += str_seq
+                aaaaaaaaa += str_seq
 
                 prev = idx
                 prev_notes = notes
                 prev_str_seq = str_seq
 
-            self.context.str_sequences[i] = str_seq.split()
+            self.context.str_sequences[i] = aaaaaaaaa.split()
 
             print("Str sequence for idx %s set to: %s" % (i, self.context.str_sequences[i]))
 
@@ -646,8 +651,8 @@ class Sequencer(tk.Frame):
                     for poly in self.context.poly_relative_sequences[i]:
                         if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
                             # THIS TOOK FUCKING FOREVER TO FIGURE OUT
-                            added = (scales.get_note_by_index_wrap(note_entry + poly, scale)
-                                     - scales.get_note_by_index_wrap(note_entry, scale))
+                            added = int(scales.get_note_by_index_wrap(note_entry + poly, scale))\
+                                    - int(scales.get_note_by_index_wrap(note_entry, scale))
                             self.context.midi.send_message([note[0], note[1] + added, note[2]])
 
             except Exception as e:
@@ -679,7 +684,7 @@ class Sequencer(tk.Frame):
         orig_note[0] += int(self.context.midi_channels[i][j])
 
         if orig_note[1] not in {NOTE_PAUSE, GO_TO_START}:
-            orig_note[1] += self.context.root - c2 - 4 + octave_offset
+            orig_note[1] += self.context.roots[i] - c2 - 4 + octave_offset
 
         orig_note[2] = random.randint(vel_min, vel_max)
 
@@ -691,10 +696,13 @@ class Sequencer(tk.Frame):
                 loop_off_note_idx = off_note_idx % len(self.context.off_sequences[i])
 
                 # TODO - fix integer modulo by 0
-                if idx_all_off % (self.context.off_sequences[i][loop_off_note_idx]) == 0:
-                    if idx_all_off > 0:
-                        self.end_all_notes(i)
-                        return off_note_idx + 1, 0
+                try:
+                    if idx_all_off % (self.context.off_sequences[i][loop_off_note_idx]) == 0:
+                        if idx_all_off > 0:
+                            self.end_all_notes(i)
+                            return off_note_idx + 1, 0
+                except:
+                    print("Don't divide by zero pls :D")
 
         return off_note_idx, idx_all_off
 
@@ -713,7 +721,10 @@ class Sequencer(tk.Frame):
                 if (a() > float(self.context.prob_skip_note.get())/100
                         and self.idx % self.get_tempo_multiplier() == 0):
 
+                    # print("self.actual_notes_played_counts[%s] = %s" % (i, self.actual_notes_played_counts[i]))
+                    # print("Loop_idx for i=%s is %s" % (i, loop_idx))
                     loop_idx = self.actual_notes_played_counts[i] % len(self.context.note_sequences[i])
+
                     octave_idx = self.get_octave_idx(i)
                     self.manage_root_sequence(i)
                     self.manage_scale_sequence(i)
@@ -767,13 +778,15 @@ class Sequencer(tk.Frame):
 
                             try:
                                 for j, channel in enumerate(valid_channels):
+                                    print("self.context.str_sequences[i][loop_idx] is %s" % self.context.str_sequences[i][loop_idx])
                                     if self.context.str_sequences[i][loop_idx].isdigit():
                                         param = int(self.context.str_sequences[i][loop_idx])
                                         orig_note = self.get_orig_note(note, octave_idx, i, j)
                                         self.play_relative_poly_notes(orig_note, param, i)
 
                             except Exception as e:
-                                log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
+                                pass
+                                # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def get_octave_idx(self, i):
         try:
@@ -787,9 +800,9 @@ class Sequencer(tk.Frame):
         try:
             root_idx = self.actual_notes_played_counts[i] % len(self.context.root_sequences[i])
 
-            if self.context.root_sequences[i][root_idx] != self.context.root:
+            if self.context.root_sequences[i][root_idx] != self.context.roots[i]:
                 self.end_all_notes(i)
-                self.context.root = self.context.root_sequences[i][root_idx]
+                self.context.roots[i] = self.context.root_sequences[i][root_idx]
 
                 log(logfile=self.context.logfile,
                     msg="Root changed to: %s" % self.context.root_sequences[i][root_idx])

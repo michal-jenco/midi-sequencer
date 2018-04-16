@@ -129,7 +129,7 @@ class Wobbler(tk.Frame):
                 else:
                     value = max_
 
-            cc = self.cc.get_cc_by_name(self.strvar_option_cc.get())
+            cc = self.volcas[self.strvar_option_volca.get()]().get_cc_by_name(self.strvar_option_cc.get())
             msg = [0xb0 + int(self.strvar_option_midi_channel.get()) - 1, cc, value]
 
             self.context.midi.send_message(msg)

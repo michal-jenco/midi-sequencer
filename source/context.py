@@ -14,6 +14,7 @@ class Context:
         self.sequence = None
         self.str_sequence = None
         self.root = None
+        self.roots = [0, 0, 0, 0, 0, 0, 0]
         self.mode = None
 
         self.memory_sequences = {}
