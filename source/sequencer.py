@@ -715,10 +715,6 @@ class Sequencer(tk.Frame):
         return off_note_idx, idx_all_off
 
     def play_midi_notes(self):
-        if not self.context.playback_on:
-            time.sleep(0.02)
-            return
-
         if not self.context.note_sequences:
             return
 
@@ -842,6 +838,10 @@ class Sequencer(tk.Frame):
         ########################################################
 
         while True:
+            if not self.context.playback_on:
+                time.sleep(0.02)
+                continue
+
             self.play_midi_notes()
             self.play_sample_notes()
 

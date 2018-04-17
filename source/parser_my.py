@@ -10,7 +10,7 @@ class Parser:
     def __init__(self):
         pass
 
-    def get_notes(self, context, text, iii, mode=MODE_SIMPLE):
+    def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
 
         # print("text inside: %s\n" % text)
 
