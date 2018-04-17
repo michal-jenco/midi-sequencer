@@ -3,6 +3,7 @@ import tkinter as tk
 from source.scales import Scales
 from source.parser_my import Parser
 from source.constants import SetSequenceModes
+from source.notes import *
 
 
 class Context:
@@ -10,11 +11,12 @@ class Context:
         self.midi = None
 
         self.scale = None
+        self.scales_individual = ["lydian", "lydian", "lydian", "lydian", "lydian", "lydian"]
         self.bpm = tk.StringVar(root, "120")
         self.sequence = None
         self.str_sequence = None
         self.root = None
-        self.roots = [0, 0, 0, 0, 0, 0, 0]
+        self.roots = [e2, e2, e2, e2, e2, e2, e2]
         self.mode = None
 
         self.memory_sequences = {}
@@ -41,7 +43,7 @@ class Context:
         self.scale_sequences = []
         self.off_sequences = []
 
-        self.midi_channels = []
+        self.midi_channels = [[10], [11], [12], [13]]
 
         self.poly = []
         self.poly_relative = []

@@ -61,6 +61,11 @@ class Sequencer(tk.Frame):
         self.memories[0].add_seq("032")
         self.memories[0].add_seq("034")
 
+        self.idx_all_off = [0, 0, 0, 0, 0, 0, 0]
+        self.off_note_idx = [0, 0, 0, 0, 0, 0, 0]
+        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0]
+        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0]
+
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
@@ -374,12 +379,14 @@ class Sequencer(tk.Frame):
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
     def set_sequence(self, _, mode=None):
+        return
+
         parser = self.context.parser
         text_ = str(self.entry_sequence.get())
 
         if mode is None:
             log(logfile=self.context.logfile, msg="\"%s\"" % text_)
-            notes, str_seq = parser.get_notes(self.context, text_)
+            notes, str_seq = parser.get_notes(self.context, text_, None)
             self.context.str_sequence = str_seq
 
         elif mode is self.context.set_sequence_modes.dont_regenerate:
@@ -405,7 +412,6 @@ class Sequencer(tk.Frame):
         for i, result in enumerate(individual_sequences):
             result = parser.parse_memory_sequence(result)
             running_seq = []
-            str_seq = ""
             aaaaaaaaa = ""
 
             prev = None
@@ -421,7 +427,7 @@ class Sequencer(tk.Frame):
 
                 else:
                     if str_seq is not None:
-                        notes, str_seq = parser.get_notes(self.context, str_seq)
+                        notes, str_seq = parser.get_notes(self.context, str_seq, i)
                     else:
                         notes, str_seq = [], ""
 
@@ -485,6 +491,8 @@ class Sequencer(tk.Frame):
 
         self.context.scale_sequences = [parser.parse_scale_sequence(self.context, seq) for seq in individual_sequences]
         self.context.scale_sequence = self.context.scale_sequences[0]
+
+        #self.set_memory_sequence(None)
 
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
@@ -702,11 +710,11 @@ class Sequencer(tk.Frame):
                             self.end_all_notes(i)
                             return off_note_idx + 1, 0
                 except:
-                    print("Don't divide by zero pls :D")
+                    print("Don't modulo by zero pls :D")
 
         return off_note_idx, idx_all_off
 
-    def play_midi_notes(self, idx_all_off, off_note_idx, skip_sequential_idx, idx_sequential_skip):
+    def play_midi_notes(self):
         if not self.context.playback_on:
             time.sleep(0.02)
             return
@@ -738,10 +746,10 @@ class Sequencer(tk.Frame):
                     orig_note = self.get_orig_note(note, octave_idx, i, 0)
 
                     self.set_current_note_idx(loop_idx)
-                    off_note_idx[i], idx_all_off[i] = self.turn_off_notes(off_note_idx[i], idx_all_off[i], i)
+                    self.off_note_idx[i], self.idx_all_off[i] = self.turn_off_notes(self.off_note_idx[i], self.idx_all_off[i], i)
 
-                    skip_sequential_idx[i], idx_sequential_skip[i], skip_sequentially = \
-                        self.skip_note_sequentially(skip_sequential_idx[i], idx_sequential_skip[i], i)
+                    self.skip_sequential_idx[i], self.idx_sequential_skip[i], skip_sequentially = \
+                        self.skip_note_sequentially(self.skip_sequential_idx[i], self.idx_sequential_skip[i], i)
 
                     if orig_note[1] == NOTE_PAUSE:
                         self.actual_notes_played_counts[i] += 1
@@ -769,8 +777,8 @@ class Sequencer(tk.Frame):
                                     Delay(self.context).create_thread_for_function(x)
 
                             self.actual_notes_played_counts[i] += 1
-                            idx_sequential_skip[i] += 1
-                            idx_all_off[i] += 1
+                            self.idx_sequential_skip[i] += 1
+                            self.idx_all_off[i] += 1
 
                             for j, channel in enumerate(valid_channels):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
@@ -778,7 +786,6 @@ class Sequencer(tk.Frame):
 
                             try:
                                 for j, channel in enumerate(valid_channels):
-                                    print("self.context.str_sequences[i][loop_idx] is %s" % self.context.str_sequences[i][loop_idx])
                                     if self.context.str_sequences[i][loop_idx].isdigit():
                                         param = int(self.context.str_sequences[i][loop_idx])
                                         orig_note = self.get_orig_note(note, octave_idx, i, j)
@@ -790,11 +797,9 @@ class Sequencer(tk.Frame):
 
     def get_octave_idx(self, i):
         try:
-            octave_idx = self.actual_notes_played_counts[i] % len(self.context.octave_sequences[i])
+            return self.actual_notes_played_counts[i] % len(self.context.octave_sequences[i])
         except:
-            octave_idx = 0
-
-        return octave_idx
+            return 0
 
     def manage_root_sequence(self, i):
         try:
@@ -805,7 +810,7 @@ class Sequencer(tk.Frame):
                 self.context.roots[i] = self.context.root_sequences[i][root_idx]
 
                 log(logfile=self.context.logfile,
-                    msg="Root changed to: %s" % self.context.root_sequences[i][root_idx])
+                    msg="Root for i=%s changed to: %s" % (i, self.context.root_sequences[i][root_idx]))
         except:
             pass
 
@@ -814,14 +819,14 @@ class Sequencer(tk.Frame):
             sc = self.context.scales
             scale_idx = self.actual_notes_played_counts[i] % len(self.context.scale_sequences[i])
 
-            if self.context.scale != sc.get_scale_by_name(self.context.scale_sequences[i][scale_idx]):
+            if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
                 self.end_all_notes(i)
-                self.context.scale = sc.get_scale_by_name(self.context.scale_sequences[i][scale_idx])
+                self.context.scales_individual[i] = self.context.scale_sequences[i][scale_idx]
                 self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
+                self.set_memory_sequence(None)
 
                 log(logfile=self.context.logfile,
-                    msg="Scale changed to: %s" % self.context.scale_sequences[i][scale_idx])
-
+                    msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
         except:
             pass
 
@@ -836,13 +841,8 @@ class Sequencer(tk.Frame):
         ########################################################
         ########################################################
 
-        self.idx_all_off = [0, 0, 0, 0, 0, 0, 0]
-        self.off_note_idx = [0, 0, 0, 0, 0, 0, 0]
-        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0]
-        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0]
-
         while True:
-            self.play_midi_notes(self.idx_all_off, self.off_note_idx, self.skip_sequential_idx, self.idx_sequential_skip)
+            self.play_midi_notes()
             self.play_sample_notes()
 
             sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht

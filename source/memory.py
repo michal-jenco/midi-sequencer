@@ -96,23 +96,23 @@ class Memory(tk.Frame):
         try:
             filename = filedialog.askopenfilename(initialdir=self.context.memory_dir, title="Select file",
                                                   filetypes=(("memory files", "*.memory"), ("all files", "*.*")))
-
         except Exception as e:
             log(logfile=self.context.logfile, msg="Could not open file dialog, because: %s" % e)
 
         else:
-            # self.clear_all()
-
             count = 0
             try:
                 with open(filename, "r") as f:
                     for line in f:
-                        timestamp, sequence = line.split("\t")
-                        self.add_seq(sequence)
-                        count += 1
+                        try:
+                            timestamp, sequence = line.split("\t")
+                            self.add_seq(sequence)
+                            count += 1
+                        except:
+                            log(logfile=self.context.logfile, msg="Could not load sequence %s" % line)
 
             except Exception as e:
-                log(msg="Exception: %s" % e)
+                log(logfile=self.context.logfile, msg="Exception trying to load a file: %s" % e)
 
             else:
                 log(logfile=self.context.logfile, msg="Loaded %s sequences from %s" % (count, filename))
