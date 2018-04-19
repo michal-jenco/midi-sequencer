@@ -31,6 +31,8 @@ class Memory(tk.Frame):
 
         self.listbox_sequences.bind('<Delete>', self._delete_selection)
         self.listbox_sequences.bind('<MouseWheel>', self._scroll_all_mouse)
+        self.listbox_indices.bind('<MouseWheel>', self._scroll_all_mouse)
+        self.listbox_lengths.bind('<MouseWheel>', self._scroll_all_mouse)
 
         self.frame_buttons = tk.Frame(self)
 
@@ -145,8 +147,9 @@ class Memory(tk.Frame):
         self.listbox_lengths.yview(*args)
 
     def _scroll_all_mouse(self, event):
-        arg = -event.delta // 120*5, "units"
+        arg = -event.delta // 120*3, "units"
         self.listbox_indices.yview_scroll(*arg)
         self.listbox_sequences.yview_scroll(*arg)
         self.listbox_lengths.yview_scroll(*arg)
+        return "break"
 
