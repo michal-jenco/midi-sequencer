@@ -552,7 +552,11 @@ class Sequencer(tk.Frame):
         self.context.scale = self.context.scales.get_scale_by_name(scale_)
         log(logfile=self.context.logfile, msg="Scale: %s" % self.context.scales.get_display_scale_name(scale_))
         self.strvar_status_bar.set("%s --- %s" % (self.context.scales.get_display_scale_name(scale_), self.context.scale))
-        # self.end_all_notes()
+
+        for i, _ in enumerate(self.context.scale_sequences):
+            self.context.scale_sequences[i] = [scale_]
+
+        self.context.scales_individual = [scale_]*10
 
     def set_off_array(self, _):
         parser = self.context.parser
