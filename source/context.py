@@ -38,10 +38,10 @@ class Context:
         self.poly_relative_sequences = []
         self.skip_notes_sequential_sequences = []
         self.skip_note_parallel_sequences = []
-        self.octave_sequences = []
+        self.octave_sequences = [[], [], [], [-2]]
         self.root_sequences = []
         self.scale_sequences = []
-        self.off_sequences = []
+        self.off_sequences = [[], [], [], [1]]
 
         self.midi_channels = [[10], [11], [12], [13]]
 

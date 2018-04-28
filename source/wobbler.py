@@ -17,7 +17,7 @@ class Wobbler(tk.Frame):
         self.parent = parent
 
         self.cc = None
-        self.volcas = OrderedDict((("Keys", CCKeys), ("FM", CCFM), ("Sample", CCSample), ("Kick", CCKeys)))
+        self.volcas = OrderedDict((("Keys", CCKeys), ("FM", CCFM), ("Sample", CCSample), ("Kick", CCKick)))
 
         self.control_change = None
         self.function = None
@@ -72,6 +72,7 @@ class Wobbler(tk.Frame):
         menu.delete(0, "end")
 
         all_ccs = self.volcas[self.strvar_option_volca.get()]().get_all()
+        print(all_ccs)
 
         for string in all_ccs:
             menu.add_command(label=string,

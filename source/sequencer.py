@@ -252,6 +252,9 @@ class Sequencer(tk.Frame):
             entry.delete(0, tk.END)
             entry.insert(0, self.string_constants.initial_empty_sequences)
 
+        self.entry_off_array.insert(tk.END, " 1")
+        self.entry_octave_sequence.insert(tk.END, " -2")
+
         self.entry_midi_channels.delete(0, tk.END)
         self.entry_midi_channels.insert(0, "10|11|12|13|")
 
@@ -603,6 +606,10 @@ class Sequencer(tk.Frame):
                 # print("Sending stop note to channel %s" % chan)
                 self.context.midi.send_message([0xb0 + chan, 123, 0])
 
+        for x in range(0, 60):
+            self.context.midi.send_message([0x90 + 13, x, 0])
+
+
     def pitch_bend(self, what):
         if what == "on":
             msg = [0b11100000 + int(self.strvar_option_midi_channel.get()) - 1, 0x00, 0x60]
@@ -663,7 +670,7 @@ class Sequencer(tk.Frame):
                     for poly in self.context.poly_relative_sequences[i]:
                         if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
                             # THIS TOOK FUCKING FOREVER TO FIGURE OUT
-                            added = int(scales.get_note_by_index_wrap(note_entry + poly, scale))\
+                            added = int(scales.get_note_by_index_wrap(note_entry + poly, scale)) \
                                     - int(scales.get_note_by_index_wrap(note_entry, scale))
                             self.context.midi.send_message([note[0], note[1] + added, note[2]])
 
