@@ -16,13 +16,14 @@ class Context:
         self.sequence = None
         self.str_sequence = None
         self.root = None
-        self.roots = [e2, e2, e2, e2, e2, e2, e2]
+        self.roots = [e2, e2, e2, e2, e2, e2, e2, e2]
         self.mode = None
 
         self.memory_sequences = {}
         self.memory_sequences["main melody"] = []
         self.memory_filepath = "../memory/"
         self.memory_dir = r"I:\Pycharm projects\MIDI\memory"
+        self.state_dir = r"../state/"
 
         self.logfile = open("../other/logfile.txt", "a")
 
@@ -33,17 +34,19 @@ class Context:
         self.set_sequence_modes = SetSequenceModes()
 
         self.note_sequences = []
-        self.str_sequences = [0, 0, 0, 0, 0, 0, 0]
+        self.str_sequences = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.poly_sequences = []
         self.poly_relative_sequences = []
         self.skip_notes_sequential_sequences = []
         self.skip_note_parallel_sequences = []
-        self.octave_sequences = [[], [], [], [-2]]
+        self.octave_sequences = [[], [], [], [], [], [], [-2]]
         self.root_sequences = []
         self.scale_sequences = []
-        self.off_sequences = [[], [], [], [1]]
+        self.off_sequences = [[], [], [], [], [], [], [1]]
 
-        self.midi_channels = [[10], [11], [12], [13]]
+        self.kick_note_values = []
+
+        self.midi_channels = [[10], [10], [10], [11], [11], [11], [13]]
 
         self.poly = []
         self.poly_relative = []

@@ -1,4 +1,5 @@
 import datetime
+import tkinter as tk
 
 
 def log(logfile=None, msg=""):
@@ -18,3 +19,8 @@ def get_date_string(type):
         result = str(datetime.datetime.now()).split(".")[0].replace(":", "-").replace(" ", "-")
 
     return result
+
+
+def insert_into_entry(entry, seq):
+    entry.delete(0, tk.END)
+    entry.insert(0, seq)

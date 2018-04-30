@@ -1,8 +1,10 @@
 import tkinter as tk
+from tkinter import filedialog
 import threading
 import time
 import copy
 import random
+import os
 
 from source.note_lengths import NoteLengths
 from source.context import Context
@@ -12,9 +14,10 @@ from source.constants import *
 from source.sample_frame import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
-from source.functions import log
+from source.functions import log, get_date_string, insert_into_entry
 from source.memory import Memory
 from source.string_constants import StringConstants
+from source.internal_state import InternalState
 
 
 class Sequencer(tk.Frame):
@@ -69,7 +72,7 @@ class Sequencer(tk.Frame):
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
-        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0]
+        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0]
 
         self.context.midi = midi_
 
@@ -247,6 +250,8 @@ class Sequencer(tk.Frame):
         self.entry_boxes = [self.entry_off_array, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequence,
                             self.entry_skip_note_parallel, self.entry_skip_note_sequential, self.entry_midi_channels,
                             self.entry_root_sequence, self.entry_octave_sequence, self.entry_scale_sequence]
+        self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "skip_par", "skip_seq",
+                                  "midi_channels", "root_seq", "octave_seq", "scale_seq"]
 
         for entry in self.entry_boxes:
             entry.delete(0, tk.END)
@@ -256,7 +261,9 @@ class Sequencer(tk.Frame):
         self.entry_octave_sequence.insert(tk.END, " -2")
 
         self.entry_midi_channels.delete(0, tk.END)
-        self.entry_midi_channels.insert(0, "10|11|12|13|")
+        self.entry_midi_channels.insert(0, "10|10|10|11|11|11|13")
+
+        self.press_all_enters()
 
     def on_closing(self):
         log(msg="Window will be destroyed.")
@@ -289,6 +296,22 @@ class Sequencer(tk.Frame):
         tk.Button(self.root,
                   text="Reset IDX",
                   command=self.reset_idx).grid(row=5, column=8, padx=10)
+
+        tk.Button(self.root,
+                  text="I N I T",
+                  command=self.init_entries).grid(row=12, column=8, padx=10)
+
+        tk.Button(self.root,
+                  text="E N T E R",
+                  command=self.press_all_enters).grid(row=13, column=8, padx=10)
+
+        tk.Button(self.root,
+                  text="Save state",
+                  command=self.save_internal_state).grid(row=14, column=8, padx=10)
+
+        tk.Button(self.root,
+                  text="Load state",
+                  command=self.load_internal_state).grid(row=15, column=8, padx=10)
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=1, padx=2, pady=2)
@@ -380,6 +403,102 @@ class Sequencer(tk.Frame):
 
         self.set_current_note_idx(0)
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
+
+    def init_entries(self):
+        for entry in self.entry_boxes:
+            if entry is not self.entry_midi_channels:
+                entry.delete(0, tk.END)
+                entry.insert(0, self.string_constants.initial_empty_sequences)
+
+        self.press_all_enters()
+
+    def press_all_enters(self):
+        self.set_memory_sequence(None)
+        self.set_off_array(None)
+        self.set_poly(None)
+        self.set_poly_relative(None)
+        self.set_skip_note_sequential(None)
+        self.set_skip_note_parallel(None)
+        self.set_octave_sequence(None)
+        self.set_root_sequence(None)
+        self.set_scale_sequence(None)
+        self.set_midi_channels(None)
+
+    def get_internal_state(self, typ=None):
+        if typ is None:
+            state = {}
+            memory = self.memories[0].get_all()
+
+            for i, entry in enumerate(self.entry_boxes):
+                state[self.entry_boxes_names[i]] = str(entry.get())
+
+            print("State: %s" % state)
+            print("Memory: %s" % memory)
+            return InternalState(memory, state)
+
+        else:
+            pass
+
+    def save_internal_state(self, typ=None):
+        if typ is None:
+            f = os.path.join(self.context.state_dir, get_date_string("filename") + ".state")
+            internal_state = self.get_internal_state()
+
+            try:
+                with open(f, "w") as f:
+                    for name, content in internal_state.entries.items():
+                        f.write("%s\t%s\n" % (name, content))
+
+                    for seq in internal_state.memory:
+                        f.write("memory\t%s\n" % seq)
+                    # f.write(self.string_constants.saved_state_separator + "\n")
+                    f.flush()
+
+            except Exception as e:
+                print("Couldn't S A V E state, because: %s" % e)
+
+        else:
+            pass
+
+    def load_internal_state(self, typ=None):
+        if typ is None:
+            try:
+                filename = filedialog.askopenfilename(initialdir=self.context.state_dir, title="Select file",
+                                                      filetypes=(("state files", "*.state"), ("all files", "*.*")))
+            except Exception as e:
+                log(logfile=self.context.logfile, msg="Could not open file dialog, because: %s" % e)
+
+            else:
+                try:
+                    with open(filename, "r") as f:
+                        lines = f.readlines()
+
+                    print(lines)
+
+                    self.memories[0].clear_all()
+
+                    for line in lines:
+                        if line != "\n":
+                            typ, content = line.split("\t")
+
+                            if typ in self.entry_boxes_names:
+                                idx = self.entry_boxes_names.index(typ)
+                                insert_into_entry(entry=self.entry_boxes[idx], seq=content)
+
+                            elif typ == "memory":
+                                self.memories[0].add_seq(content)
+
+                            else:
+                                print("Something weird in state file: %s" % typ)
+
+                except Exception as e:
+                    print("Couldn't L O A D state, because: %s" % e)
+
+                else:
+                    self.press_all_enters()
+
+        else:
+            pass
 
     def set_sequence(self, _, mode=None):
         return
@@ -606,10 +725,6 @@ class Sequencer(tk.Frame):
                 # print("Sending stop note to channel %s" % chan)
                 self.context.midi.send_message([0xb0 + chan, 123, 0])
 
-        for x in range(0, 60):
-            self.context.midi.send_message([0x90 + 13, x, 0])
-
-
     def pitch_bend(self, what):
         if what == "on":
             msg = [0b11100000 + int(self.strvar_option_midi_channel.get()) - 1, 0x00, 0x60]
@@ -771,8 +886,22 @@ class Sequencer(tk.Frame):
                         elif not self.skip_note_parallel(self.idx, i) and not skip_sequentially:
                             for j, channel in enumerate(valid_channels):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
+
+                                print(self.context.kick_note_values)
+
+                                if self.context.kick_note_values:
+                                    self.context.midi.send_message([0x90 + 13, self.context.kick_note_values[-1], 0])
+                                    print("ended kick noite %s" % self.context.kick_note_values[-1])
+
+                                    self.context.kick_note_values = []
+
+                                if orig_note[0] - 0x90 == 13:
+                                    self.context.kick_note_values.append(orig_note[1])
+                                    print("appended kick noite %s" % orig_note[1])
+
                                 self.context.midi.send_message(orig_note)
-                                # print("%s: Sent MIDI note %s to channel: %s" % (time.time(),orig_note, orig_note[0]-0x90))
+
+                                print("%s: Sent MIDI note %s to channel: %s" % (time.time(),orig_note, orig_note[0]-0x90))
 
                             for j, channel in enumerate(valid_channels):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
