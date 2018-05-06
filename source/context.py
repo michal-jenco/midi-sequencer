@@ -30,7 +30,7 @@ class Context:
         self.get_delay_multiplier = sequencer.strvar_delay_multiplier.get
 
         self.scales = Scales()
-        self.parser = Parser()
+        self.parser = Parser(self)
         self.set_sequence_modes = SetSequenceModes()
 
         self.note_sequences = []

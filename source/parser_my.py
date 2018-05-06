@@ -2,13 +2,15 @@ import random
 import itertools
 
 from source.scales import Scales
+from source.string_constants import StringConstants
 from source.constants import note_dict as constants_note_dict
 from source.constants import MODE_SAMPLE, MODE_SIMPLE, NOTE_PAUSE, GO_TO_START
 
 
 class Parser:
-    def __init__(self):
-        pass
+    def __init__(self, context):
+        self.context = context
+        self.string_constants = StringConstants()
 
     def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
 
@@ -304,16 +306,24 @@ class Parser:
 
         sequences = list(text.split())
 
-        for seq in sequences:
+        for iii, seq in enumerate(sequences):
             times = self.parse_param("x", str(seq))
 
             if "x" in seq:
                 idx = seq.index("x")
                 seq = seq[0:idx]
 
-            for i in range(0, times):
-                result.append(int(seq))
+            if seq.startswith(self.string_constants.literal_memory_sequence):
+                result.append((seq, times))
 
+            else:
+                try:
+                    for i in range(0, times):
+                        result.append(int(seq))
+                except Exception as e:
+                    print("Exception in parse_memory_sequence: %s" % e)
+
+        print("aaaaaaaaaaa " + str(result))
         return result
 
     def parse_root_sequence(self, text):
