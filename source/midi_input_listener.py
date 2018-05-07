@@ -20,7 +20,8 @@ class MIDIInputListener(object):
         for i, dev in enumerate(self.available_ports):
             if self.input_name in dev:
                 self.port = i
-                print(i, dev)
+                print("Found %s on port %s" % (self.input_name, i))
+                break
 
         print("I am going to open %s on port %s." % (input_name, self.port))
 
