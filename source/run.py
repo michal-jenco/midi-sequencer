@@ -1,7 +1,9 @@
-from source.sequencer import Sequencer
 import threading
 import rtmidi
 import time
+
+from source.string_constants import StringConstants
+from source.sequencer import Sequencer
 
 midi = rtmidi.MidiOut()
 available_ports = midi.get_ports()
@@ -9,14 +11,18 @@ available_ports = midi.get_ports()
 print("Available MIDI devices:")
 for dev in available_ports:
     print("\t%s" % dev)
-time.sleep(0.1)
 
-midi_port = 1
+for i, dev in enumerate(available_ports):
+    if StringConstants().BESPECO_MIDI_NAME in dev:
+        bespeco_port = i
+        print("Bespeco port: %s" % bespeco_port)
 
 try:
-    midi.open_port(midi_port)
+    midi.open_port(bespeco_port)
 except:
-    midi.open_port(midi_port-1)
+    midi.open_port(0)
+
+time.sleep(0.1)
 
 thread_keys = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
 # thread_sample = threading.Thread(target=lambda: Sequencer(midi).show(), args=())

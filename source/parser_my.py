@@ -323,7 +323,6 @@ class Parser:
                 except Exception as e:
                     print("Exception in parse_memory_sequence: %s" % e)
 
-        print("aaaaaaaaaaa " + str(result))
         return result
 
     def parse_root_sequence(self, text):

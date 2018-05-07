@@ -5,6 +5,7 @@ import time
 import copy
 import random
 import os
+import queue
 
 from source.note_lengths import NoteLengths
 from source.context import Context
@@ -18,6 +19,7 @@ from source.functions import log, get_date_string, insert_into_entry
 from source.memory import Memory
 from source.string_constants import StringConstants
 from source.internal_state import InternalState
+from source.midi_input_listener import MIDIInputListener
 
 
 class Sequencer(tk.Frame):
@@ -33,6 +35,11 @@ class Sequencer(tk.Frame):
         self.root.geometry('+0+0')
 
         self.string_constants = StringConstants()
+
+        self.midi_input_queue = queue.Queue(maxsize=0)
+        self.midi_input = MIDIInputListener(self.string_constants.AKAI_MIDIMIX_NAME,
+                                            self.midi_input_queue,
+                                            interval=.005)
 
         self.threads = []
 
@@ -796,7 +803,7 @@ class Sequencer(tk.Frame):
                         if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
                             # THIS TOOK FUCKING FOREVER TO FIGURE OUT
                             added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
-                                    - int(scales.get_note_by_index_wrap(note_entry, scale)))
+                                     - int(scales.get_note_by_index_wrap(note_entry, scale)))
                             self.context.midi.send_message([note[0], note[1] + added, note[2]])
                             # print("sent poly relative note %s" % note)
 
@@ -913,12 +920,13 @@ class Sequencer(tk.Frame):
                                 # print("%s: Sent MIDI note %s to channel: %s" % (time.time(),
                                 #  orig_note, orig_note[0]-0x90))
 
-                            for j, channel in enumerate(valid_channels):
-                                orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                if self.delay_is_on():
+                            if self.delay_is_on():
+                                for j, channel in enumerate(valid_channels):
+                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
                                     x = lambda: self.d.run_delay_with_note(orig_note,
-                                                                           60 / self.bpm / self.get_delay_multiplier(),
-                                                                           self.df.functions[self.dc.CONSTANT_DECAY], -10)
+                                                                     60 / self.bpm / self.get_delay_multiplier(),
+                                                                     self.df.functions[self.dc.CONSTANT_DECAY],
+                                                                     -10)
 
                                     Delay(self.context).create_thread_for_function(x)
 
@@ -930,16 +938,16 @@ class Sequencer(tk.Frame):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
                                 self.play_poly_notes(orig_note, i)
 
-                            # try:
-                            for j, channel in enumerate(valid_channels):
-                                if self.context.str_sequences[i][loop_idx].isdigit():
-                                    param = int(self.context.str_sequences[i][loop_idx])
-                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                    self.play_relative_poly_notes(orig_note, param, i)
+                            try:
+                                for j, channel in enumerate(valid_channels):
+                                    if self.context.str_sequences[i][loop_idx].isdigit():
+                                        param = int(self.context.str_sequences[i][loop_idx])
+                                        orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                        self.play_relative_poly_notes(orig_note, param, i)
 
-                            # except Exception as e:
-                            #     pass
-                            #     log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
+                            except Exception as e:
+                                pass
+                                # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def get_octave_idx(self, i):
         try:
@@ -957,12 +965,13 @@ class Sequencer(tk.Frame):
 
                 log(logfile=self.context.logfile,
                     msg="Root for i=%s changed to: %s" % (i, self.context.root_sequences[i][root_idx]))
-        except:
+
+        except Exception as e:
             pass
+            # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def manage_scale_sequence(self, i):
         try:
-            sc = self.context.scales
             scale_idx = self.actual_notes_played_counts[i] % len(self.context.scale_sequences[i])
 
             if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
@@ -973,8 +982,10 @@ class Sequencer(tk.Frame):
 
                 log(logfile=self.context.logfile,
                     msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
-        except:
+
+        except Exception as e:
             pass
+            # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def play_sequence(self):
         log(logfile=self.context.logfile, msg="Play sequence is running.")
