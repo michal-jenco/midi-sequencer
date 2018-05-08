@@ -51,7 +51,7 @@ class SampleFrame(tk.Frame):
         if click:
             msg += "X"
 
-        self.strvars[channel].set(msg[:60])
+        self.strvars[channel].set(msg[:40])
 
     def display(self):
         offset = 5

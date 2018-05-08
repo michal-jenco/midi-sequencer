@@ -10,7 +10,7 @@ from source.constants import *
 
 class Wobbler(tk.Frame):
     def __init__(self, parent, context, name_):
-        tk.Frame.__init__(self, parent, bg="darkblue", padx=0, pady=5)
+        tk.Frame.__init__(self, parent, bg="darkblue", padx=0, pady=0)
 
         self.name = name_
         self.context = context
@@ -63,9 +63,8 @@ class Wobbler(tk.Frame):
         self.intvar_check_10x = tk.IntVar(DISABLED)
         self.check_x10 = tk.Checkbutton(self, text="x10", variable=self.intvar_check_10x)
 
-        self.output_file = open("../other/" + self.name + ".txt", "a")
-
-        print("%s created" % self.name)
+        # self.output_file = open("../other/" + self.name + ".txt", "a")
+        # print("%s created" % self.name)
 
     def update_cc_list(self, _):
         menu = self.option_cc["menu"]
@@ -88,12 +87,12 @@ class Wobbler(tk.Frame):
         self.scale_wait_time.grid(row=5, column=2, rowspan=7, padx=0)
         self.scale_func_factor.grid(row=5, column=3, rowspan=7, padx=0)
 
-        self.button_toggle.grid(row=7, column=20, pady=1)
+        self.button_toggle.grid(row=7, column=20, pady=0)
 
-        self.option_volca.grid(row=4, column=20, pady=1)
-        self.option_func.grid(row=6, column=20, pady=1)
-        self.option_cc.grid(row=5, column=20, pady=1)
-        self.option_midi_channel.grid(row=9, column=20, pady=1)
+        self.option_volca.grid(row=4, column=20, pady=0)
+        self.option_func.grid(row=6, column=20, pady=0)
+        self.option_cc.grid(row=5, column=20, pady=0)
+        self.option_midi_channel.grid(row=9, column=20, pady=0)
 
         self.check_x10.grid(row=10, column=20)
 

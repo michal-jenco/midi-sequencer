@@ -113,6 +113,7 @@ class Sequencer(tk.Frame):
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 3"))
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 4"))
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 5"))
+        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 6"))
 
         self.sample_frame = SampleFrame(self.root, self.context)
 
