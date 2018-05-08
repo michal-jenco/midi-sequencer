@@ -21,7 +21,7 @@ class Memory(tk.Frame):
 
         self.scrollbar = tk.Scrollbar(self, command=self._scroll_all)
 
-        self.height = 14
+        self.height = 20
         self.listbox_indices = tk.Listbox(self, width=2, height=self.height,
                                           selectmode=tk.EXTENDED, yscrollcommand=self.scrollbar.set)
         self.listbox_sequences = tk.Listbox(self, width=35, height=self.height,

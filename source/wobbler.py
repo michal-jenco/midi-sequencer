@@ -10,7 +10,7 @@ from source.constants import *
 
 class Wobbler(tk.Frame):
     def __init__(self, parent, context, name_):
-        tk.Frame.__init__(self, parent, bg="darkblue", padx=5, pady=5)
+        tk.Frame.__init__(self, parent, bg="darkblue", padx=0, pady=5)
 
         self.name = name_
         self.context = context
@@ -58,7 +58,7 @@ class Wobbler(tk.Frame):
         self.option_cc = tk.OptionMenu(self, self.strvar_option_cc, *self.cc_all)
 
         self.strvar_option_midi_channel = tk.StringVar(self, "12")
-        self.option_midi_channel = tk.OptionMenu(self, self.strvar_option_midi_channel, *range(1,17))
+        self.option_midi_channel = tk.OptionMenu(self, self.strvar_option_midi_channel, *range(1, 17))
 
         self.intvar_check_10x = tk.IntVar(DISABLED)
         self.check_x10 = tk.Checkbutton(self, text="x10", variable=self.intvar_check_10x)
@@ -81,13 +81,12 @@ class Wobbler(tk.Frame):
         self.strvar_option_cc.set(all_ccs[0])
 
     def display(self):
-        # self.label_name.grid(row=0, column=0, columnspan=2)
-        self.label_value.grid(row=5, column=0, pady=(0, 10))
+        self.label_value.grid(row=5, column=0, pady=(0, 10), columnspan=2)
 
-        self.scale_min.grid(row=5, column=0, rowspan=7, padx=2)
-        self.scale_max.grid(row=5, column=1, rowspan=7, padx=2)
-        self.scale_wait_time.grid(row=5, column=2, rowspan=7, padx=2)
-        self.scale_func_factor.grid(row=5, column=3, rowspan=7, padx=2)
+        self.scale_min.grid(row=5, column=0, rowspan=7, padx=0)
+        self.scale_max.grid(row=5, column=1, rowspan=7, padx=0)
+        self.scale_wait_time.grid(row=5, column=2, rowspan=7, padx=0)
+        self.scale_func_factor.grid(row=5, column=3, rowspan=7, padx=0)
 
         self.button_toggle.grid(row=7, column=20, pady=1)
 
@@ -99,8 +98,8 @@ class Wobbler(tk.Frame):
         self.check_x10.grid(row=10, column=20)
 
     def wobble(self):
-
         loop_cnt = 0
+        
         while True:
             if not self.running:
                 time.sleep(0.1)
@@ -112,19 +111,19 @@ class Wobbler(tk.Frame):
             min_ = slider_min if slider_min < slider_max else slider_max
             max_ = slider_max if slider_max > slider_min else slider_min
 
-            scale_ = int(self.strvar_scale_func_factor.get())
-            func_ = self.strvar_option_func.get()
+            scale = int(self.strvar_scale_func_factor.get())
+            func = self.strvar_option_func.get()
 
-            if func_ == "sin":
-                value = int((m.sin(loop_cnt / scale_) + 1) / 2 * (max_ - min_) + min_)
+            if func == "sin":
+                value = int((m.sin(loop_cnt / scale) + 1) / 2 * (max_ - min_) + min_)
 
-            elif func_ == "cos":
-                value = int((m.cos(loop_cnt / scale_) + 1) / 2 * (max_ - min_) + min_)
+            elif func == "cos":
+                value = int((m.cos(loop_cnt / scale) + 1) / 2 * (max_ - min_) + min_)
 
-            elif func_ == "rand":
+            elif func == "rand":
                 value = random.randint(min_, max_)
 
-            elif func_ == "min_max":
+            elif func == "min_max":
                 if loop_cnt % 2 == 0:
                     value = min_
                 else:

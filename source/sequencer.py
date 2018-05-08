@@ -51,8 +51,6 @@ class Sequencer(tk.Frame):
         self.delay_is_on = lambda: True if self.intvar_checkbox_state.get() == 1 else False
 
         self.context = Context(self.root, self)
-        self.context.drone_seq = [0, 1, -2, -3]
-        self.context.each_drone_count = 8
         self.context.root = e2
         self.context.mode = MODE_SIMPLE
         self.context.scale = None
@@ -99,6 +97,7 @@ class Sequencer(tk.Frame):
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 2"))
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 3"))
         self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 4"))
+        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 5"))
 
         self.sample_frame = SampleFrame(self.root, self.context)
 
@@ -369,7 +368,7 @@ class Sequencer(tk.Frame):
 
         self.option_tempo_multiplier.grid(row=80, column=8)
 
-        self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1)
+        self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1, rowspan=2)
         for i, mem in enumerate(self.memories):
             mem.show()
             mem.grid()
