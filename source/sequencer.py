@@ -344,8 +344,6 @@ class Sequencer(tk.Frame):
             self.velocities_scale_min[i].grid(column=i*2, row=0)
             self.velocities_scale_max[i].grid(column=i*2+1, row=0)
 
-        # self.scale_vel_min.grid(column=0, row=0)
-        # self.scale_vel_max.grid(column=1, row=0)
         self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
         self.scale_prob_skip_poly.grid(column=NumberOf.VELOCITY_SLIDERS*2, row=0)
         self.scale_prob_skip_poly_relative.grid(column=NumberOf.VELOCITY_SLIDERS*2 + 1, row=0)
@@ -469,7 +467,6 @@ class Sequencer(tk.Frame):
 
                     for seq in internal_state.memory:
                         f.write("memory\t%s\n" % seq)
-                    # f.write(self.string_constants.saved_state_separator + "\n")
                     f.flush()
 
             except Exception as e:
@@ -530,7 +527,6 @@ class Sequencer(tk.Frame):
             self.context.str_sequence = str_seq
 
         elif mode is self.context.set_sequence_modes.dont_regenerate:
-            # log(logfile=self.context.logfile, msg="self.context.str_sequence is %s" % self.context.str_sequence)
             notes, str_seq = parser.get_notes(self.context, self.context.str_sequence.replace(" ", ""))
 
         self.context.sequence = notes
@@ -639,8 +635,6 @@ class Sequencer(tk.Frame):
         self.context.scale_sequences = [parser.parse_scale_sequence(self.context, seq) for seq in individual_sequences]
         self.context.scale_sequence = self.context.scale_sequences[0]
 
-        #self.set_memory_sequence(None)
-
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
     def set_poly(self, _):
@@ -741,13 +735,11 @@ class Sequencer(tk.Frame):
         log(logfile=self.context.logfile, msg="Sequence started.")
 
     def end_all_notes(self, i=None):
-        # print("ending all notes, i=%s" % i)
         if i is None:
             for j in range(16):
                 self.context.midi.send_message([0xb0 + j, 123, 0])
         else:
             for chan in self.context.midi_channels[i]:
-                # print("Sending stop note to channel %s" % chan)
                 self.context.midi.send_message([0xb0 + chan, 123, 0])
 
     def pitch_bend(self, what):
@@ -819,7 +811,6 @@ class Sequencer(tk.Frame):
                             added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
                                      - int(scales.get_note_by_index_wrap(note_entry, scale)))
                             self.context.midi.send_message([note[0], note[1] + added, note[2]])
-                            # print("sent poly relative note %s" % note)
 
             except Exception as e:
                 print("Exception in function play_relative_poly_notes: %s" % e)
@@ -828,7 +819,6 @@ class Sequencer(tk.Frame):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
             if sample_seq:
                 sample_idx = self.idx % len(sample_seq)
-                # log(logfile=self.context.logfile, msg="Sample_idx: %s" % sample_idx)
 
                 step = (self.idx - 1) % len(sample_seq)
                 self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
@@ -861,7 +851,6 @@ class Sequencer(tk.Frame):
             if self.context.off_sequences[i]:
                 loop_off_note_idx = off_note_idx % len(self.context.off_sequences[i])
 
-                # TODO - fix integer modulo by 0
                 try:
                     if idx_all_off % (self.context.off_sequences[i][loop_off_note_idx]) == 0:
                         if idx_all_off > 0:
@@ -883,8 +872,6 @@ class Sequencer(tk.Frame):
                 if (a() > float(self.context.prob_skip_note.get())/100
                         and self.idx % self.get_tempo_multiplier() == 0):
 
-                    # print("self.actual_notes_played_counts[%s] = %s" % (i, self.actual_notes_played_counts[i]))
-                    # print("Loop_idx for i=%s is %s" % (i, loop_idx))
                     loop_idx = self.actual_notes_played_counts[i] % len(self.context.note_sequences[i])
 
                     octave_idx = self.get_octave_idx(i)
@@ -931,9 +918,6 @@ class Sequencer(tk.Frame):
 
                                 self.context.midi.send_message(orig_note)
 
-                                # print("%s: Sent MIDI note %s to channel: %s" % (time.time(),
-                                #  orig_note, orig_note[0]-0x90))
-
                             if self.delay_is_on():
                                 for j, channel in enumerate(valid_channels):
                                     orig_note = self.get_orig_note(note, octave_idx, i, j)
@@ -959,9 +943,8 @@ class Sequencer(tk.Frame):
                                         orig_note = self.get_orig_note(note, octave_idx, i, j)
                                         self.play_relative_poly_notes(orig_note, param, i)
 
-                            except Exception as e:
+                            except:
                                 pass
-                                # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def get_octave_idx(self, i):
         try:
@@ -980,9 +963,8 @@ class Sequencer(tk.Frame):
                 log(logfile=self.context.logfile,
                     msg="Root for i=%s changed to: %s" % (i, self.context.root_sequences[i][root_idx]))
 
-        except Exception as e:
+        except:
             pass
-            # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def manage_scale_sequence(self, i):
         try:
@@ -997,9 +979,8 @@ class Sequencer(tk.Frame):
                 log(logfile=self.context.logfile,
                     msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 
-        except Exception as e:
+        except:
             pass
-            # log(logfile=self.context.logfile, msg="There was this exception: %s" % e)
 
     def play_sequence(self):
         log(logfile=self.context.logfile, msg="Play sequence is running.")
