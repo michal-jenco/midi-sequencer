@@ -35,12 +35,6 @@ class Sequencer(tk.Frame):
         self.root.geometry('+0+0')
 
         self.string_constants = StringConstants()
-
-        self.midi_input_queue = queue.Queue(maxsize=0)
-        self.midi_input = MIDIInputListener(self.string_constants.AKAI_MIDIMIX_NAME,
-                                            self.midi_input_queue,
-                                            interval=.005)
-
         self.threads = []
 
         self.frame_delay = tk.Frame(self.root)
@@ -63,6 +57,13 @@ class Sequencer(tk.Frame):
         self.context.mode = MODE_SIMPLE
         self.context.scale = None
         self.context.playback_on = False
+
+        self.midi_input_queue = queue.Queue(maxsize=0)
+        self.midi_input = MIDIInputListener(sequencer=self,
+                                            context=self.context,
+                                            input_name=self.string_constants.AKAI_MIDIMIX_NAME,
+                                            queue=self.midi_input_queue,
+                                            interval=.005)
 
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
@@ -101,22 +102,17 @@ class Sequencer(tk.Frame):
 
         self.sample_frame = SampleFrame(self.root, self.context)
 
-        self.strvar_tempo_multiplier = tk.StringVar(self.root, "3")
-        self.option_tempo_multiplier = tk.OptionMenu(self.root, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
-        self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
-
-        self.strvar_option_midi_channel = tk.StringVar(self.root, "12")
-        self.option_midi_channel = tk.OptionMenu(self.root, self.strvar_option_midi_channel, *range(17))
-
-        self.strvar_option_midi_channel2 = tk.StringVar(self.root, "11")
-        self.option_midi_channel2 = tk.OptionMenu(self.root, self.strvar_option_midi_channel2, *range(17))
-
+        self.frame_buttons = tk.Frame(self.root)
         self.frame_entries = tk.Frame(self.root)
         self.frame_entries["bg"] = "purple"
         self.frame_scale_buttons = tk.Frame(self.root)
         self.frame_sliders = tk.Frame(self.root)
         self.frame_roots = tk.Frame(self.root)
         self.frame_prob_sliders = tk.Frame(self.root)
+
+        self.strvar_tempo_multiplier = tk.StringVar(self.frame_buttons, "2")
+        self.option_tempo_multiplier = tk.OptionMenu(self.frame_buttons, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
+        self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 
         label_font = ("Courier", "11")
         self.strvar_status_bar = tk.StringVar(self.root, "")
@@ -154,9 +150,8 @@ class Sequencer(tk.Frame):
         self.scale_prob_skip_poly_relative = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
                                                       variable=self.strvar_prob_skip_poly_relative, length=150)
 
-        self.strvar_bpm = tk.StringVar(self.frame_sliders)
-        self.scale_bpm = tk.Scale(self.frame_sliders, from_=5, to=600, orient=tk.HORIZONTAL, sliderlength=30,
-                                  variable=self.context.bpm, length=500)
+        self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,
+                                  sliderlength=30, variable=self.context.bpm, length=500)
 
         self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence".ljust(20), height=1)
         self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence".ljust(20), height=1)
@@ -280,47 +275,48 @@ class Sequencer(tk.Frame):
 
     def show(self):
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Start sequence",
                   command=self.start_sequence).grid(row=0, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Stop sequence",
                   command=self.stop_sequence).grid(row=1, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="All notes off",
                   command=self.end_all_notes).grid(row=2, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Pitch bend ON",
                   command=lambda: self.pitch_bend("on")).grid(row=3, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Pitch bend OFF",
                   command=lambda: self.pitch_bend("off")).grid(row=4, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Reset IDX",
                   command=self.reset_idx).grid(row=5, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="I N I T",
                   command=self.init_entries).grid(row=12, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="E N T E R",
                   command=self.press_all_enters).grid(row=13, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Save state",
                   command=self.save_internal_state).grid(row=14, column=8, padx=10)
 
-        tk.Button(self.root,
+        tk.Button(self.frame_buttons,
                   text="Load state",
                   command=self.load_internal_state).grid(row=15, column=8, padx=10)
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
+        self.frame_buttons.grid(row=0, column=30, rowspan=10, columnspan=1)
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=1, padx=2, pady=2)
         self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
@@ -371,9 +367,7 @@ class Sequencer(tk.Frame):
 
         self.check_delay_is_on.grid(row=11, column=10)
 
-        self.option_midi_channel.grid(row=11-5, column=8, pady=1)
-        self.option_midi_channel2.grid(row=11-4, column=8, pady=1)
-        self.option_tempo_multiplier.grid(row=8, column=8)
+        self.option_tempo_multiplier.grid(row=80, column=8)
 
         self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1)
         for i, mem in enumerate(self.memories):

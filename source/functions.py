@@ -24,3 +24,21 @@ def get_date_string(type):
 def insert_into_entry(entry, seq):
     entry.delete(0, tk.END)
     entry.insert(0, seq)
+
+
+def range_to_range(r1, r2, value):
+    """Scale value with range1 to range2"""
+
+    OldMin, OldMax = r1
+    NewMin, NewMax = r2
+
+    OldRange = OldMax - OldMin
+
+    if OldRange == 0:
+        NewValue = NewMin
+
+    else:
+        NewRange = NewMax - NewMin
+        NewValue = (((value - OldMin) * NewRange) / OldRange) + NewMin
+
+    return NewValue

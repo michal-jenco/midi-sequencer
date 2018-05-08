@@ -38,6 +38,20 @@ class MemoryType:
         self.rhythm = "rhythm"
 
 
+class Ranges:
+    MIDI_MIN = 0
+    MIDI_MAX = 127
+    MIDI_RANGE = MIDI_MIN, MIDI_MAX
+
+    BPM_MIN = 1
+    BPM_MAX = 600
+    BPM_RANGE = BPM_MIN, BPM_MAX
+
+    PERC_MIN = 0
+    PERC_MAX = 100
+    PERC_RANGE = PERC_MIN, PERC_MAX
+
+
 note_dict = {"c": c2, "cs": cs2, "d": d2, "ds": ds2, "e": e2, "f": f2, "fs": fs2, "g": g2, "gs": gs2,
              "a": a2, "as": as2, "h": b2, "b": b2, "df": cs2, "ef": ds2, "gf": fs2, "af": gs2, "bf": as2}
 

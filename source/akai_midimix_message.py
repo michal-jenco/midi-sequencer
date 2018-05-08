@@ -84,8 +84,22 @@ class AkaiMidimixMessage(object):
         self.code_dict[144][26] = "Bank Right Pressed"
         self.code_dict[128][26] = "Bank Right Released"
 
-    def get_name_by_index(self, type_, i):
+        self.reverse_dict = {}
+        
+        for typ in self.code_dict.keys():
+            for code in self.code_dict[typ]:
+                self.reverse_dict[self.code_dict[typ][code]] = typ, code
+
+    def get_name_by_msg(self, msg):
+        typ, i, _ = msg
+
         try:
-            return self.code_dict[type_][i]
+            return self.code_dict[typ][i]
         except:
-            return "No such code in AKAI MIDI_MIX messages :("
+            return "No such code (%s) in AKAI MIDI_MIX messages :(" % typ, i
+
+    def message_is_string(self, msg, string):
+        return self.code_dict[msg[0]][msg[1]] == string
+
+    def get_value(self, msg):
+        return msg[2]
