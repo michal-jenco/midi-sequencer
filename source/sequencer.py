@@ -305,67 +305,67 @@ class Sequencer(tk.Frame):
         tk.Button(self.frame_buttons,
                   text="Start sequence".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.start_sequence).grid(row=0, column=8, padx=10)
+                  command=self.start_sequence).grid(row=0, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="Stop sequence".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.stop_sequence).grid(row=1, column=8, padx=10)
+                  command=self.stop_sequence).grid(row=1, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="All notes off".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.end_all_notes).grid(row=2, column=8, padx=10)
+                  command=self.end_all_notes).grid(row=2, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="Pitch bend ON".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=lambda: self.pitch_bend("on")).grid(row=3, column=8, padx=10)
+                  command=lambda: self.pitch_bend("on")).grid(row=3, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="Pitch bend OFF".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=lambda: self.pitch_bend("off")).grid(row=4, column=8, padx=10)
+                  command=lambda: self.pitch_bend("off")).grid(row=4, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="Reset IDX".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.reset_idx).grid(row=5, column=8, padx=10)
+                  command=self.reset_idx).grid(row=5, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="I N I T".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.init_entries).grid(row=12, column=8, padx=10)
+                  command=self.init_entries).grid(row=12, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="E N T E R".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.press_all_enters).grid(row=13, column=8, padx=10)
+                  command=self.press_all_enters).grid(row=13, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="Save state".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.save_internal_state).grid(row=14, column=8, padx=10)
+                  command=self.save_internal_state).grid(row=14, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="Load state".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.load_internal_state).grid(row=15, column=8, padx=10)
+                  command=self.load_internal_state).grid(row=15, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="M U T E".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.mute_all).grid(row=16, column=8, padx=10)
+                  command=self.mute_all).grid(row=16, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="U N - M U T E".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.unmute_all).grid(row=17, column=8, padx=10)
+                  command=self.unmute_all).grid(row=17, column=8, padx=0)
 
         tk.Button(self.frame_buttons,
                   text="I N V E R T".center(InitialValues.CENTER_JUST_BUTTON),
                   font=("Courier", "8"),
-                  command=self.invert_mute).grid(row=18, column=8, padx=10)
+                  command=self.invert_mute).grid(row=18, column=8, padx=0)
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
         self.frame_buttons.grid(row=0, column=30, rowspan=23, columnspan=1)

@@ -115,11 +115,10 @@ class MIDIInputListener(object):
                     velocities = self.sequencer.velocities_strvars_max
 
                 if not self.fader_synced[i]:
-                    if abs(int(velocities[i//2].get()) - value) < 5:
+                    if abs(int(velocities[i // 2].get()) - value) < 5:
                         self.fader_synced[i] = True
-
-                if self.fader_synced[i]:
-                    velocities[i//2].set(value)
+                else:
+                    velocities[i // 2].set(value)
 
             except:
                 pass
