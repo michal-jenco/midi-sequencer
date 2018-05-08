@@ -77,3 +77,15 @@ class MIDIInputListener(object):
         elif msg_name == "RecArm 5 Pressed":
             self.sequencer.press_all_enters()
 
+        elif "Fader" in msg_name:
+            try:
+                i = int(msg_name.split()[-1]) - 1
+                velocity_value = value
+
+                if i % 2 == 0:
+                    self.sequencer.velocities_strvars_min[i//2].set(velocity_value)
+                else:
+                    self.sequencer.velocities_strvars_max[i//2].set(velocity_value)
+
+            except:
+                pass

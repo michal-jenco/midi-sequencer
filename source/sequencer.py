@@ -126,27 +126,41 @@ class Sequencer(tk.Frame):
                                                    font=label_font, width=4)
 
         self.strvar_prob_skip_note = tk.StringVar(self.frame_sliders)
-        self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL, sliderlength=30,
+        self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=Ranges.PERC_MIN, to=Ranges.PERC_MAX,
+                                             orient=tk.HORIZONTAL, sliderlength=30,
                                              variable=self.context.prob_skip_note, length=500)
 
-        self.strvar_vel_min = tk.StringVar(self.frame_prob_sliders)
-        self.strvar_vel_min.set("100")
-        self.scale_vel_min = tk.Scale(self.frame_prob_sliders, from_=0, to=127, orient=tk.VERTICAL,
-                                      variable=self.strvar_vel_min, length=150)
+        self.velocities_scale_min = []
+        self.velocities_scale_max = []
+        self.velocities_strvars_min = []
+        self.velocities_strvars_max = []
 
-        self.strvar_vel_max = tk.StringVar(self.frame_prob_sliders)
-        self.strvar_vel_max.set("127")
-        self.scale_vel_max = tk.Scale(self.frame_prob_sliders, from_=0, to=127, orient=tk.VERTICAL,
-                                      variable=self.strvar_vel_max, length=150)
+        for i in range(NumberOf.VELOCITY_SLIDERS):
+            self.velocities_strvars_min.append(tk.StringVar(self.frame_prob_sliders))
+            self.velocities_strvars_min[-1].set(InitialValues.VELOCITY_MIN)
+            self.velocities_scale_min.append(tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.MIDI_MIN, to=Ranges.MIDI_MAX,
+                                                      orient=tk.VERTICAL,
+                                                      variable=self.velocities_strvars_min[i],
+                                                      length=InitialValues.VELOCITY_SLIDER_LEN))
+
+            self.velocities_strvars_max.append(tk.StringVar(self.frame_prob_sliders))
+            self.velocities_strvars_max[-1].set(InitialValues.VELOCITY_MAX)
+            self.velocities_scale_max.append(tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.MIDI_MIN, to=Ranges.MIDI_MAX,
+                                                      orient=tk.VERTICAL,
+                                                      variable=self.velocities_strvars_max[i],
+                                                      length=InitialValues.VELOCITY_SLIDER_LEN))
 
         self.strvar_prob_skip_poly = tk.StringVar(self.frame_prob_sliders)
         self.strvar_prob_skip_poly.set("50")
-        self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
-                                             variable=self.strvar_prob_skip_poly, length=150)
+        self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=Ranges.PERC_MIN, to=Ranges.PERC_MAX,
+                                             orient=tk.VERTICAL, variable=self.strvar_prob_skip_poly, length=150)
 
         self.strvar_prob_skip_poly_relative = tk.StringVar(self.frame_prob_sliders)
         self.strvar_prob_skip_poly_relative.set("50")
-        self.scale_prob_skip_poly_relative = tk.Scale(self.frame_prob_sliders, from_=0, to=100, orient=tk.VERTICAL,
+        self.scale_prob_skip_poly_relative = tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.PERC_MIN, to=Ranges.PERC_MAX, orient=tk.VERTICAL,
                                                       variable=self.strvar_prob_skip_poly_relative, length=150)
 
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,
@@ -325,11 +339,16 @@ class Sequencer(tk.Frame):
         self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
 
         self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
-        self.scale_vel_min.grid(column=0, row=0)
+
+        for i in range(NumberOf.VELOCITY_SLIDERS):
+            self.velocities_scale_min[i].grid(column=i*2, row=0)
+            self.velocities_scale_max[i].grid(column=i*2+1, row=0)
+
+        # self.scale_vel_min.grid(column=0, row=0)
+        # self.scale_vel_max.grid(column=1, row=0)
         self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
-        self.scale_vel_max.grid(column=1, row=0)
-        self.scale_prob_skip_poly.grid(column=2, row=0)
-        self.scale_prob_skip_poly_relative.grid(column=3, row=0)
+        self.scale_prob_skip_poly.grid(column=NumberOf.VELOCITY_SLIDERS*2, row=0)
+        self.scale_prob_skip_poly_relative.grid(column=NumberOf.VELOCITY_SLIDERS*2 + 1, row=0)
         self.scale_delay_multiplier.grid(column=10, row=10)
 
         init_row = 0
@@ -365,10 +384,9 @@ class Sequencer(tk.Frame):
         self.label_k.grid(row=10+2, column=2, sticky="w", padx=(10, 0), pady=1)
 
         self.check_delay_is_on.grid(row=11, column=10)
-
         self.option_tempo_multiplier.grid(row=80, column=8)
-
         self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1, rowspan=2)
+
         for i, mem in enumerate(self.memories):
             mem.show()
             mem.grid()
@@ -741,9 +759,12 @@ class Sequencer(tk.Frame):
         self.context.midi.send_message(msg)
         log(logfile=self.context.logfile, msg="Pitch bend sent.")
 
-    def get_velocity_min_max(self):
-        slider_min = int(self.strvar_vel_min.get())
-        slider_max = int(self.strvar_vel_max.get())
+    def get_velocity_min_max(self, i):
+        if i > NumberOf.VELOCITY_SLIDERS:
+            return 100, 127
+
+        slider_min = int(self.velocities_strvars_min[i].get())
+        slider_max = int(self.velocities_strvars_max[i].get())
 
         vel_min = slider_min if slider_min < slider_max else slider_max
         vel_max = slider_max if slider_max > slider_min else slider_min
@@ -819,7 +840,7 @@ class Sequencer(tk.Frame):
         return float(self.context.get_delay_multiplier())
 
     def get_orig_note(self, note, octave_idx, i, j=0):
-        vel_min, vel_max = self.get_velocity_min_max()
+        vel_min, vel_max = self.get_velocity_min_max(i)
 
         octave_offset = 0
         if self.context.octave_sequences:
