@@ -26,7 +26,7 @@ class Sequencer(tk.Frame):
 
     def __init__(self, midi_):
         self.root = tk.Tk()
-        tk.Frame.__init__(self, self.root, bg="darkblue", padx=5, pady=5)
+        tk.Frame.__init__(self, self.root, bg="darkblue", padx=2, pady=2)
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
@@ -56,12 +56,10 @@ class Sequencer(tk.Frame):
         self.context.scale = None
         self.context.playback_on = False
 
-        self.midi_input_queue = queue.Queue(maxsize=0)
         self.midi_input = MIDIInputListener(sequencer=self,
                                             context=self.context,
                                             input_name=self.string_constants.AKAI_MIDIMIX_NAME,
-                                            queue=self.midi_input_queue,
-                                            interval=.005)
+                                            interval=SleepTimes.MIDI_INPUT_MAINLOOP)
 
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
@@ -69,6 +67,23 @@ class Sequencer(tk.Frame):
         self.memories[0].add_seq("031")
         self.memories[0].add_seq("032")
         self.memories[0].add_seq("034")
+
+        self.frame_channel_enable = tk.Frame(self.root)
+        self.frame_channel_enable.grid(row=23, column=4, rowspan=2)
+        self.checkboxes_enable_channels = []
+        self.intvars_enable_channels = []
+
+        for i in range(NumberOf.CHANNEL_CHECKBOXES):
+            self.intvars_enable_channels.append(tk.IntVar(self.root, ENABLED))
+            self.checkboxes_enable_channels.append(tk.Checkbutton(self.frame_channel_enable,
+                                                                  text="Ch%s" % i,
+                                                                  variable=self.intvars_enable_channels[-1]))
+            self.checkboxes_enable_channels[i].grid(row=0, column=i)
+        self.intvar_solo = tk.IntVar(self.root, DISABLED)
+        self.checkbox_solo = tk.Checkbutton(self.frame_channel_enable,
+                                            text="Solo",
+                                            variable=self.intvar_solo)
+        self.checkbox_solo.grid(row=0, column=NumberOf.CHANNEL_CHECKBOXES)
 
         self.idx_all_off = [0, 0, 0, 0, 0, 0, 0]
         self.off_note_idx = [0, 0, 0, 0, 0, 0, 0]
@@ -139,7 +154,7 @@ class Sequencer(tk.Frame):
             self.velocities_strvars_min.append(tk.StringVar(self.frame_prob_sliders))
             self.velocities_strvars_min[-1].set(InitialValues.VELOCITY_MIN)
             self.velocities_scale_min.append(tk.Scale(self.frame_prob_sliders,
-                                                      from_=Ranges.MIDI_MIN, to=Ranges.MIDI_MAX,
+                                                      from_=Ranges.MIDI_MAX, to=Ranges.MIDI_MIN,
                                                       orient=tk.VERTICAL,
                                                       variable=self.velocities_strvars_min[i],
                                                       length=InitialValues.VELOCITY_SLIDER_LEN))
@@ -147,7 +162,7 @@ class Sequencer(tk.Frame):
             self.velocities_strvars_max.append(tk.StringVar(self.frame_prob_sliders))
             self.velocities_strvars_max[-1].set(InitialValues.VELOCITY_MAX)
             self.velocities_scale_max.append(tk.Scale(self.frame_prob_sliders,
-                                                      from_=Ranges.MIDI_MIN, to=Ranges.MIDI_MAX,
+                                                      from_=Ranges.MIDI_MAX, to=Ranges.MIDI_MIN,
                                                       orient=tk.VERTICAL,
                                                       variable=self.velocities_strvars_max[i],
                                                       length=InitialValues.VELOCITY_SLIDER_LEN))
@@ -287,49 +302,73 @@ class Sequencer(tk.Frame):
         self.root.destroy()
 
     def show(self):
-
         tk.Button(self.frame_buttons,
-                  text="Start sequence",
+                  text="Start sequence".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.start_sequence).grid(row=0, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="Stop sequence",
+                  text="Stop sequence".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.stop_sequence).grid(row=1, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="All notes off",
+                  text="All notes off".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.end_all_notes).grid(row=2, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="Pitch bend ON",
+                  text="Pitch bend ON".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=lambda: self.pitch_bend("on")).grid(row=3, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="Pitch bend OFF",
+                  text="Pitch bend OFF".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=lambda: self.pitch_bend("off")).grid(row=4, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="Reset IDX",
+                  text="Reset IDX".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.reset_idx).grid(row=5, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="I N I T",
+                  text="I N I T".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.init_entries).grid(row=12, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="E N T E R",
+                  text="E N T E R".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.press_all_enters).grid(row=13, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="Save state",
+                  text="Save state".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.save_internal_state).grid(row=14, column=8, padx=10)
 
         tk.Button(self.frame_buttons,
-                  text="Load state",
+                  text="Load state".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
                   command=self.load_internal_state).grid(row=15, column=8, padx=10)
 
+        tk.Button(self.frame_buttons,
+                  text="M U T E".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
+                  command=self.mute_all).grid(row=16, column=8, padx=10)
+
+        tk.Button(self.frame_buttons,
+                  text="U N - M U T E".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
+                  command=self.unmute_all).grid(row=17, column=8, padx=10)
+
+        tk.Button(self.frame_buttons,
+                  text="I N V E R T".center(InitialValues.CENTER_JUST_BUTTON),
+                  font=("Courier", "8"),
+                  command=self.invert_mute).grid(row=18, column=8, padx=10)
+
         self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
-        self.frame_buttons.grid(row=0, column=30, rowspan=10, columnspan=1)
+        self.frame_buttons.grid(row=0, column=30, rowspan=23, columnspan=1)
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=1, padx=2, pady=2)
         self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
@@ -392,6 +431,18 @@ class Sequencer(tk.Frame):
         self.display_wobblers()
         self.sample_frame.display()
         self.root.mainloop()
+
+    def mute_all(self):
+        for item in self.intvars_enable_channels:
+            item.set(False)
+
+    def unmute_all(self):
+        for item in self.intvars_enable_channels:
+            item.set(True)
+
+    def invert_mute(self):
+        for item in self.intvars_enable_channels:
+            item.set(not item.get())
 
     def display_wobblers(self):
         abc = 0
@@ -868,6 +919,9 @@ class Sequencer(tk.Frame):
         valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
 
         for i, valid_channels in enumerate(valid_midi_channels):
+            if not self.intvars_enable_channels[i].get():
+                continue
+
             if self.context.note_sequences[i]:
                 if (a() > float(self.context.prob_skip_note.get())/100
                         and self.idx % self.get_tempo_multiplier() == 0):

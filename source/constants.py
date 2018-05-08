@@ -13,7 +13,13 @@ ENABLED = 1
 class NumberOf:
     VELOCITY_SLIDERS = 7
     POLYPHONY_ABS_SLIDERS = 4
-    POLYPHONY_REL_SLIDERS = 4
+    POLYPHONY_REL_SLIDERS = POLYPHONY_ABS_SLIDERS
+
+    CHANNEL_CHECKBOXES = 8
+
+
+class SleepTimes:
+    MIDI_INPUT_MAINLOOP = .001
 
 
 class InitialValues:
@@ -21,6 +27,7 @@ class InitialValues:
     VELOCITY_MAX = 127
 
     VELOCITY_SLIDER_LEN = 100
+    CENTER_JUST_BUTTON = 16
 
 
 class DelayFunctions:
@@ -57,7 +64,7 @@ class Ranges:
     MIDI_RANGE = MIDI_MIN, MIDI_MAX
 
     BPM_MIN = 1
-    BPM_MAX = 600
+    BPM_MAX = 240
     BPM_RANGE = BPM_MIN, BPM_MAX
 
     PERC_MIN = 0

@@ -9,15 +9,16 @@ from source.constants import Ranges
 
 
 class MIDIInputListener(object):
-    def __init__(self, sequencer, context, input_name, queue, interval):
+    def __init__(self, sequencer, context, input_name, interval):
         self.sequencer = sequencer
         self.context = context
         self.input_name = input_name
         self.interval = interval
-        self.queue = queue
 
         self.midi = rtmidi.MidiIn()
         self.akai_message = AkaiMidimixMessage()
+
+        self.fader_synced = [False]*8
 
         self.available_ports = self.midi.get_ports()
 
@@ -77,15 +78,48 @@ class MIDIInputListener(object):
         elif msg_name == "RecArm 5 Pressed":
             self.sequencer.press_all_enters()
 
+        elif msg_name == "RecArm 6 Pressed":
+            self.sequencer.mute_all()
+
+        elif msg_name == "RecArm 7 Pressed":
+            self.sequencer.unmute_all()
+
+        elif msg_name == "RecArm 8 Pressed":
+            self.sequencer.invert_mute()
+
+        elif msg_name == "Solo Pressed":
+            self.sequencer.intvar_solo.set(not self.sequencer.intvar_solo.get())
+
+        elif "Mute" in msg_name and "Pressed" in msg_name:
+            i = int(msg_name.split()[1]) - 1
+
+            if self.sequencer.intvar_solo.get():
+                for j, item in enumerate(self.sequencer.intvars_enable_channels):
+                    if i != j:
+                        print("Setting %s to False" % j)
+                        self.sequencer.intvars_enable_channels[j].set(False)
+                    else:
+                        print("Setting %s to True" % j)
+                        self.sequencer.intvars_enable_channels[j].set(True)
+
+            else:
+                self.sequencer.intvars_enable_channels[i].set(not self.sequencer.intvars_enable_channels[i].get())
+
         elif "Fader" in msg_name:
             try:
                 i = int(msg_name.split()[-1]) - 1
-                velocity_value = value
 
                 if i % 2 == 0:
-                    self.sequencer.velocities_strvars_min[i//2].set(velocity_value)
+                    velocities = self.sequencer.velocities_strvars_min
                 else:
-                    self.sequencer.velocities_strvars_max[i//2].set(velocity_value)
+                    velocities = self.sequencer.velocities_strvars_max
+
+                if not self.fader_synced[i]:
+                    if abs(int(velocities[i//2].get()) - value) < 5:
+                        self.fader_synced[i] = True
+
+                if self.fader_synced[i]:
+                    velocities[i//2].set(value)
 
             except:
                 pass

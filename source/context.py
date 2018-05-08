@@ -79,3 +79,5 @@ class Context:
         self.amper_max = 8
 
         self.midi_port = None
+
+        self.solo_on = False
