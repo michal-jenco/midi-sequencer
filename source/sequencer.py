@@ -141,43 +141,18 @@ class Sequencer(tk.Frame):
         self.label_main_seq_current_idx = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_current_idx,
                                                    font=label_font, width=4)
 
-        self.strvar_prob_skip_note = tk.StringVar(self.frame_sliders)
-        self.scale_prob_skip_note = tk.Scale(self.frame_sliders, from_=Ranges.PERC_MIN, to=Ranges.PERC_MAX,
-                                             orient=tk.HORIZONTAL, sliderlength=30,
-                                             variable=self.context.prob_skip_note, length=500)
-
         self.velocities_scale_min = []
         self.velocities_scale_max = []
         self.velocities_strvars_min = []
         self.velocities_strvars_max = []
+        self.strvars_prob_skip_note = []
+        self.scales_prob_skip_note = []
+        self.strvars_prob_poly_abs = []
+        self.strvars_prob_poly_rel = []
+        self.scales_prob_poly_abs = []
+        self.scales_prob_poly_rel = []
 
-        for i in range(NumberOf.VELOCITY_SLIDERS):
-            self.velocities_strvars_min.append(tk.StringVar(self.frame_prob_sliders))
-            self.velocities_strvars_min[-1].set(InitialValues.VELOCITY_MIN)
-            self.velocities_scale_min.append(tk.Scale(self.frame_prob_sliders,
-                                                      from_=Ranges.MIDI_MAX, to=Ranges.MIDI_MIN,
-                                                      orient=tk.VERTICAL,
-                                                      variable=self.velocities_strvars_min[i],
-                                                      length=InitialValues.VELOCITY_SLIDER_LEN))
-
-            self.velocities_strvars_max.append(tk.StringVar(self.frame_prob_sliders))
-            self.velocities_strvars_max[-1].set(InitialValues.VELOCITY_MAX)
-            self.velocities_scale_max.append(tk.Scale(self.frame_prob_sliders,
-                                                      from_=Ranges.MIDI_MAX, to=Ranges.MIDI_MIN,
-                                                      orient=tk.VERTICAL,
-                                                      variable=self.velocities_strvars_max[i],
-                                                      length=InitialValues.VELOCITY_SLIDER_LEN))
-
-        self.strvar_prob_skip_poly = tk.StringVar(self.frame_prob_sliders)
-        self.strvar_prob_skip_poly.set("50")
-        self.scale_prob_skip_poly = tk.Scale(self.frame_prob_sliders, from_=Ranges.PERC_MIN, to=Ranges.PERC_MAX,
-                                             orient=tk.VERTICAL, variable=self.strvar_prob_skip_poly, length=150)
-
-        self.strvar_prob_skip_poly_relative = tk.StringVar(self.frame_prob_sliders)
-        self.strvar_prob_skip_poly_relative.set("50")
-        self.scale_prob_skip_poly_relative = tk.Scale(self.frame_prob_sliders,
-                                                      from_=Ranges.PERC_MIN, to=Ranges.PERC_MAX, orient=tk.VERTICAL,
-                                                      variable=self.strvar_prob_skip_poly_relative, length=150)
+        self.create_prob_sliders()
 
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,
                                   sliderlength=30, variable=self.context.bpm, length=500)
@@ -296,6 +271,55 @@ class Sequencer(tk.Frame):
 
         self.press_all_enters()
 
+    def create_prob_sliders(self):
+        for i in range(NumberOf.VELOCITY_SLIDERS):
+            self.velocities_strvars_min.append(tk.StringVar(self.frame_prob_sliders))
+            self.velocities_strvars_min[-1].set(InitialValues.VELOCITY_MIN)
+            self.velocities_scale_min.append(tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.MIDI_MAX, to=Ranges.MIDI_MIN,
+                                                      orient=tk.VERTICAL,
+                                                      variable=self.velocities_strvars_min[i],
+                                                      length=InitialValues.VELOCITY_SLIDER_LEN))
+
+            self.velocities_strvars_max.append(tk.StringVar(self.frame_prob_sliders))
+            self.velocities_strvars_max[-1].set(InitialValues.VELOCITY_MAX)
+            self.velocities_scale_max.append(tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.MIDI_MAX, to=Ranges.MIDI_MIN,
+                                                      orient=tk.VERTICAL,
+                                                      variable=self.velocities_strvars_max[i],
+                                                      length=InitialValues.VELOCITY_SLIDER_LEN))
+
+        for i in range(NumberOf.PROB_SKIP_NOTE_SLIDERS):
+            self.strvars_prob_skip_note.append(tk.StringVar(self.frame_prob_sliders))
+            self.scales_prob_skip_note.append(tk.Scale(self.frame_prob_sliders,
+                                                       from_=Ranges.PERC_MAX, to=Ranges.PERC_MIN,
+                                                       orient=tk.VERTICAL, sliderlength=30,
+                                                       variable=self.strvars_prob_skip_note[-1],
+                                                       length=InitialValues.SKIP_NOTE_SLIDER_LEN))
+
+        for i in range(NumberOf.POLYPHONY_SLIDERS):
+            self.strvars_prob_poly_abs.append(tk.StringVar(self.frame_prob_sliders))
+            self.strvars_prob_poly_rel.append(tk.StringVar(self.frame_prob_sliders))
+            self.strvars_prob_poly_abs[-1].set(InitialValues.PROB_POLY)
+            self.strvars_prob_poly_rel[-1].set(InitialValues.PROB_POLY)
+
+            self.scales_prob_poly_abs.append(tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.PERC_MAX, to=Ranges.PERC_MIN,
+                                                      orient=tk.VERTICAL, sliderlength=30,
+                                                      variable=self.strvars_prob_poly_abs[-1],
+                                                      length=InitialValues.POLY_SLIDER_LEN))
+
+            self.scales_prob_poly_rel.append(tk.Scale(self.frame_prob_sliders,
+                                                      from_=Ranges.PERC_MAX, to=Ranges.PERC_MIN,
+                                                      orient=tk.VERTICAL, sliderlength=30,
+                                                      variable=self.strvars_prob_poly_rel[-1],
+                                                      length=InitialValues.POLY_SLIDER_LEN))
+
+        self.velocities_scale_max[-1]["label"] = "Vel"
+        self.scales_prob_skip_note[-1]["label"] = "Skip"
+        self.scales_prob_poly_abs[-1]["label"] = "Abs"
+        self.scales_prob_poly_rel[-1]["label"] = "Rel"
+
     def on_closing(self):
         log(msg="Window will be destroyed.")
         self.end_all_notes()
@@ -378,15 +402,22 @@ class Sequencer(tk.Frame):
         self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2)
         self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
 
-        self.scale_prob_skip_note.grid(row=23, column=3, columnspan=3)
-
         for i in range(NumberOf.VELOCITY_SLIDERS):
             self.velocities_scale_min[i].grid(column=i*2, row=0)
             self.velocities_scale_max[i].grid(column=i*2+1, row=0)
 
+        for i in range(NumberOf.PROB_SKIP_NOTE_SLIDERS):
+            self.scales_prob_skip_note[i].grid(row=0, column=NumberOf.VELOCITY_SLIDERS*2 + i)
+
+        for i in range(NumberOf.POLYPHONY_SLIDERS):
+            col = NumberOf.VELOCITY_SLIDERS*2 + NumberOf.PROB_SKIP_NOTE_SLIDERS + i
+            self.scales_prob_poly_abs[i].grid(row=0, column=col)
+
+        for i in range(NumberOf.POLYPHONY_SLIDERS):
+            col = NumberOf.VELOCITY_SLIDERS*2 + NumberOf.PROB_SKIP_NOTE_SLIDERS + NumberOf.POLYPHONY_SLIDERS + i
+            self.scales_prob_poly_rel[i].grid(row=0, column=col)
+
         self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
-        self.scale_prob_skip_poly.grid(column=NumberOf.VELOCITY_SLIDERS*2, row=0)
-        self.scale_prob_skip_poly_relative.grid(column=NumberOf.VELOCITY_SLIDERS*2 + 1, row=0)
         self.scale_delay_multiplier.grid(column=10, row=10)
 
         init_row = 0
@@ -837,7 +868,7 @@ class Sequencer(tk.Frame):
         if self.context.poly_sequences:
             if self.context.poly_sequences[i]:
                 for poly in self.context.poly_sequences[i]:
-                    if a() < int(self.strvar_prob_skip_poly.get()) / 100.0:
+                    if a() < int(self.strvars_prob_poly_abs[i].get()) / 100.0:
                         self.context.midi.send_message([note[0], note[1] + poly, note[2]])
 
     def play_relative_poly_notes(self, note, note_entry, i):
@@ -858,7 +889,7 @@ class Sequencer(tk.Frame):
             try:
                 if self.context.poly_relative_sequences[i]:
                     for poly in self.context.poly_relative_sequences[i]:
-                        if a() < int(self.strvar_prob_skip_poly_relative.get()) / 100.0:
+                        if a() < int(self.strvars_prob_poly_rel[i].get()) / 100.0:
                             # THIS TOOK FUCKING FOREVER TO FIGURE OUT
                             added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
                                      - int(scales.get_note_by_index_wrap(note_entry, scale)))
@@ -924,7 +955,7 @@ class Sequencer(tk.Frame):
                 continue
 
             if self.context.note_sequences[i]:
-                if (a() > float(self.context.prob_skip_note.get())/100
+                if (a() > float(self.strvars_prob_skip_note[i].get()) / 100
                         and self.idx % self.get_tempo_multiplier() == 0):
 
                     loop_idx = self.actual_notes_played_counts[i] % len(self.context.note_sequences[i])

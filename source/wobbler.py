@@ -64,7 +64,7 @@ class Wobbler(tk.Frame):
         self.check_x10 = tk.Checkbutton(self, text="x10", variable=self.intvar_check_10x)
 
         # self.output_file = open("../other/" + self.name + ".txt", "a")
-        # print("%s created" % self.name)
+        print("%s created" % self.name)
 
     def update_cc_list(self, _):
         menu = self.option_cc["menu"]
