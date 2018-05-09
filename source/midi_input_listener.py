@@ -19,6 +19,9 @@ class MIDIInputListener(object):
         self.akai_message = AkaiMidimixMessage()
 
         self.fader_synced = [False]*8
+        self.know_row_1_synced = [False]*8
+        self.know_row_2_synced = [False]*8
+        self.know_row_3_synced = [False]*8
 
         self.available_ports = self.midi.get_ports()
 
@@ -36,9 +39,35 @@ class MIDIInputListener(object):
             print("Akai MIDI Mix is not connected.")
             return
 
+        self.callback_dict = self.get_callback_dict()
+
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
         self.main_loop_thread.start()
+
+    def get_callback_dict(self):
+        result = {"RecArm 1 Pressed": self.playback_on_callback,
+                  "RecArm 2 Pressed": self.sequencer.end_all_notes,
+                  "RecArm 3 Pressed": self.sequencer.reset_idx,
+                  "RecArm 4 Pressed": self.sequencer.init_entries,
+                  "RecArm 5 Pressed": self.sequencer.press_all_enters,
+                  "RecArm 6 Pressed": self.sequencer.mute_all,
+                  "RecArm 7 Pressed": self.sequencer.unmute_all,
+                  "RecArm 8 Pressed": self.sequencer.invert_mute,
+                  "Solo Pressed": self.solo_callback,
+                  "Knob Row 1 Col 8": self.bpm_callback}
+        return result
+
+    def bpm_callback(self, value):
+        bpm_range_value = range_to_range(Ranges.MIDI_RANGE, Ranges.BPM_RANGE, value)
+        self.context.bpm.set(bpm_range_value)
+        print("Set BPM to %s" % bpm_range_value)
+
+    def playback_on_callback(self):
+        self.context.playback_on = not self.context.playback_on
+
+    def solo_callback(self):
+        self.sequencer.intvar_solo.set(not self.sequencer.intvar_solo.get())
 
     def main_loop(self):
         while True:
@@ -58,37 +87,36 @@ class MIDIInputListener(object):
         msg_name = self.akai_message.get_name_by_msg(msg)
         value = self.akai_message.get_value(msg)
 
-        if msg_name == "Knob Row 1 Col 8":
+        if msg_name in self.callback_dict:
+            self.callback_dict[msg_name]()
+
+        elif msg_name == "Knob Row 1 Col 8":
             bpm_range_value = range_to_range(Ranges.MIDI_RANGE, Ranges.BPM_RANGE, value)
             self.context.bpm.set(bpm_range_value)
             print("Set BPM to %s" % bpm_range_value)
 
-        elif msg_name == "RecArm 1 Pressed":
-            self.context.playback_on = not self.context.playback_on
+        elif "Knob Row" in msg_name:
+            knob_row = int(msg_name.split()[2])
+            i = int(msg_name.split()[-1]) - 1
 
-        elif msg_name == "RecArm 2 Pressed":
-            self.sequencer.end_all_notes()
+            if i == 7:
+                return
 
-        elif msg_name == "RecArm 3 Pressed":
-            self.sequencer.reset_idx()
+            if knob_row == 1:
+                sync = self.know_row_1_synced
+                strvars = self.sequencer.strvars_prob_skip_note
+            elif knob_row == 2:
+                sync = self.know_row_2_synced
+                strvars = self.sequencer.strvars_prob_poly_abs
+            else:
+                sync = self.know_row_3_synced
+                strvars = self.sequencer.strvars_prob_poly_rel
 
-        elif msg_name == "RecArm 4 Pressed":
-            self.sequencer.init_entries()
-
-        elif msg_name == "RecArm 5 Pressed":
-            self.sequencer.press_all_enters()
-
-        elif msg_name == "RecArm 6 Pressed":
-            self.sequencer.mute_all()
-
-        elif msg_name == "RecArm 7 Pressed":
-            self.sequencer.unmute_all()
-
-        elif msg_name == "RecArm 8 Pressed":
-            self.sequencer.invert_mute()
-
-        elif msg_name == "Solo Pressed":
-            self.sequencer.intvar_solo.set(not self.sequencer.intvar_solo.get())
+            if not sync[i]:
+                if abs(int(strvars[i].get()) - value) < 5:
+                    sync[i] = True
+            else:
+                strvars[i].set(value)
 
         elif "Mute" in msg_name and "Pressed" in msg_name:
             i = int(msg_name.split()[1]) - 1
