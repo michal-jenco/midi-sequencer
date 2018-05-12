@@ -21,6 +21,10 @@ class SleepTimes:
     MIDI_INPUT_MAINLOOP = .001
 
 
+class Misc:
+    KNOB_SYNC_DISTANCE = 5
+
+
 class InitialValues:
     VELOCITY_MIN = 100
     VELOCITY_MAX = 127
@@ -67,7 +71,7 @@ class Ranges:
     MIDI_RANGE = MIDI_MIN, MIDI_MAX
 
     BPM_MIN = 1
-    BPM_MAX = 240
+    BPM_MAX = 480
     BPM_RANGE = BPM_MIN, BPM_MAX
 
     PERC_MIN = 0

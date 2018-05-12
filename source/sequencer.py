@@ -950,11 +950,12 @@ class Sequencer(tk.Frame):
 
         valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
 
-        for i, valid_channels in enumerate(valid_midi_channels):
-            if not self.intvars_enable_channels[i].get():
-                continue
+        # for i, _ in enumerate(self.actual_notes_played_counts):
+        #     print("Channel %s:" % i, self.actual_notes_played_counts[i])
+        # print()
 
-            if self.context.note_sequences[i]:
+        for i, valid_channels in enumerate(valid_midi_channels):
+            if i < len(self.context.note_sequences) and self.context.note_sequences[i]:
                 if (a() > float(self.strvars_prob_skip_note[i].get()) / 100
                         and self.idx % self.get_tempo_multiplier() == 0):
 
@@ -968,6 +969,11 @@ class Sequencer(tk.Frame):
                         note = self.context.note_sequences[i][loop_idx]
                     except:
                         time.sleep(0.02)
+                        continue
+
+                    if not self.intvars_enable_channels[i].get():
+                        if note != NOTE_PAUSE:
+                            self.actual_notes_played_counts[i] += 1
                         continue
 
                     orig_note = self.get_orig_note(note, octave_idx, i, 0)
@@ -1007,10 +1013,11 @@ class Sequencer(tk.Frame):
                             if self.delay_is_on():
                                 for j, channel in enumerate(valid_channels):
                                     orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                    x = lambda: self.d.run_delay_with_note(orig_note,
-                                                                     60 / self.bpm / self.get_delay_multiplier(),
-                                                                     self.df.functions[self.dc.CONSTANT_DECAY],
-                                                                     -10)
+                                    x = lambda: self.d.run_delay_with_note(
+                                        orig_note,
+                                        60 / self.bpm / self.get_delay_multiplier(),
+                                        self.df.functions[self.dc.CONSTANT_DECAY],
+                                        -10)
 
                                     Delay(self.context).create_thread_for_function(x)
 

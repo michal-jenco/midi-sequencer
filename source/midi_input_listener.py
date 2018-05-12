@@ -5,7 +5,7 @@ from rtmidi.midiutil import open_midiinput
 
 from source.akai_midimix_message import AkaiMidimixMessage
 from source.functions import range_to_range
-from source.constants import Ranges
+from source.constants import Ranges, Misc
 
 
 class MIDIInputListener(object):
@@ -31,11 +31,10 @@ class MIDIInputListener(object):
                 print("Found %s on port %s" % (self.input_name, i))
                 break
 
-        print("I am going to open %s on port %s." % (input_name, self.port))
-
         try:
+            print("I am going to open %s on port %s." % (input_name, self.port))
             self.midi, self.port = open_midiinput(self.port)
-        except (EOFError, KeyboardInterrupt):
+        except:
             print("Akai MIDI Mix is not connected.")
             return
 
@@ -54,8 +53,7 @@ class MIDIInputListener(object):
                   "RecArm 6 Pressed": self.sequencer.mute_all,
                   "RecArm 7 Pressed": self.sequencer.unmute_all,
                   "RecArm 8 Pressed": self.sequencer.invert_mute,
-                  "Solo Pressed": self.solo_callback,
-                  "Knob Row 1 Col 8": self.bpm_callback}
+                  "Solo Pressed": self.solo_callback}
         return result
 
     def bpm_callback(self, value):
@@ -74,11 +72,12 @@ class MIDIInputListener(object):
             msg = self.midi.get_message()
 
             if msg:
+                # throw away some weird number
                 msg, _ = msg
                 type_, controller, value = msg
                 str_controller = self.akai_message.get_name_by_msg(msg)
 
-                print("MIDI Input Listener: %s - %s" % (str_controller, value))
+                print("MIDI Input Listener: %s: %s" % (str_controller, value))
                 self._callback(msg)
 
             time.sleep(self.interval)
@@ -112,9 +111,12 @@ class MIDIInputListener(object):
                 sync = self.know_row_3_synced
                 strvars = self.sequencer.strvars_prob_poly_rel
 
+            value = int(range_to_range(Ranges.MIDI_RANGE, Ranges.PERC_RANGE, value))
+
             if not sync[i]:
-                if abs(int(strvars[i].get()) - value) < 5:
+                if abs(int(strvars[i].get()) - value) < Misc.KNOB_SYNC_DISTANCE:
                     sync[i] = True
+                    strvars[i].set(value)
             else:
                 strvars[i].set(value)
 
@@ -124,10 +126,8 @@ class MIDIInputListener(object):
             if self.sequencer.intvar_solo.get():
                 for j, item in enumerate(self.sequencer.intvars_enable_channels):
                     if i != j:
-                        print("Setting %s to False" % j)
                         self.sequencer.intvars_enable_channels[j].set(False)
                     else:
-                        print("Setting %s to True" % j)
                         self.sequencer.intvars_enable_channels[j].set(True)
 
             else:
@@ -143,8 +143,9 @@ class MIDIInputListener(object):
                     velocities = self.sequencer.velocities_strvars_max
 
                 if not self.fader_synced[i]:
-                    if abs(int(velocities[i // 2].get()) - value) < 5:
+                    if abs(int(velocities[i // 2].get()) - value) < Misc.KNOB_SYNC_DISTANCE:
                         self.fader_synced[i] = True
+                        velocities[i // 2].set(value)
                 else:
                     velocities[i // 2].set(value)
 
