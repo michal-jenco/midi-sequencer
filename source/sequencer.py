@@ -653,7 +653,7 @@ class Sequencer(tk.Frame):
 
                     else:
                         if str_seq is not None:
-                            notes, str_seq = parser.get_notes(self.context, str_seq, i)
+                            notes, str_seq = parser.get_notes(self.context, str_seq, iii=i)
                         else:
                             notes, str_seq = [], ""
 

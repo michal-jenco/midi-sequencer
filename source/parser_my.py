@@ -48,7 +48,7 @@ class Parser:
 
                 msg = [0x90]
 
-                if note.isdigit():
+                if note.isdigit() or note in {"a", "b", "c", "d", "e"}:
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
 
@@ -59,7 +59,9 @@ class Parser:
                     elif oct_ == 12:
                         add = "+"
 
-                    note_value = Scales.get_note_by_index_wrap(int(note), context.scales.get_scale_by_name(context.scales_individual[iii]))
+                    note_value = Scales.get_note_by_index_wrap(int(note, 16),
+                                                               context.scales.get_scale_by_name(
+                                                                   context.scales_individual[iii]))
                     str_seq += (str(context.scales.get_scale_by_name(context.scales_individual[iii]).index(note_value))
                                 + add + ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " ")
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp
@@ -105,13 +107,14 @@ class Parser:
                     count_of_permutations = self.parse_param("c", perm_content_control)
                     perm_len = self.parse_param("L", perm_content_control)
 
-                    _, str_repr = self.get_notes(context, perm_content_notes, mode=MODE_SIMPLE)
+                    _, str_repr = self.get_notes(context, perm_content_notes, mode=MODE_SIMPLE, iii=iii)
                     str_seq_internal = self.parse_permutations(str_repr.replace(" ", ""),
                                                                random_order=random_order,
                                                                output_length=length,
                                                                start=start,
                                                                perm_len=perm_len)
-                    perm_notes, str_repr = self.get_notes(context, str_seq_internal, mode=MODE_SIMPLE)
+                    print("str_seq_internal: %s" % str_seq_internal)
+                    perm_notes, str_repr = self.get_notes(context, str_seq_internal, mode=MODE_SIMPLE, iii=iii)
 
                     for n in perm_notes:
                         if n[1] != NOTE_PAUSE:
@@ -212,6 +215,7 @@ class Parser:
 
     @staticmethod
     def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None, perm_len=None):
+        print("seq: %s" % seq)
         individual_permutations = ["".join(x) for x in itertools.permutations(seq, perm_len)]
 
         if start is None:
