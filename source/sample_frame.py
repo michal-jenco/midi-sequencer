@@ -10,6 +10,7 @@ class SampleFrame(tk.Frame):
         self["bg"] = "darkred"
 
         self.context = context
+        self.parser = context.parser
 
         self.seq_entries = []
         self.labels = []
@@ -17,7 +18,8 @@ class SampleFrame(tk.Frame):
         self.mutes = []
         self.intvars_mutes = []
 
-        self.parser = context.parser
+        self.intvar_solo = tk.IntVar(self, False)
+        self.checkbutton_solo = tk.Checkbutton(self, variable=self.intvar_solo, text="Solo")
 
         self.cnt = 10
         for i in range(0, self.cnt):
@@ -27,7 +29,7 @@ class SampleFrame(tk.Frame):
 
             s = tk.StringVar(self, "")
             label_font = ("Courier", "10")
-            
+
             intvar_mute = tk.IntVar(self, True)
             mute = tk.Checkbutton(self, variable=intvar_mute)
 
@@ -66,6 +68,7 @@ class SampleFrame(tk.Frame):
             self.mutes[i].grid(row=offset + i, column=9, pady=2, padx=(0, 3), sticky="w")
             self.seq_entries[i].grid(row=offset + i, column=10, pady=2, sticky="w")
             self.labels[i].grid(row=offset + i, column=11, pady=2, sticky="w")
+        self.checkbutton_solo.grid(row=offset + self.cnt + 1, column=9, pady=2, sticky="w")
 
     def set_sequence(self, event, channel):
         notes, str_seq = self.parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
@@ -78,3 +81,15 @@ class SampleFrame(tk.Frame):
 
         self.context.sample_seqs[channel] = notes
         self.update_label_with_current_step(channel, 0, False)
+
+    def mute_all(self):
+        for i in range(self.cnt):
+            self.intvars_mutes[i].set(False)
+
+    def unmute_all(self):
+        for i in range(self.cnt):
+            self.intvars_mutes[i].set(True)
+
+    def invert_mute(self):
+        for i in range(self.cnt):
+            self.intvars_mutes[i].set(not self.intvars_mutes[i].get())

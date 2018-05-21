@@ -4,6 +4,7 @@ import rtmidi
 from rtmidi.midiutil import open_midiinput
 
 from source.akai_midimix_message import AkaiMidimixMessage
+from source.akai_midimix_state import AkaiMidimixStates, AkaiMidimixState
 from source.functions import range_to_range
 from source.constants import Ranges, Misc
 
@@ -14,14 +15,16 @@ class MIDIInputListener(object):
         self.context = context
         self.input_name = input_name
         self.interval = interval
+        self.channel_count = 8
 
         self.midi = rtmidi.MidiIn()
         self.akai_message = AkaiMidimixMessage()
+        self.state = AkaiMidimixState()
 
-        self.fader_synced = [False]*8
-        self.know_row_1_synced = [False]*8
-        self.know_row_2_synced = [False]*8
-        self.know_row_3_synced = [False]*8
+        self.fader_synced = [False] * self.channel_count
+        self.know_row_1_synced = [False] * self.channel_count
+        self.know_row_2_synced = [False] * self.channel_count
+        self.know_row_3_synced = [False] * self.channel_count
 
         self.available_ports = self.midi.get_ports()
 
@@ -50,11 +53,40 @@ class MIDIInputListener(object):
                   "RecArm 3 Pressed": self.sequencer.reset_idx,
                   "RecArm 4 Pressed": self.sequencer.init_entries,
                   "RecArm 5 Pressed": self.sequencer.press_all_enters,
-                  "RecArm 6 Pressed": self.sequencer.mute_all,
-                  "RecArm 7 Pressed": self.sequencer.unmute_all,
-                  "RecArm 8 Pressed": self.sequencer.invert_mute,
+                  "RecArm 6 Pressed": lambda: self.mute_callback(mode="mute"),
+                  "RecArm 7 Pressed": lambda: self.mute_callback(mode="unmute"),
+                  "RecArm 8 Pressed": lambda: self.mute_callback(mode="invert"),
                   "Solo Pressed": self.solo_callback}
         return result
+
+    def get_state_and_device(self):
+        state = self.state.get()
+
+        if state is AkaiMidimixStates.MAIN:
+            device = self.sequencer
+        elif state is AkaiMidimixStates.SAMPLE_FRAME:
+            device = self.sequencer.sample_frame
+
+        return state, device
+
+    def mute_callback(self, mode):
+        _, device = self.get_state_and_device()
+
+        if mode == "mute":
+            device.mute_all()
+
+        elif mode == "unmute":
+            device.unmute_all()
+
+        elif mode == "invert":
+            device.invert_mute()
+
+    def bank_callback(self, direction):
+        if direction.lower() == "left":
+            self.state.previous()
+
+        elif direction.lower() == "right":
+            self.state.next()
 
     def bpm_callback(self, value):
         bpm_range_value = range_to_range(Ranges.MIDI_RANGE, Ranges.BPM_RANGE, value)
@@ -65,7 +97,8 @@ class MIDIInputListener(object):
         self.context.playback_on = not self.context.playback_on
 
     def solo_callback(self):
-        self.sequencer.intvar_solo.set(not self.sequencer.intvar_solo.get())
+        _, device = self.get_state_and_device()
+        device.intvar_solo.set(not device.intvar_solo.get())
 
     def main_loop(self):
         while True:
@@ -120,17 +153,25 @@ class MIDIInputListener(object):
             strvars[i].set(value)
 
         elif "Mute" in msg_name and "Pressed" in msg_name:
+            state, device = self.get_state_and_device()
+
+            if state is AkaiMidimixStates.MAIN:
+                intvars = device.intvars_enable_channels
+
+            elif state is AkaiMidimixStates.SAMPLE_FRAME:
+                intvars = device.intvars_mutes
+
             i = int(msg_name.split()[1]) - 1
 
-            if self.sequencer.intvar_solo.get():
-                for j, item in enumerate(self.sequencer.intvars_enable_channels):
+            if device.intvar_solo.get():
+                for j, item in enumerate(intvars):
                     if i != j:
-                        self.sequencer.intvars_enable_channels[j].set(False)
+                        intvars[j].set(False)
                     else:
-                        self.sequencer.intvars_enable_channels[j].set(True)
+                        intvars[j].set(True)
 
             else:
-                self.sequencer.intvars_enable_channels[i].set(not self.sequencer.intvars_enable_channels[i].get())
+                intvars[i].set(not intvars[i].get())
 
         elif "Fader" in msg_name:
             try:
@@ -150,3 +191,6 @@ class MIDIInputListener(object):
 
             except:
                 pass
+
+        elif "Bank" in msg_name and "Pressed" in msg_name:
+            self.bank_callback(direction=msg_name.split()[1])
