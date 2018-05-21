@@ -5,7 +5,6 @@ import time
 import copy
 import random
 import os
-import queue
 
 from source.note_lengths import NoteLengths
 from source.context import Context
@@ -85,15 +84,15 @@ class Sequencer(tk.Frame):
                                             variable=self.intvar_solo)
         self.checkbox_solo.grid(row=0, column=NumberOf.CHANNEL_CHECKBOXES)
 
-        self.idx_all_off = [0, 0, 0, 0, 0, 0, 0]
-        self.off_note_idx = [0, 0, 0, 0, 0, 0, 0]
-        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0]
-        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0]
+        self.idx_all_off = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.off_note_idx = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
-        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0]
+        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         self.context.midi = midi_
 
@@ -950,10 +949,6 @@ class Sequencer(tk.Frame):
 
         valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
 
-        # for i, _ in enumerate(self.actual_notes_played_counts):
-        #     print("Channel %s:" % i, self.actual_notes_played_counts[i])
-        # print()
-
         for i, valid_channels in enumerate(valid_midi_channels):
             if i < len(self.context.note_sequences) and self.context.note_sequences[i]:
                 if (a() > float(self.strvars_prob_skip_note[i].get()) / 100
@@ -992,7 +987,7 @@ class Sequencer(tk.Frame):
                         if orig_note[1] == GO_TO_START:
                             self.idx = -1
                             self.actual_notes_played_counts[i] = 0
-                            continue
+                            return "dont sleep"
 
                         elif not self.skip_note_parallel(self.idx, i) and not skip_sequentially:
                             for j, channel in enumerate(valid_channels):
@@ -1091,10 +1086,11 @@ class Sequencer(tk.Frame):
                 time.sleep(0.02)
                 continue
 
-            self.play_midi_notes()
+            res = self.play_midi_notes()
             self.play_sample_notes()
 
-            sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
-            time.sleep(sleep_time)
+            if res != "dont sleep":
+                sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
+                time.sleep(sleep_time)
 
             self.idx += 1
