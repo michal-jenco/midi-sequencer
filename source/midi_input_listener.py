@@ -116,9 +116,8 @@ class MIDIInputListener(object):
             if not sync[i]:
                 if abs(int(strvars[i].get()) - value) < Misc.KNOB_SYNC_DISTANCE:
                     sync[i] = True
-                    strvars[i].set(value)
-            else:
-                strvars[i].set(value)
+
+            strvars[i].set(value)
 
         elif "Mute" in msg_name and "Pressed" in msg_name:
             i = int(msg_name.split()[1]) - 1

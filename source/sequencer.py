@@ -906,7 +906,7 @@ class Sequencer(tk.Frame):
                 step = (self.idx - 1) % len(sample_seq)
                 self.sample_frame.update_label_with_current_step(channel, step, sample_seq[step])
 
-                if sample_seq[sample_idx]:
+                if sample_seq[sample_idx] and self.sample_frame.intvars_mutes[channel].get():
                     self.context.midi.send_message(sample_seq[sample_idx])
 
     def get_delay_multiplier(self):

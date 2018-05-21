@@ -14,11 +14,13 @@ class SampleFrame(tk.Frame):
         self.seq_entries = []
         self.labels = []
         self.strvars = []
+        self.mutes = []
+        self.intvars_mutes = []
 
         self.parser = context.parser
 
-        cnt = 10
-        for i in range(0, cnt):
+        self.cnt = 10
+        for i in range(0, self.cnt):
             e = tk.Entry(self, width=40)
             self.seq_entries.append(e)
             self.seq_entries[i].bind('<Return>', lambda event, x=i: self.set_sequence(event, x))
@@ -26,9 +28,14 @@ class SampleFrame(tk.Frame):
             s = tk.StringVar(self, "")
             label_font = ("Courier", "10")
             
-            l = tk.Label(self, text=random.choice("?:_#&"), textvariable=s, font=label_font)
+            intvar_mute = tk.IntVar(self, True)
+            mute = tk.Checkbutton(self, variable=intvar_mute)
+
+            l = tk.Label(self, text="", textvariable=s, font=label_font)
             self.labels.append(l)
             self.strvars.append(s)
+            self.mutes.append(mute)
+            self.intvars_mutes.append(intvar_mute)
 
     def update_label_with_current_step(self, channel, step, click):
         notes, str_seq = self.parser.get_notes(self.context, self.seq_entries[channel].get(), mode=MODE_SAMPLE)
@@ -55,11 +62,10 @@ class SampleFrame(tk.Frame):
 
     def display(self):
         offset = 5
-        for i, e in enumerate(self.seq_entries):
-            e.grid(row=offset + i, column=10, pady=2, sticky="w")
-
-        for i, l in enumerate(self.labels):
-            l.grid(row=offset + i, column=11, pady=2, sticky="w")
+        for i in range(self.cnt):
+            self.mutes[i].grid(row=offset + i, column=9, pady=2, padx=(0, 3), sticky="w")
+            self.seq_entries[i].grid(row=offset + i, column=10, pady=2, sticky="w")
+            self.labels[i].grid(row=offset + i, column=11, pady=2, sticky="w")
 
     def set_sequence(self, event, channel):
         notes, str_seq = self.parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
