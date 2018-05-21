@@ -318,6 +318,10 @@ class Parser:
                 seq = seq[0:idx]
 
             if seq.startswith(self.string_constants.literal_memory_sequence):
+                if seq[1] == "(":
+                    seq = seq[seq.index("("):seq.index(")")].replace(
+                        self.string_constants.literal_memory_sequence_separator, " ")
+
                 result.append((seq, times))
 
             else:
