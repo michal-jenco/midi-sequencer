@@ -157,7 +157,6 @@ class MIDIInputListener(object):
 
             if state is AkaiMidimixStates.MAIN:
                 intvars = device.intvars_enable_channels
-
             elif state is AkaiMidimixStates.SAMPLE_FRAME:
                 intvars = device.intvars_mutes
 
@@ -169,7 +168,6 @@ class MIDIInputListener(object):
                         intvars[j].set(False)
                     else:
                         intvars[j].set(True)
-
             else:
                 intvars[i].set(not intvars[i].get())
 

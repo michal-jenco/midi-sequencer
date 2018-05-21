@@ -4,7 +4,7 @@ import time
 import random
 from collections import OrderedDict
 
-from source.cc import CCKeys, CCFM, CCKick, CCSample
+from source.cc import CCKeys, CCFM, CCKick, CCSample, CCMonologue
 from source.constants import *
 
 
@@ -17,7 +17,8 @@ class Wobbler(tk.Frame):
         self.parent = parent
 
         self.cc = None
-        self.volcas = OrderedDict((("Keys", CCKeys), ("FM", CCFM), ("Sample", CCSample), ("Kick", CCKick)))
+        self.devices = OrderedDict((("Keys", CCKeys), ("FM", CCFM), ("Sample", CCSample), ("Kick", CCKick),
+                                    ("Monologue", CCMonologue)))
 
         self.control_change = None
         self.function = None
@@ -46,9 +47,9 @@ class Wobbler(tk.Frame):
 
         self.button_toggle = tk.Button(self, text="Start", command=self.toggle)
 
-        self.strvar_option_volca = tk.StringVar(self, list(self.volcas.keys())[0])
-        self.option_volca = tk.OptionMenu(self, self.strvar_option_volca, *self.volcas.keys(), command=self.update_cc_list)
-        self.cc = self.volcas[self.strvar_option_volca.get()]()
+        self.strvar_option_volca = tk.StringVar(self, list(self.devices.keys())[0])
+        self.option_volca = tk.OptionMenu(self, self.strvar_option_volca, *self.devices.keys(), command=self.update_cc_list)
+        self.cc = self.devices[self.strvar_option_volca.get()]()
 
         self.strvar_option_func = tk.StringVar(self, "sin")
         self.option_func = tk.OptionMenu(self, self.strvar_option_func, "sin", "cos", "rand", "min_max")
@@ -70,7 +71,7 @@ class Wobbler(tk.Frame):
         menu = self.option_cc["menu"]
         menu.delete(0, "end")
 
-        all_ccs = self.volcas[self.strvar_option_volca.get()]().get_all()
+        all_ccs = self.devices[self.strvar_option_volca.get()]().get_all()
         print(all_ccs)
 
         for string in all_ccs:
@@ -128,7 +129,7 @@ class Wobbler(tk.Frame):
                 else:
                     value = max_
 
-            cc = self.volcas[self.strvar_option_volca.get()]().get_cc_by_name(self.strvar_option_cc.get())
+            cc = self.devices[self.strvar_option_volca.get()]().get_cc_by_name(self.strvar_option_cc.get())
             msg = [0xb0 + int(self.strvar_option_midi_channel.get()) - 1, cc, value]
 
             self.context.midi.send_message(msg)

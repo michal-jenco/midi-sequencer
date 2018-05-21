@@ -79,3 +79,21 @@ class CCKick(CC):
         self.resonator_bend = 47
         self.resonator_time = 48
         self.accent = 49
+
+
+class CCMonologue(CC):
+    def __init__(self):
+        super(CC, self).__init__()
+
+        self.eg_attack, self.eg_decay, self.eg_int = 16, 17, 25
+        self.eg_type, self.eg_target = 61, 62
+        self.lfo_rate, self.lfo_depth = 24, 26
+        self.lfo_target, self.lfo_wave, self.lfo_mode = 56, 58, 59
+        self.drive = 28
+        self.pitch = 35
+        self.shape_1, self.shape_2 = 36, 37
+        self.level_1, self.level_2 = 39, 40
+        self.cutoff, self.resonance = 43, 44
+        self.octave_2 = 49
+        self.wave_1, self.wave_2 = 50, 51
+        self.sync_ring = 60
