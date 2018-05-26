@@ -39,8 +39,8 @@ class Sequencer(tk.Frame):
         self.frame_delay = tk.Frame(self.root)
         self.frame_delay["bg"] = "yellow"
         self.strvar_delay_multiplier = tk.StringVar(self.frame_delay)
-        self.scale_delay_multiplier = tk.Scale(self.frame_delay, from_=0.1, to=10.0, orient=tk.HORIZONTAL,
-                                               sliderlength=30, resolution=0.1,
+        self.scale_delay_multiplier = tk.Scale(self.frame_delay, from_=.1, to=10., orient=tk.HORIZONTAL,
+                                               sliderlength=30, resolution=.1,
                                                variable=self.strvar_delay_multiplier, length=500)
 
         self.intvar_checkbox_state = tk.IntVar(self.root)
@@ -266,7 +266,7 @@ class Sequencer(tk.Frame):
         self.entry_octave_sequence.insert(tk.END, " -2")
 
         self.entry_midi_channels.delete(0, tk.END)
-        self.entry_midi_channels.insert(0, "10|10|10|11|11|11|13")
+        self.entry_midi_channels.insert(0, "15|11|10|11|11|11|13")
 
         self.press_all_enters()
 
@@ -963,7 +963,7 @@ class Sequencer(tk.Frame):
                     try:
                         note = self.context.note_sequences[i][loop_idx]
                     except:
-                        time.sleep(0.02)
+                        time.sleep(.02)
                         continue
 
                     if not self.intvars_enable_channels[i].get():
@@ -1083,7 +1083,7 @@ class Sequencer(tk.Frame):
 
         while True:
             if not self.context.playback_on:
-                time.sleep(0.02)
+                time.sleep(.02)
                 continue
 
             res = self.play_midi_notes()
