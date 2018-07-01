@@ -1,0 +1,13 @@
+poly	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+root_seq	 ex24 fx8 ex24 gx8 |    |    |    |    |    | 
+midi_channels	10|10|10|11|11|11|13
+memory_seq	  &80-4-4 |    |    |    |    |    | 
+off array	   |    |    |    |    |    |  1
+scale_seq	   |    |    |    |    |    | 
+skip_seq	3 1 2|    |    |    |    |    | 
+octave_seq	   |    |    |    |    |    |  -2
+memory	031
+memory	032
+memory	034

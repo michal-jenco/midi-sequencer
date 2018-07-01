@@ -1,0 +1,11 @@
+poly	   |    |    |    |    |    | 
+root_seq	dx96 ax96|dx96 ax96|dx96 ax96|dx96 ax96|    |    |dx96 ax96
+skip_seq	   |    |    |    |    |    | 
+octave_seq	 1  |    |    |    |    |    | -2
+midi_channels	15|11|10|11 10|11|11|13
+
+poly_relative	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+off array	   |    |    |    |    |    | 
+scale_seq	lydian_augmentedx192 mixolydianx192|lydian_augmentedx192 mixolydianx192|lydian_augmentedx192 mixolydianx192|lydian_augmentedx192 mixolydianx192|    |    |lydian_augmentedx192 mixolydianx192
+memory_seq	&0-560-78x4 &2-452-67x2 &3-673-89x2|&0,,,251,,,,,x2 &(,3,,6,54,25,6,87,5,,,,,4;ro-0) | &4.5.x4 &6.7.x2 &(1.2.3.2.;o+1)   |    |    |    | &0,,x8 &2.x4 &3.x4

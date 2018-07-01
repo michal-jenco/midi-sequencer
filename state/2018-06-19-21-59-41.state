@@ -1,0 +1,10 @@
+midi_channels	15|11|10|11|11|11|13
+octave_seq	   |    |    |    |    |    |  -2
+scale_seq	lydianx48 mixolydianx48 lydian_sharp_9x24 phrygian24 acousticx48   |    |    |    |    |    | 
+off array	   |    |    |    |    |    |  1
+root_seq	 dx48 gx48 cx48 ex48 |   dx72 gx48 cx48 ex48   |    dx72 gx48 cx48 ex48  |   dx72 gx48 cx48 ex48   |    |    | 
+poly_relative	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+memory_seq	 &0.3.1.5.x4 &(2.1.5.4.;o-1)x4  |    |    |    |    |    | 

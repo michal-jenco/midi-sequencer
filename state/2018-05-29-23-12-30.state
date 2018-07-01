@@ -1,0 +1,26 @@
+off array	   |    |    |    |    |    | 
+
+scale_seq	   |    |    |    |    |    | 
+
+skip_par	   |    |    |    |    |    | 
+
+memory_seq	&(0-,,2,,1-,,6,,5,8,;o-1) |  |  |&0=x16  &0,,,x12|&0+,,,x20  &0+,,x16 |&(9451124457678458;ro+1) |
+&0,.=
+root_seq	   |    |    |    |    |    | 
+
+midi_channels	15|11|10|11|11|11|13
+
+skip_seq	   |    |    |    |    |    | 
+
+poly	   |    |    |    |    |    | 
+
+poly_relative	   |    |    |    |    |    | 
+
+octave_seq	   |    |    |    |    |    | 
+
+memory	031
+
+memory	032
+
+memory	034
+

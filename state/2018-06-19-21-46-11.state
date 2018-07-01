@@ -1,0 +1,10 @@
+midi_channels	15|11|10|11|11|11|13
+octave_seq	   |    |    |    |    |    |  -2
+scale_seq	   |    |    |    |    |    | 
+off array	   |    |    |    |    |    |  1
+root_seq	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+memory_seq	 &0.3.1.5.  |    |    |    |    |    | 

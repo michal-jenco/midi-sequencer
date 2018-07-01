@@ -1,0 +1,13 @@
+midi_channels	15|11|10|11|11|11|13
+memory_seq	  &(02356421;ro-1) |&   |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+octave_seq	   |    |    |    |    |    |  -2
+skip_seq	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+scale_seq	   |    |    |    |    |    | 
+off array	   |    |    |    |    |    |  1
+root_seq	 ex32 dx32  |  ex32 dx32   |    |    |    |    | 
+memory	031
+memory	032
+memory	034

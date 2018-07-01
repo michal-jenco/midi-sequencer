@@ -1,0 +1,14 @@
+root_seq	   | gx96 dx96 ax96 ex96  |    |    |    |    | 
+skip_seq	   |   |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+scale_seq	   | locrianx96 enigmaticx96 locrianx96 enigmaticx96 lydian_sharp_9x192 mixolydian_b6x192 |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+memory_seq	  | &(0-.2,3.41.9,7.c...;ro+0)x2 |    |    |    |    | &0=,x12 &2=,3,=1=,5=,
+midi_channels	15|11|10|11|11|11|13
+octave_seq	   |  |    |    |    |    |  -2
+skip_par	   |    |    |    |    |    | 
+off array	   |    |    |    |    |    |  
+memory	02356
+memory	364
+memory	5645231257
+memory	0=0=0=3.3.3.5==,

@@ -1,0 +1,13 @@
+midi_channels	10|11|10|11|11|11|13
+off array	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+memory_seq	   |  &0235624679356  |    |    |    |    | 
+scale_seq	   |    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+root_seq	   |    |    |    |    |    | 
+octave_seq	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+memory	031
+memory	032
+memory	034

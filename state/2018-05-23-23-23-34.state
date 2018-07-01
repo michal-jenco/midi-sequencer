@@ -1,0 +1,14 @@
+octave_seq	   |    -2|   0 |0    |    |    | 
+root_seq	   |    |    |    |    |    | 
+off array	   |    |    |    |    |    | 
+memory_seq	 &(023568)x99 &09x0 &25x0  | 3|  3|3   |    |    | &(9457216a;ro-1) 
+scale_seq	   |    |    |    |    |    | 
+midi_channels	15|11|11|11|11|11|13
+skip_seq	   |    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+memory	031
+memory	032
+memory	034
+memory	r,.==============

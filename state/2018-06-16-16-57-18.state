@@ -1,0 +1,22 @@
+midi_channels	15|11|10|11|11|11|13
+
+memory_seq	&(012345678987654321;ro-1)|&9,,5,,4,,7,,6,,2,,|    |    |    |    | 
+
+scale_seq	fifthsx288 fourthsx288 thirdsx288 yox288|fifthsx288 fourthsx288 thirdsx288 yox288|fifthsx288 fourthsx288 thirdsx288 yox288 |    |    |    | 
+
+poly	   |    |    |    |    |    | 
+
+octave_seq	   |    |    |    |    |    | 
+
+skip_seq	   |    |    |    |    |    | 
+
+root_seq	dx72 ex72 fx72 cx72 ex72 dx72 cx72 fx72|dx72 ex72 fx72 cx72 ex72 dx72 cx72 fx72|dx72 ex72 fx72 cx72 ex72 dx72 cx72 fx72|    |    |    | 
+
+poly_relative	   |    |    |    |    |    | 
+
+skip_par	   |    |    |    |    |    | 
+
+off array	   |    |    |    |    |    | 
+
+memory	012345678987654321
+

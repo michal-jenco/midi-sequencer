@@ -1,0 +1,23 @@
+midi_channels	15|11|10|11|11|11|13
+
+memory_seq	&(01234567898765432;ro+0)|&9,,5,,4,,7,,6,,2,|    |    |    |    | 
+&0+===2,,,
+scale_seq	fifthsx272 fourthsx272 thirdsx272 yox272|fifthsx272 fourthsx272 thirdsx272 yox272| fifthsx272 fourthsx272 thirdsx272 yox272 |    |    |    | 
+fifthsx272 fourthsx272 thirdsx272 yox272
+poly	   |    |    |    |    |    | 
+
+octave_seq	   |    |    |    |    |    | 
+-2
+skip_seq	   |    |    |    |    |    | 
+
+root_seq	dx68 ex68 fx68 cx68 ex68 dx68 cx68 fx68| dx68 ex68 fx68 cx68 ex68 dx68 cx68 fx68 | dx68 ex68 fx68 cx68 ex68 dx68 cx68 fx68 |    |    |    | dx68 ex68 fx68 cx68 ex68 dx68 cx68 fx68
+poly_relative	   |    |    |    |    |    | 
+
+skip_par	   |    |    |    |    |    | 
+
+off array	   |    |    |    |    |    | 
+
+memory	012345678987654321
+
+memory	01234567898765432
+memory	9,,5,,4,,7,,6,,2,
