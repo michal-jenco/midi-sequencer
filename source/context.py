@@ -11,20 +11,18 @@ class Context:
         self.midi = None
 
         self.scale = None
-        self.scales_individual = ["lydian", "lydian", "lydian", "lydian", "lydian", "lydian"]
+        self.scales_individual = []
         self.bpm = tk.StringVar(root, "90")
         self.sequence = None
         self.str_sequence = None
         self.root = None
-        self.roots = [e2, e2, e2, e2, e2, e2, e2, e2]
+        self.roots = []
         self.mode = None
 
-        self.memory_sequences = {}
-        self.memory_sequences["main melody"] = []
+        self.memory_sequences = {"main melody": []}
         self.memory_filepath = "../memory/"
         self.memory_dir = r"I:\Pycharm projects\MIDI\memory"
         self.state_dir = r"../state/"
-
         self.logfile = open("../other/logfile.txt", "a")
 
         self.get_delay_multiplier = sequencer.strvar_delay_multiplier.get
@@ -43,41 +41,31 @@ class Context:
         self.root_sequences = [[e2], [], [], [], [], [], []]
         self.scale_sequences = [["lydian"], [], [], [], [], [], []]
         self.off_sequences = [[], [], [], [], [], [], [1]]
-
-        self.kick_note_values = []
-
         self.midi_channels = [[10], [10], [10], [11], [11], [11], [13]]
+        self.kick_note_values = []
 
         self.poly = []
         self.poly_relative = []
         self.skip_notes_parallel = []
         self.skip_notes_sequential = []
-
         self.octave_sequence = []
         self.root_sequence = []
         self.scale_sequence = []
-
-        self.sample_seqs = []
-        for i in range(0, 10):
-            self.sample_seqs.append([])
+        self.sample_seqs = [[]*10]
 
         self.playback_on = False
+        self.solo_on = False
         self.off_list = []
         self.prob_skip_note = tk.StringVar(root)
 
         self.comma_pause = 1
         self.dot_pause = 2
         self.dash_pause = 4
-
         self.question_min = 1
         self.question_max = 8
-
         self.paragraph_min = 1
         self.paragraph_max = 8
-
         self.amper_min = 1
         self.amper_max = 8
 
         self.midi_port = None
-
-        self.solo_on = False

@@ -59,9 +59,7 @@ class Evolver:
         for k in range(0, i):
             self.do_step(context)
 
-    def do_step(self, context):
-        c = context
-
+    def do_step(self):
         if self.i_grow:
             pass
 

@@ -212,9 +212,6 @@ class Sequencer(tk.Frame):
         self.entry_sequence.bind('<Return>', self.set_sequence)
         self.entry_sequence.bind('<Control-Return>', lambda typ=MemoryType().melody: self.add_seq_to_memory(typ))
         self.entry_sequence.delete(0, tk.END)
-        self.entry_sequence.insert(0, "054")
-        self.set_scale("lydian")
-        self.set_sequence(None)
 
         self.entry_memory_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_memory_sequence.bind('<Return>', self.set_memory_sequence)
@@ -266,9 +263,9 @@ class Sequencer(tk.Frame):
         self.entry_scale_sequence.delete(0, tk.END)
         self.entry_root_sequence.delete(0, tk.END)
 
-        self.entry_midi_channels.insert(0, "15|11|10|11|11|11|13")
-        self.entry_scale_sequence.insert(0, "lydian|*0|*0|*0|*0|*0|*0")
-        self.entry_root_sequence.insert(0, "e|*0|*0|*0|*0|*0|*0")
+        self.entry_midi_channels.insert(0, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
+        self.entry_scale_sequence.insert(0, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
+        self.entry_root_sequence.insert(0, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
 
         self.press_all_enters()
 
