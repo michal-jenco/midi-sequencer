@@ -189,11 +189,7 @@ class Wobbler(tk.Frame):
 
     @staticmethod
     def square_func(loop_cnt):
-        if loop_cnt % 2 == 0:
-            value = 0
-        else:
-            value = 1
-        return value
+        return loop_cnt % 2
 
     @staticmethod
     def rand_func():

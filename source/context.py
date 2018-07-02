@@ -40,8 +40,8 @@ class Context:
         self.skip_notes_sequential_sequences = []
         self.skip_note_parallel_sequences = []
         self.octave_sequences = [[], [], [], [], [], [], [-2]]
-        self.root_sequences = []
-        self.scale_sequences = []
+        self.root_sequences = [[e2], [], [], [], [], [], []]
+        self.scale_sequences = [["lydian"], [], [], [], [], [], []]
         self.off_sequences = [[], [], [], [], [], [], [1]]
 
         self.kick_note_values = []

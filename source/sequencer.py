@@ -16,7 +16,7 @@ from source.delay import Delay
 from source.helpful_functions import a
 from source.functions import log, get_date_string, insert_into_entry
 from source.memory import Memory
-from source.string_constants import StringConstants
+from source.constants import StringConstants
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 
@@ -63,9 +63,6 @@ class Sequencer(tk.Frame):
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
         self.memories.append(Memory(self.frame_memories, self.context, MemoryType().melody))
-        self.memories[0].add_seq("031")
-        self.memories[0].add_seq("032")
-        self.memories[0].add_seq("034")
 
         self.frame_channel_enable = tk.Frame(self.root)
         self.frame_channel_enable.grid(row=23, column=4, rowspan=2)
@@ -202,7 +199,7 @@ class Sequencer(tk.Frame):
                       height=1,
                       font=button_font,
                       command=lambda y=scale: self.set_scale(y)) \
-                .grid(row=(row_), column=(col_ % wrap), sticky="nsew")
+                .grid(row=row_, column=(col_ % wrap), sticky="nsew")
 
             col_ += 1
 
@@ -266,7 +263,12 @@ class Sequencer(tk.Frame):
         self.entry_octave_sequence.insert(tk.END, " -2")
 
         self.entry_midi_channels.delete(0, tk.END)
+        self.entry_scale_sequence.delete(0, tk.END)
+        self.entry_root_sequence.delete(0, tk.END)
+
         self.entry_midi_channels.insert(0, "15|11|10|11|11|11|13")
+        self.entry_scale_sequence.insert(0, "lydian|*0|*0|*0|*0|*0|*0")
+        self.entry_root_sequence.insert(0, "e|*0|*0|*0|*0|*0|*0")
 
         self.press_all_enters()
 
@@ -688,7 +690,8 @@ class Sequencer(tk.Frame):
             separator=self.string_constants.multiple_entry_separator,
             sequences=text)
 
-        self.context.root_sequences = [parser.parse_root_sequence(seq) for seq in individual_sequences]
+        for i, seq in enumerate(individual_sequences):
+            self.context.root_sequences[i] = parser.parse_root_sequence(seq)
         self.context.root_sequence = self.context.root_sequences[0]
 
         log(logfile=self.context.logfile, msg="Root sequences set to: %s" % self.context.root_sequences)
@@ -701,7 +704,8 @@ class Sequencer(tk.Frame):
             separator=self.string_constants.multiple_entry_separator,
             sequences=text)
 
-        self.context.octave_sequences = [parser.parse_octave_sequence(seq) for seq in individual_sequences]
+        for i, seq in enumerate(individual_sequences):
+            self.context.octave_sequences[i] = parser.parse_octave_sequence(seq)
         self.context.octave_sequence = self.context.octave_sequences[0]
 
         log(logfile=self.context.logfile, msg="Octave sequences set to: %s" % self.context.octave_sequences)
@@ -714,7 +718,8 @@ class Sequencer(tk.Frame):
             separator=self.string_constants.multiple_entry_separator,
             sequences=text)
 
-        self.context.scale_sequences = [parser.parse_scale_sequence(self.context, seq) for seq in individual_sequences]
+        for i, seq in enumerate(individual_sequences):
+            self.context.scale_sequences[i] = parser.parse_scale_sequence(self.context, seq)
         self.context.scale_sequence = self.context.scale_sequences[0]
 
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)

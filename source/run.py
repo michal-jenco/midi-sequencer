@@ -2,7 +2,7 @@ import threading
 import rtmidi
 import time
 
-from source.string_constants import StringConstants
+from source.constants import StringConstants
 from source.sequencer import Sequencer
 
 midi = rtmidi.MidiOut()

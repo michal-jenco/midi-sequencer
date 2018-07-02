@@ -2,8 +2,7 @@ import random
 import itertools
 
 from source.scales import Scales
-from source.string_constants import StringConstants
-from source.constants import note_dict as constants_note_dict
+from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE, NOTE_PAUSE, GO_TO_START
 
 
@@ -291,6 +290,9 @@ class Parser:
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
+            if self.is_pointer(seq):
+                return self.context.octave_sequences[self.get_pointer_destination(seq)]
+
             for i in range(0, times):
                 if seq.startswith(("+", "-")):
                     result.append(int(seq[0:2])*12)
@@ -342,6 +344,9 @@ class Parser:
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
+            if self.is_pointer(seq):
+                return self.context.root_sequences[self.get_pointer_destination(seq)]
+
             if "x" in seq:
                 idx = seq.index("x")
                 seq = seq[0:idx]
@@ -354,6 +359,14 @@ class Parser:
 
         return result
 
+    @staticmethod
+    def is_pointer(seq):
+        return seq.startswith(StringConstants().pointer)
+
+    @staticmethod
+    def get_pointer_destination(seq):
+        return int(seq[1])
+
     def parse_scale_sequence(self, context, text):
         result = []
         sequences = list(text.split())
@@ -362,9 +375,11 @@ class Parser:
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
+            if self.is_pointer(seq):
+                return context.scale_sequences[self.get_pointer_destination(seq)]
+
             if "x" in seq:
-                idx = seq.rindex("x")
-                seq = seq[0:idx]
+                seq = seq[0:seq.rindex("x")]
 
             if seq in available_scales:
                 for i in range(0, times):
@@ -372,6 +387,7 @@ class Parser:
 
             else:
                 print("Scale %s does not exist." % seq)
+                return []
 
         return result
 
