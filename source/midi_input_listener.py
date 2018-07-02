@@ -48,16 +48,15 @@ class MIDIInputListener(object):
         self.main_loop_thread.start()
 
     def get_callback_dict(self):
-        result = {"RecArm 1 Pressed": self.playback_on_callback,
-                  "RecArm 2 Pressed": self.sequencer.end_all_notes,
-                  "RecArm 3 Pressed": self.sequencer.reset_idx,
-                  "RecArm 4 Pressed": self.sequencer.init_entries,
-                  "RecArm 5 Pressed": self.sequencer.press_all_enters,
-                  "RecArm 6 Pressed": lambda: self.mute_callback(mode="mute"),
-                  "RecArm 7 Pressed": lambda: self.mute_callback(mode="unmute"),
-                  "RecArm 8 Pressed": lambda: self.mute_callback(mode="invert"),
-                  "Solo Pressed": self.solo_callback}
-        return result
+        return {"RecArm 1 Pressed": self.playback_on_callback,
+                "RecArm 2 Pressed": self.sequencer.end_all_notes,
+                "RecArm 3 Pressed": self.sequencer.reset_idx,
+                "RecArm 4 Pressed": lambda: 0,
+                "RecArm 5 Pressed": self.sequencer.press_all_enters,
+                "RecArm 6 Pressed": lambda: self.mute_callback(mode="mute"),
+                "RecArm 7 Pressed": lambda: self.mute_callback(mode="unmute"),
+                "RecArm 8 Pressed": lambda: self.mute_callback(mode="invert"),
+                "Solo Pressed": self.solo_callback}
 
     def get_state_and_device(self):
         state = self.state.get()

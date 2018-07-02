@@ -837,8 +837,8 @@ class Sequencer(tk.Frame):
         if i > NumberOf.VELOCITY_SLIDERS:
             return 100, 127
 
-        slider_min = int(self.velocities_strvars_min[i].get())
-        slider_max = int(self.velocities_strvars_max[i].get())
+        slider_min = Ranges.MIDI_MAX if i >= len(self.velocities_strvars_min) else int(self.velocities_strvars_min[i].get())
+        slider_max = Ranges.MIDI_MAX if i >= len(self.velocities_strvars_max) else int(self.velocities_strvars_max[i].get())
 
         vel_min = slider_min if slider_min < slider_max else slider_max
         vel_max = slider_max if slider_max > slider_min else slider_min
@@ -1045,7 +1045,7 @@ class Sequencer(tk.Frame):
             root_idx = self.actual_notes_played_counts[i] % len(self.context.root_sequences[i])
 
             if self.context.root_sequences[i][root_idx] != self.context.roots[i]:
-                self.end_all_notes(i)
+                # self.end_all_notes(i)
                 self.context.roots[i] = self.context.root_sequences[i][root_idx]
 
                 log(logfile=self.context.logfile,
@@ -1059,7 +1059,7 @@ class Sequencer(tk.Frame):
             scale_idx = self.actual_notes_played_counts[i] % len(self.context.scale_sequences[i])
 
             if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
-                self.end_all_notes(i)
+                # self.end_all_notes(i)
                 self.context.scales_individual[i] = self.context.scale_sequences[i][scale_idx]
                 self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
                 self.set_memory_sequence(None)

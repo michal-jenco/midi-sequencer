@@ -77,12 +77,10 @@ class Wobbler(tk.Frame):
         menu.delete(0, "end")
 
         all_ccs = self.devices[self.strvar_option_volca.get()]().get_all()
-        print(all_ccs)
 
         for string in all_ccs:
             menu.add_command(label=string,
                              command=lambda value=string: self.strvar_option_cc.set(value))
-
         self.strvar_option_cc.set(all_ccs[0])
 
     def display(self):
@@ -119,6 +117,9 @@ class Wobbler(tk.Frame):
             scale = int(self.strvar_scale_func_factor.get())
             func = self.strvar_option_func.get()
 
+            # self.funcs = {"sin": lambda: self.sin_func(loop_cnt, scale)}
+            # value = self.funcs[func]
+
             if func == "sin":
                 value = self.sin_func(loop_cnt, scale)
 
@@ -139,7 +140,8 @@ class Wobbler(tk.Frame):
 
             value = range_to_range((0, 1), (min_, max_), value)
 
-            print("#"*int(value/3))
+            # visual output
+            # print("#"*int(value/3))
 
             cc = self.devices[self.strvar_option_volca.get()]().get_cc_by_name(self.strvar_option_cc.get())
             msg = [0xb0 + int(self.strvar_option_midi_channel.get()) - 1, cc, value]
