@@ -392,16 +392,16 @@ class Sequencer(tk.Frame):
                   font=("Courier", "8"),
                   command=self.invert_mute).grid(row=18, column=8, padx=0)
 
-        self.frame_wobblers.grid(row=0, column=3, rowspan=5, columnspan=4)
-        self.frame_buttons.grid(row=0, column=30, rowspan=23, columnspan=1)
+        self.frame_wobblers.grid(row=0, column=3, rowspan=1, columnspan=4)
+        self.frame_buttons.grid(row=0, column=30, rowspan=20)
         self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=1, padx=2, pady=2)
-        self.frame_scale_buttons.grid(row=5, column=3, rowspan=4, columnspan=3, padx=5, pady=0)
+        self.frame_scale_buttons.grid(row=1, column=3, rowspan=1, columnspan=3, padx=5, pady=0)
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1)
         self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
-        self.frame_status.grid(row=23, column=30, sticky="w", ipadx=2, ipady=2)
+        self.frame_status.grid(row=21, column=30, sticky="w", ipadx=2, ipady=2, rowspan=20)
 
         for i in range(NumberOf.VELOCITY_SLIDERS):
             self.velocities_scale_min[i].grid(column=i*2, row=0)
@@ -1096,6 +1096,8 @@ class Sequencer(tk.Frame):
 
             res = self.play_midi_notes()
             self.play_sample_notes()
+
+            self.frame_status.update()
 
             if res != "dont sleep":
                 sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht

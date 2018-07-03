@@ -255,7 +255,7 @@ class Parser:
                 else:
                     repetitions = int(seq[param_index + 1:next_param_index])
             else:
-                repetitions = True
+                repetitions = None
 
         elif param == "x" and param not in seq:
             repetitions = 1
@@ -377,11 +377,11 @@ class Parser:
             if self.is_pointer(seq):
                 return context.scale_sequences[self.get_pointer_destination(seq)]
 
-            if "x" in seq:
+            if "x" in seq and times is not None:
                 seq = seq[0:seq.rindex("x")]
 
             if seq in available_scales:
-                for i in range(0, times):
+                for i in range(0, 1 if times is None else times):
                     result.append(seq)
 
             else:

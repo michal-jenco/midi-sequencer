@@ -12,12 +12,12 @@ class AkaiMidimixState(object):
 
     def next(self):
         self.state_index += 1
-        self.sequencer.status_frame.midi_input_listener_state_changed()
+        self.sequencer.frame_status.midi_input_listener_state_changed()
         print("AkaiMidimixState is now: %s" % self.get())
 
     def previous(self):
         self.state_index -= 1
-        self.sequencer.status_frame.midi_input_listener_state_changed()
+        self.sequencer.frame_status.midi_input_listener_state_changed()
         print("AkaiMidimixState is now: %s" % self.get())
 
     def get(self):
