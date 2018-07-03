@@ -19,6 +19,7 @@ from source.memory import Memory
 from source.constants import StringConstants
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
+from source.status_frame import StatusFrame
 
 
 class Sequencer(tk.Frame):
@@ -55,10 +56,12 @@ class Sequencer(tk.Frame):
         self.context.scale = None
         self.context.playback_on = False
 
-        self.midi_input = MIDIInputListener(sequencer=self,
-                                            context=self.context,
-                                            input_name=self.string_constants.AKAI_MIDIMIX_NAME,
-                                            interval=SleepTimes.MIDI_INPUT_MAINLOOP)
+        self.midi_input_listener = MIDIInputListener(sequencer=self,
+                                                     context=self.context,
+                                                     input_name=self.string_constants.AKAI_MIDIMIX_NAME,
+                                                     interval=SleepTimes.MIDI_INPUT_MAINLOOP)
+
+        self.status_frame = StatusFrame(parent=self.root, sequencer=self)
 
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
@@ -397,8 +400,9 @@ class Sequencer(tk.Frame):
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
-        self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2)
+        self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1)
         self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
+        self.status_frame.grid(row=23, column=30, sticky="w", ipadx=2, ipady=2)
 
         for i in range(NumberOf.VELOCITY_SLIDERS):
             self.velocities_scale_min[i].grid(column=i*2, row=0)

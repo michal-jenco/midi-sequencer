@@ -19,7 +19,7 @@ class MIDIInputListener(object):
 
         self.midi = rtmidi.MidiIn()
         self.akai_message = AkaiMidimixMessage()
-        self.state = AkaiMidimixState()
+        self.state = AkaiMidimixState(sequencer=sequencer)
 
         self.fader_synced = [False] * self.channel_count
         self.know_row_1_synced = [False] * self.channel_count
