@@ -11,12 +11,12 @@ class Context:
         self.midi = None
 
         self.scale = None
-        self.scales_individual = []
+        self.scales_individual = [""]*7
         self.bpm = tk.StringVar(root, "90")
         self.sequence = None
         self.str_sequence = None
         self.root = None
-        self.roots = []
+        self.roots = [0]*7
         self.mode = None
 
         self.memory_sequences = {"main melody": []}

@@ -10,12 +10,18 @@ class StatusFrame(tk.Frame):
         self.midi_input_listener_state = self.midi_input_listener.state
 
         self.big_font = "Courier New", "15", "bold"
+        self.small_font = "Courier New", "10"
 
         self.frame_midi_input_listener_state = tk.Frame(self)
         self.strvar_midi_input_listener_state = tk.StringVar(self.frame_midi_input_listener_state)
         self.label_midi_input_listener_state = tk.Label(self.frame_midi_input_listener_state,
                                                         textvariable=self.strvar_midi_input_listener_state,
                                                         font=self.big_font)
+        self.frame_sequence_indices = tk.Frame(self)
+        self.strvar_sequence_indices = tk.StringVar(self.frame_sequence_indices)
+        self.label_sequence_indices = tk.Label(self.frame_sequence_indices,
+                                               textvariable=self.strvar_sequence_indices,
+                                               font=self.small_font)
 
         self["bg"] = "gold"
         self._grid()
@@ -23,13 +29,25 @@ class StatusFrame(tk.Frame):
 
     def _grid(self):
         self.frame_midi_input_listener_state.grid(row=10, column=10)
+        self.frame_sequence_indices.grid(row=15, column=10)
 
         self.label_midi_input_listener_state.grid()
+        self.label_sequence_indices.grid()
 
     def _init(self):
         self.label_midi_input_listener_state["bg"] = "darkorange"
-        self.midi_input_listener_state_changed()
+        self.update()
 
     def midi_input_listener_state_changed(self):
         value = self.midi_input_listener_state.get().center(14)
         self.strvar_midi_input_listener_state.set(value)
+
+    def update_sequence_indices(self):
+        msg = ""
+        for i, item in enumerate(self.sequencer.actual_notes_played_counts):
+            msg += "Sequence %s: %s\n" % (i, item)
+        self.strvar_sequence_indices.set(msg)
+
+    def update(self):
+        self.midi_input_listener_state_changed()
+        self.update_sequence_indices()

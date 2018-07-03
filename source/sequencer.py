@@ -60,9 +60,6 @@ class Sequencer(tk.Frame):
                                                      context=self.context,
                                                      input_name=self.string_constants.AKAI_MIDIMIX_NAME,
                                                      interval=SleepTimes.MIDI_INPUT_MAINLOOP)
-
-        self.status_frame = StatusFrame(parent=self.root, sequencer=self)
-
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
         self.memories.append(Memory(self.frame_memories, self.context, MemoryType().melody))
@@ -93,6 +90,8 @@ class Sequencer(tk.Frame):
 
         self.idx = 0
         self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        self.frame_status = StatusFrame(parent=self.root, sequencer=self)
 
         self.context.midi = midi_
 
@@ -402,7 +401,7 @@ class Sequencer(tk.Frame):
         self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1)
         self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
-        self.status_frame.grid(row=23, column=30, sticky="w", ipadx=2, ipady=2)
+        self.frame_status.grid(row=23, column=30, sticky="w", ipadx=2, ipady=2)
 
         for i in range(NumberOf.VELOCITY_SLIDERS):
             self.velocities_scale_min[i].grid(column=i*2, row=0)
@@ -693,6 +692,7 @@ class Sequencer(tk.Frame):
 
         for i, seq in enumerate(individual_sequences):
             self.context.root_sequences[i] = parser.parse_root_sequence(seq)
+            self.context.roots[i] = self.context.root_sequences[i][0]
         self.context.root_sequence = self.context.root_sequences[0]
 
         log(logfile=self.context.logfile, msg="Root sequences set to: %s" % self.context.root_sequences)
@@ -721,8 +721,10 @@ class Sequencer(tk.Frame):
 
         for i, seq in enumerate(individual_sequences):
             self.context.scale_sequences[i] = parser.parse_scale_sequence(self.context, seq)
+            self.context.scales_individual[i] = self.context.scale_sequences[i][0]
         self.context.scale_sequence = self.context.scale_sequences[0]
 
+        self.set_memory_sequence(None)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
     def set_poly(self, _):

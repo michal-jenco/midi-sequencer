@@ -12,9 +12,6 @@ class Parser:
         self.string_constants = StringConstants()
 
     def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
-
-        # print("text inside: %s\n" % text)
-
         msg_list = []
         str_seq = ""
 
@@ -57,6 +54,8 @@ class Parser:
                         add = ""
                     elif oct_ == 12:
                         add = "+"
+
+                    print(context.scales_individual)
 
                     note_value = Scales.get_note_by_index_wrap(int(note, 16),
                                                                context.scales.get_scale_by_name(
