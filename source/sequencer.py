@@ -795,7 +795,7 @@ class Sequencer(tk.Frame):
         for i, _ in enumerate(self.context.scale_sequences):
             self.context.scale_sequences[i] = [scale_]
 
-        self.context.scales_individual = [scale_]*10
+        self.context.scales_individual = [scale_]*7
 
     def set_off_array(self, _):
         parser = self.context.parser
@@ -1061,7 +1061,7 @@ class Sequencer(tk.Frame):
             root_idx = self.actual_notes_played_counts[i] % len(self.context.root_sequences[i])
 
             if self.context.root_sequences[i][root_idx] != self.context.roots[i]:
-                # self.end_all_notes(i)
+                self.end_all_notes(i)
                 self.context.roots[i] = self.context.root_sequences[i][root_idx]
 
                 log(logfile=self.context.logfile,
@@ -1075,7 +1075,7 @@ class Sequencer(tk.Frame):
             scale_idx = self.actual_notes_played_counts[i] % len(self.context.scale_sequences[i])
 
             if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
-                # self.end_all_notes(i)
+                self.end_all_notes(i)
                 self.context.scales_individual[i] = self.context.scale_sequences[i][scale_idx]
                 self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
                 self.set_memory_sequence(None)
