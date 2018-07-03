@@ -510,6 +510,14 @@ class Sequencer(tk.Frame):
                 entry.delete(0, tk.END)
                 entry.insert(0, self.string_constants.initial_empty_sequences)
 
+        self.entry_scale_sequence.delete(0, tk.END)
+        self.entry_root_sequence.delete(0, tk.END)
+
+        self.entry_scale_sequence.insert(0, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
+        self.entry_root_sequence.insert(0, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
+        self.entry_octave_sequence.insert(tk.END, "-2")
+        self.entry_off_array.insert(tk.END, "1")
+
         self.press_all_enters()
 
     def press_all_enters(self):

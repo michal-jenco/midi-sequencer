@@ -1,6 +1,7 @@
 import tkinter as tk
 
 from source.akai_midimix_state import AkaiMidimixStates
+from source.functions import get_note_name_from_integer
 
 
 class StatusFrame(tk.Frame):
@@ -81,7 +82,7 @@ class StatusFrame(tk.Frame):
     def update_roots(self):
         msg = ""
         for i, item in enumerate(self.sequencer.context.roots[:self.limit]):
-            msg += ("Seq %s: %s" % (i, item)).center(18) + ("\n" if i < self.limit - 1 else "")
+            msg += ("Seq %s: %s" % (i, get_note_name_from_integer(item))).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_roots.set(msg)
 
     def update(self):
