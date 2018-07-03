@@ -121,7 +121,7 @@ class Sequencer(tk.Frame):
         self.frame_roots = tk.Frame(self.root)
         self.frame_prob_sliders = tk.Frame(self.root)
 
-        self.strvar_tempo_multiplier = tk.StringVar(self.frame_buttons, "2")
+        self.strvar_tempo_multiplier = tk.StringVar(self.frame_buttons, "1")
         self.option_tempo_multiplier = tk.OptionMenu(self.frame_buttons, self.strvar_tempo_multiplier, *[x for x in range(1, 9)])
         self.get_tempo_multiplier = lambda: int(self.strvar_tempo_multiplier.get())
 

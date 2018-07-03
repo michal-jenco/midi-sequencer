@@ -51,7 +51,7 @@ class Context:
         self.octave_sequence = []
         self.root_sequence = []
         self.scale_sequence = []
-        self.sample_seqs = [[]*10]
+        self.sample_seqs = [[], [], [], [], [], [], [], [], [], []]
 
         self.playback_on = False
         self.solo_on = False

@@ -3,7 +3,7 @@ import tkinter as tk
 
 
 def log(logfile=None, msg=""):
-    result = "[%s]: \"%s\"%s" % (str(datetime.datetime.now()), msg, "\n")
+    result = "[%s]: \"%s\"" % (str(datetime.datetime.now()), msg)
 
     if logfile is not None:
         logfile.write(result)
