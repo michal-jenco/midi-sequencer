@@ -6,7 +6,7 @@ import copy
 import random
 import os
 
-from source.note_lengths import NoteLengths
+from source.note_object import NoteLengths, NoteTypes, convert_midi_notes_to_note_objects
 from source.context import Context
 from source.evolver import Evolver
 from source.wobbler import Wobbler
@@ -16,7 +16,6 @@ from source.delay import Delay
 from source.helpful_functions import a
 from source.functions import log, get_date_string, insert_into_entry
 from source.memory import Memory
-from source.constants import StringConstants
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 from source.status_frame import StatusFrame
@@ -621,6 +620,7 @@ class Sequencer(tk.Frame):
         elif mode is self.context.set_sequence_modes.dont_regenerate:
             notes, str_seq = parser.get_notes(self.context, self.context.str_sequence.replace(" ", ""))
 
+        notes = convert_midi_notes_to_note_objects(self.context, notes)
         self.context.sequence = notes
         self.entry_str_seq.delete(0, tk.END)
         self.entry_str_seq.insert(0, self.context.str_sequence)
@@ -641,15 +641,14 @@ class Sequencer(tk.Frame):
             result = parser.parse_memory_sequence(result)
             running_seq = []
             aaaaaaaaa = ""
-
-            prev = None
-            prev_notes = None
-            prev_str_seq = None
+            prev, prev_notes, prev_str_seq = None, None, None
 
             for idx in result:
                 # this is for literal sequence in memory sequence entrybox
                 if isinstance(idx, tuple):
                     notes, str_seq = self.context.parser.get_notes(self.context, idx[0][1:], iii=i)
+                    print(notes)
+                    notes = convert_midi_notes_to_note_objects(self.context, notes)
                     notes *= idx[1]
                     str_seq *= idx[1]
 
@@ -663,6 +662,7 @@ class Sequencer(tk.Frame):
                     else:
                         if str_seq is not None:
                             notes, str_seq = parser.get_notes(self.context, str_seq, iii=i)
+                            notes = convert_midi_notes_to_note_objects(self.context, notes)
                         else:
                             notes, str_seq = [], ""
 
@@ -795,6 +795,11 @@ class Sequencer(tk.Frame):
         for i, _ in enumerate(self.context.scale_sequences):
             self.context.scale_sequences[i] = [scale_]
 
+        sequences = self.entry_scale_sequence.get().split(StringConstants().multiple_entry_separator)
+        new_content = [" %s " % scale_] + sequences[1:]
+        insert_into_entry(self.entry_scale_sequence,
+                          StringConstants().multiple_entry_separator.join(new_content))
+        self.set_scale_sequence(None)
         self.context.scales_individual = [scale_]*7
 
     def set_off_array(self, _):
@@ -883,8 +888,8 @@ class Sequencer(tk.Frame):
         if self.context.poly_sequences:
             if self.context.poly_sequences[i]:
                 for poly in self.context.poly_sequences[i]:
-                    if a() < int(self.strvars_prob_poly_abs[i].get()) / 100.0:
-                        self.context.midi.send_message([note[0], note[1] + poly, note[2]])
+                    if a() < int(self.strvars_prob_poly_abs[i].get()) / 100.:
+                        note.play_transposed(poly)
 
     def play_relative_poly_notes(self, note, note_entry, i):
         if not str(note_entry).isdigit():
@@ -892,26 +897,23 @@ class Sequencer(tk.Frame):
 
         try:
             if self.context.scale_sequences[i]:
-                scale = self.context.scale_sequences[i]
+                scale = self.context.scale_sequences[i][0]
             else:
                 scale = self.context.scale
         except Exception as e:
             print("Exception: %s" % e)
 
         scales = self.context.scales
+        scale = scales.get_scale_by_name(scale)
 
         if self.context.poly_relative_sequences:
-            try:
-                if self.context.poly_relative_sequences[i]:
-                    for poly in self.context.poly_relative_sequences[i]:
-                        if a() < int(self.strvars_prob_poly_rel[i].get()) / 100.0:
-                            # THIS TOOK FUCKING FOREVER TO FIGURE OUT
-                            added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
-                                     - int(scales.get_note_by_index_wrap(note_entry, scale)))
-                            self.context.midi.send_message([note[0], note[1] + added, note[2]])
-
-            except Exception as e:
-                print("Exception in function play_relative_poly_notes: %s" % e)
+            if self.context.poly_relative_sequences[i]:
+                for poly in self.context.poly_relative_sequences[i]:
+                    if a() < int(self.strvars_prob_poly_rel[i].get()) / 100.:
+                        # THIS TOOK FUCKING FOREVER TO FIGURE OUT
+                        added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
+                                 - int(scales.get_note_by_index_wrap(note_entry, scale)))
+                        note.play_transposed(added)
 
     def play_sample_notes(self):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
@@ -935,13 +937,12 @@ class Sequencer(tk.Frame):
             octave_offset = 0 if not self.context.octave_sequences[i] else self.context.octave_sequences[i][octave_idx]
 
         orig_note = copy.copy(note)
-        orig_note[0] += int(self.context.midi_channels[i][j])
+        orig_note.set_channel(self.context.midi_channels[i][j])
 
-        if orig_note[1] not in {NOTE_PAUSE, GO_TO_START}:
-            orig_note[1] += self.context.roots[i] - c2 - 4 + octave_offset
+        if orig_note.type_ is NoteTypes.NORMAL:
+            orig_note.pitch += self.context.roots[i] - c2 - 4 + octave_offset
 
-        orig_note[2] = random.randint(vel_min, vel_max)
-
+        orig_note.set_velocity(random.randint(vel_min, vel_max))
         return orig_note
 
     def turn_off_notes(self, off_note_idx, idx_all_off, i):
@@ -983,7 +984,7 @@ class Sequencer(tk.Frame):
                         continue
 
                     if not self.intvars_enable_channels[i].get():
-                        if note != NOTE_PAUSE:
+                        if note != NoteTypes.NOTE_PAUSE:
                             self.actual_notes_played_counts[i] += 1
                         continue
 
@@ -995,12 +996,12 @@ class Sequencer(tk.Frame):
                     self.skip_sequential_idx[i], self.idx_sequential_skip[i], skip_sequentially = \
                         self.skip_note_sequentially(self.skip_sequential_idx[i], self.idx_sequential_skip[i], i)
 
-                    if orig_note[1] == NOTE_PAUSE:
+                    if orig_note.type_ is NoteTypes.NOTE_PAUSE:
                         self.actual_notes_played_counts[i] += 1
                         continue
 
-                    if orig_note[1] != NOTE_PAUSE:
-                        if orig_note[1] == GO_TO_START:
+                    if orig_note.type_ is not NoteTypes.NOTE_PAUSE:
+                        if orig_note.type_ is NoteTypes.GO_TO_START:
                             self.idx = -1
                             self.actual_notes_played_counts[i] = 0
                             return "dont sleep"
@@ -1009,17 +1010,16 @@ class Sequencer(tk.Frame):
                             for j, channel in enumerate(valid_channels):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
 
-                                if self.context.kick_note_values:
-                                    self.context.midi.send_message([0x90 + 13, self.context.kick_note_values[-1], 0])
-                                    print("ended kick noite %s" % self.context.kick_note_values[-1])
+                                if self.context.kick_notes:
+                                    self.context.kick_notes[-1].end()
+                                    # self.context.midi.send_message([0x90 + 13, self.context.kick_notes[-1], 0])
+                                    self.context.kick_notes = []
 
-                                    self.context.kick_note_values = []
+                                if orig_note.channel == 13:
+                                    self.context.kick_notes.append(orig_note)
 
-                                if orig_note[0] - 0x90 == 13:
-                                    self.context.kick_note_values.append(orig_note[1])
-                                    print("appended kick noite %s" % orig_note[1])
-
-                                self.context.midi.send_message(orig_note)
+                                orig_note.play()
+                                # self.context.midi.send_message(orig_note)
 
                             if self.delay_is_on():
                                 for j, channel in enumerate(valid_channels):
@@ -1040,15 +1040,11 @@ class Sequencer(tk.Frame):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
                                 self.play_poly_notes(orig_note, i)
 
-                            try:
-                                for j, channel in enumerate(valid_channels):
-                                    if self.context.str_sequences[i][loop_idx].isdigit():
-                                        param = int(self.context.str_sequences[i][loop_idx])
-                                        orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                        self.play_relative_poly_notes(orig_note, param, i)
-
-                            except:
-                                pass
+                            for j, channel in enumerate(valid_channels):
+                                if self.context.str_sequences[i][loop_idx].isdigit():
+                                    param = int(self.context.str_sequences[i][loop_idx])
+                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                    self.play_relative_poly_notes(orig_note, param, i)
 
     def get_octave_idx(self, i):
         try:

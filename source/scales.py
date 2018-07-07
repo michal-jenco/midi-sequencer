@@ -14,8 +14,6 @@ class Scales:
         self.gypsy = [0, 2, 3, 6, 7, 8, 11, 12]
         self.octatonic = [0, 1, 3, 4, 6, 7, 9, 10, 12]
 
-        # self.chromatic = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-
         self.pentatonic = [0, 3, 5, 7, 10, 12]
         self.wholetone = [0, 2, 4, 6, 8, 10, 12]
 
@@ -35,30 +33,21 @@ class Scales:
         self.lydian_augmented = [0, 2, 4, 6, 8, 9, 11, 12]
 
         self.acoustic = [0, 2, 4, 6, 7, 9, 10, 12]
-
         self.ukrainian_dorian = [0, 2, 3, 6, 7, 9, 10, 12]
-
         self.phrygian_dominant = [0, 1, 4, 5, 7, 8, 10, 12]
-
-        self.x2_harmonic_major = [0, 1, 4, 5, 7, 8, 11, 12]
-
+        self.double_harm_major = [0, 1, 4, 5, 7, 8, 11, 12]
         self.hungarian_minor = [0, 2, 3, 6, 7, 8, 11, 12]
-
         self.neapolitan_minor = [0, 1, 3, 5, 7, 8, 11, 12]
         self.neapolitan_major = [0, 1, 3, 5, 7, 9, 11, 12]
-
         self.enigmatic = [0, 1, 4, 6, 8, 10, 11, 12]
-
         self.hirajoshi = [0, 2, 3, 7, 8, 12]
         self.yo = [0, 2, 5, 7, 9, 12]
-
         self.persian = [0, 1, 4, 5, 6, 8, 11, 12]
-
         self.mixolydian_b6 = [0, 2, 4, 5, 7, 8, 10, 12]
 
-        # self.byzantine = self.x2_harmonic_major
-        # self.arabic = self.x2_harmonic_major
-        # self.gypsy_major = self.x2_harmonic_major
+        # self.byzantine = self.double_harm_major
+        # self.arabic = self.double_harm_major
+        # self.gypsy_major = self.double_harm_major
         # self.gypsy_minor = self.hungarian_minor
 
         for scale in self.get_all():
@@ -66,14 +55,12 @@ class Scales:
             orig_len = len(scale)
             for octave in range(0, 2):
                 for tone in range(1, orig_len):
-                    scale.append(scale[tone] + (octave+1)*12)
+                    scale.append(scale[tone] + (octave + 1) * 12)
 
     def get_random(self):
         scale_list = sorted(list(self.__dict__.keys()))
         chosen_scale = random.choice(scale_list)
-
         log(msg="Random scale: \"%s\"" % chosen_scale)
-
         return self.__dict__[chosen_scale]
 
     def get_all(self):

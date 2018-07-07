@@ -3,9 +3,6 @@ from source.notes import *
 MODE_SIMPLE = 100
 MODE_SAMPLE = 102
 
-NOTE_PAUSE = 9999
-GO_TO_START = NOTE_PAUSE + 1
-
 DISABLED = 0
 ENABLED = 1
 

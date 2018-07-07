@@ -12,7 +12,7 @@ class Context:
 
         self.scale = None
         self.scales_individual = [""]*7
-        self.bpm = tk.StringVar(root, "90")
+        self.bpm = tk.StringVar(root, "60")
         self.sequence = None
         self.str_sequence = None
         self.root = None
@@ -42,7 +42,7 @@ class Context:
         self.scale_sequences = [["lydian"], [], [], [], [], [], []]
         self.off_sequences = [[], [], [], [], [], [], [1]]
         self.midi_channels = [[10], [10], [10], [11], [11], [11], [13]]
-        self.kick_note_values = []
+        self.kick_notes = []
 
         self.poly = []
         self.poly_relative = []

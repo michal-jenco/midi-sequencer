@@ -2,8 +2,9 @@ import random
 import itertools
 
 from source.scales import Scales
+from source.note_object import NoteTypes
 from source.constants import note_dict as constants_note_dict, StringConstants
-from source.constants import MODE_SAMPLE, MODE_SIMPLE, NOTE_PAUSE, GO_TO_START
+from source.constants import MODE_SAMPLE, MODE_SIMPLE
 
 
 class Parser:
@@ -25,16 +26,11 @@ class Parser:
                 seq = text
                 control = None
 
-            # print("Control: %s" % control)
-
             notes = list(seq)
-            seq_length = len(notes)
-
             perm_char = "p"
             skipping_permutations = False
 
             for idx, note in enumerate(notes):
-
                 if skipping_permutations:
                     if note != perm_char:
                         continue
@@ -47,15 +43,7 @@ class Parser:
                 if note.isdigit() or note in {"a", "b", "c", "d", "e"}:
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
-
-                    if oct_ == -12:
-                        add = "-"
-                    elif oct_ == 0:
-                        add = ""
-                    elif oct_ == 12:
-                        add = "+"
-
-                    print(context.scales_individual)
+                    add = self.get_plus_or_minus_add(oct_)
 
                     note_value = Scales.get_note_by_index_wrap(int(note, 16),
                                                                context.scales.get_scale_by_name(
@@ -63,29 +51,24 @@ class Parser:
                     str_seq += (str(context.scales.get_scale_by_name(context.scales_individual[iii]).index(note_value))
                                 + add + ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " ")
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp
+                    velocity = 100
                     msg.append(note_value)
-                    msg.append(100)
+                    msg.append(velocity)
                     msg_list.append(msg)
 
                 elif note == "r":
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
-
-                    if oct_ == -12:
-                        add = "-"
-                    elif oct_ == 0:
-                        add = ""
-                    elif oct_ == 12:
-                        add = "+"
+                    add = self.get_plus_or_minus_add(oct_)
 
                     note_value = random.choice(context.scales.get_scale_by_name(context.scales_individual[iii])[:9])
                     str_seq += (str(context.scales.get_scale_by_name(context.scales_individual[iii]).index(note_value))
                                 + add + ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " ")
 
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp
+                    velocity = 100
                     msg.append(note_value)
-                    msg.append(100)
-
+                    msg.append(velocity)
                     msg_list.append(msg)
 
                 elif note == perm_char:
@@ -115,66 +98,52 @@ class Parser:
                     perm_notes, str_repr = self.get_notes(context, str_seq_internal, mode=MODE_SIMPLE, iii=iii)
 
                     for n in perm_notes:
-                        if n[1] != NOTE_PAUSE:
-                            msg_list.append([n[0], n[1] + self.get_octave(control), n[2]])
+                        if n[1] != NoteTypes.NOTE_PAUSE:
+                            msg = [n[0], n[1] + self.get_octave(control), n[2]]
                         else:
-                            msg_list.append([n[0], n[1], n[2]])
+                            msg = [n[0], n[1], n[2]]
+                    msg_list.append(msg)
 
                     str_seq += str_repr
                     skipping_permutations = True
 
                 elif note == ",":
                     for i in range(0, context.comma_pause):
-                        msg_list.append([0x90, NOTE_PAUSE, 0])
+                        msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " %s " % note
 
                 elif note == ".":
                     for i in range(0, context.dot_pause):
-                        msg_list.append([0x90, NOTE_PAUSE, 0])
+                        msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " , "
 
                 elif note == "=":
                     for i in range(0, context.dash_pause):
-                        msg_list.append([0x90, NOTE_PAUSE, 0])
+                        msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " , "
 
                 elif note == "&":
                     count = random.randint(context.amper_min, context.amper_max)
                     for i in range(0, count):
-                        msg_list.append([0x90, NOTE_PAUSE, 0])
+                        msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " , "
 
                 elif note == "/":
-                    msg_list.append([0x90, GO_TO_START, 0])
+                    msg_list.append([0x90, NoteTypes.GO_TO_START, 0])
 
                 elif note == "§":
                     count = random.randint(context.paragraph_min, context.paragraph_max)
+
                     for i in range(0, count):
                         note_value = random.choice(context.scales_individual[iii])
                         str_seq += str(context.scales_individual[iii].index(note_value)) + " "
-
                         note_value += context.root + self.get_octave(control)
                         msg_list.append([0x90, note_value, 100])
 
-                elif note.isalpha():
-                    pass
-                    """
-                    idx = ord(hashlib.sha256(note.encode('utf-8')).hexdigest()[0])
-                    note_value = context.scales.get_note_by_index_wrap(idx, context.scale)
-                    str_seq += str(context.scale.index(note_value)) + " "
-
-                    print("%s: %s" % (note, str(note_value)))
-
-                    note_value += context.root + self.get_octave(control)
-                    msg_list.append([0x90, note_value, 100])
-                    """
-
         elif mode == MODE_SAMPLE:
             sequences = text.split()
-
             repetitions = 1
             for seq in sequences:
-
                 if seq == "/":
                     break
 
@@ -182,7 +151,6 @@ class Parser:
                     x_index = seq.index("x")
                     if seq[x_index+1:]:
                         repetitions = int(seq[x_index+1:])
-
                 else:
                     repetitions = 1
 
@@ -194,7 +162,6 @@ class Parser:
 
                 for i in range(0, repetitions):
                     for idx, note in enumerate(notes):
-
                         if note == "0":
                             msg_list.append([])
 
@@ -202,14 +169,17 @@ class Parser:
                             msg_list.append([0x90, 127, 127])
 
                         elif note.isdigit() and note not in {"0", "1"}:
-                            for i in range(0, int(note)):
+                            for _ in range(0, int(note)):
                                 msg_list.append([])
-
                         else:
                             # unknown symbol (not yet defined a use)
                             pass
 
         return msg_list, str_seq.replace("  ", " ")
+
+    @staticmethod
+    def get_plus_or_minus_add(oct_):
+        return {-12: "-", 0: "", 12: "+"}[oct_]
 
     @staticmethod
     def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None, perm_len=None):
@@ -442,8 +412,6 @@ class Parser:
 
     @staticmethod
     def parse_flat_sharp(notes, idx):
-        offset = 0
-
         try:
             if notes[idx + 1] == "s" or (
                     idx + 2 < len(notes) and notes[idx + 2] == "s" and notes[idx + 1] in {"+", "-"}):
