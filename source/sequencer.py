@@ -647,7 +647,6 @@ class Sequencer(tk.Frame):
                 # this is for literal sequence in memory sequence entrybox
                 if isinstance(idx, tuple):
                     notes, str_seq = self.context.parser.get_notes(self.context, idx[0][1:], iii=i)
-                    print(notes)
                     notes = convert_midi_notes_to_note_objects(self.context, notes)
                     notes *= idx[1]
                     str_seq *= idx[1]
