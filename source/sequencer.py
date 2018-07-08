@@ -8,7 +8,6 @@ import os
 
 from source.note_object import NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects
 from source.context import Context
-from source.evolver import Evolver
 from source.wobbler import Wobbler
 from source.constants import *
 from source.sample_frame import SampleFrame
@@ -22,7 +21,6 @@ from source.status_frame import StatusFrame
 
 
 class Sequencer(tk.Frame):
-
     def __init__(self, midi_):
         self.root = tk.Tk()
         tk.Frame.__init__(self, self.root, bg="darkblue", padx=2, pady=2)
@@ -1030,13 +1028,13 @@ class Sequencer(tk.Frame):
 
     def get_octave_idx(self, i):
         try:
-            return self.actual_notes_played_counts[i] % len(self.context.octave_sequences[i])
+            return self.step_played_counts[i] % len(self.context.octave_sequences[i])
         except:
             return 0
 
     def manage_root_sequence(self, i):
         try:
-            root_idx = self.actual_notes_played_counts[i] % len(self.context.root_sequences[i])
+            root_idx = self.step_played_counts[i] % len(self.context.root_sequences[i])
 
             if self.context.root_sequences[i][root_idx] != self.context.roots[i]:
                 self.end_all_notes(i)
@@ -1050,7 +1048,7 @@ class Sequencer(tk.Frame):
 
     def manage_scale_sequence(self, i):
         try:
-            scale_idx = self.actual_notes_played_counts[i] % len(self.context.scale_sequences[i])
+            scale_idx = self.step_played_counts[i] % len(self.context.scale_sequences[i])
 
             if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
                 self.end_all_notes(i)

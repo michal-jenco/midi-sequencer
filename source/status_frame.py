@@ -69,7 +69,7 @@ class StatusFrame(tk.Frame):
 
     def update_sequence_indices(self):
         msg = ""
-        for i, item in enumerate(self.sequencer.actual_notes_played_counts[:self.limit]):
+        for i, item in enumerate(self.sequencer.step_played_counts[:self.limit]):
             msg += ("Seq %s: %s" % (i, item)).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_sequence_indices.set(msg)
 
