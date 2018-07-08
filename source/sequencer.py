@@ -6,7 +6,7 @@ import copy
 import random
 import os
 
-from source.note_object import NoteLengths, NoteTypes, convert_midi_notes_to_note_objects
+from source.note_object import NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects
 from source.context import Context
 from source.evolver import Evolver
 from source.wobbler import Wobbler
@@ -91,26 +91,20 @@ class Sequencer(tk.Frame):
         self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         self.frame_status = StatusFrame(parent=self.root, sequencer=self)
-
         self.context.midi = midi_
-
         self.bpm = float(self.context.bpm.get())
 
-        self.d = Delay(self.context)
-        self.df = DelayFunctions()
-        self.dc = DelayConstants()
+        self.delay = Delay(self.context)
+        self.delay_functions = DelayFunctions()
+        self.delay_constants = DelayConstants()
 
-        self.evolver = Evolver(self.context, self.root)
-        self.wobblers = []
+        self.labels_entry_names = []
+        self.entry_names = []
 
+        self.wobbler_count = 6
         self.frame_wobblers = tk.Frame(self.root, bg="black")
-
-        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 1"))
-        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 2"))
-        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 3"))
-        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 4"))
-        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 5"))
-        self.wobblers.append(Wobbler(self.frame_wobblers, self.context, "Keys wobbler 6"))
+        self.wobblers = [Wobbler(self.frame_wobblers, self.context, "Keys wobbler %s" % i)
+                         for i in range(self.wobbler_count)]
 
         self.sample_frame = SampleFrame(self.root, self.context)
 
@@ -156,6 +150,7 @@ class Sequencer(tk.Frame):
 
         self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence".ljust(20), height=1)
         self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence".ljust(20), height=1)
+        self.label_a3 = tk.Label(self.frame_entries, font=label_font, text="Scheduling Sequence".ljust(20), height=1)
         self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr".ljust(20), height=1)
         self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes".ljust(20), height=1)
         self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony".ljust(20), height=1)
@@ -217,14 +212,14 @@ class Sequencer(tk.Frame):
         self.entry_memory_sequence = tk.Entry(self.frame_entries, width=80)
         self.entry_memory_sequence.bind('<Return>', self.set_memory_sequence)
 
-        self.entry_memory_sequence2 = tk.Entry(self.frame_entries, width=80)
-        self.entry_memory_sequence2.bind('<Return>', self.set_memory_sequence)
+        self.entry_note_scheduling = tk.Entry(self.frame_entries, width=80)
+        self.entry_note_scheduling.bind('<Return>', self.set_note_scheduling_sequence)
 
         self.entry_off_array = tk.Entry(self.frame_entries, width=80)
         self.entry_off_array.bind('<Return>', self.set_off_array)
 
         self.entry_poly = tk.Entry(self.frame_entries, width=80)
-        self.entry_poly.bind('<Return>', self.set_poly)
+        self.entry_poly.bind('<Return>', self.set_poly_absolute)
 
         self.entry_poly_relative = tk.Entry(self.frame_entries, width=80)
         self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
@@ -248,27 +243,15 @@ class Sequencer(tk.Frame):
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
 
         self.entry_boxes = [self.entry_off_array, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequence,
-                            self.entry_skip_note_parallel, self.entry_skip_note_sequential, self.entry_midi_channels,
-                            self.entry_root_sequence, self.entry_octave_sequence, self.entry_scale_sequence]
-        self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "skip_par", "skip_seq",
-                                  "midi_channels", "root_seq", "octave_seq", "scale_seq"]
+                            self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
+                            self.entry_midi_channels, self.entry_root_sequence, self.entry_octave_sequence,
+                            self.entry_scale_sequence]
 
-        for entry in self.entry_boxes:
-            entry.delete(0, tk.END)
-            entry.insert(0, self.string_constants.initial_empty_sequences)
+        self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
+                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "octave_seq", "scale_seq"]
 
-        self.entry_off_array.insert(tk.END, " 1")
-        self.entry_octave_sequence.insert(tk.END, " -2")
-
-        self.entry_midi_channels.delete(0, tk.END)
-        self.entry_scale_sequence.delete(0, tk.END)
-        self.entry_root_sequence.delete(0, tk.END)
-
-        self.entry_midi_channels.insert(0, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
-        self.entry_scale_sequence.insert(0, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
-        self.entry_root_sequence.insert(0, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
-
-        self.press_all_enters()
+        insert_into_entry(self.entry_midi_channels, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
+        self.init_entries()
 
     def create_prob_sliders(self):
         for i in range(NumberOf.VELOCITY_SLIDERS):
@@ -420,37 +403,24 @@ class Sequencer(tk.Frame):
         self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
         self.scale_delay_multiplier.grid(column=10, row=10)
 
-        init_row = 0
-        self.entry_sequence.grid(row=0, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_memory_sequence.grid(row=init_row+1, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_str_seq.grid(row=init_row+3, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_off_array.grid(row=init_row+4, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_poly.grid(row=init_row+5, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_poly_relative.grid(row=init_row+6, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_skip_note_sequential.grid(row=init_row+7, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_skip_note_parallel.grid(row=init_row+8, column=5, sticky='wn', pady=1, padx=10)
-        self.entry_octave_sequence.grid(row=init_row+9, column=5, sticky="wn", pady=1, padx=10)
-        self.entry_root_sequence.grid(row=init_row+10, column=5, sticky="wn", pady=1, padx=10)
-        self.entry_scale_sequence.grid(row=init_row+11, column=5, sticky="wn", pady=1, padx=10)
-        self.entry_midi_channels.grid(row=init_row+12, column=5, sticky="wn", pady=1, padx=10)
-        del init_row
+        self.entry_names = [self.entry_sequence, self.entry_memory_sequence, self.entry_note_scheduling,
+                            self.entry_str_seq, self.entry_off_array, self.entry_poly, self.entry_poly_relative,
+                            self.entry_skip_note_sequential, self.entry_skip_note_parallel, self.entry_octave_sequence,
+                            self.entry_root_sequence, self.entry_scale_sequence, self.entry_midi_channels]
+
+        for i, entry_name in enumerate(self.entry_names):
+            entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=1, padx=10)
         self.label_main_seq_len.grid(row=0, column=6)
         self.label_main_seq_current_idx.grid(row=1, column=6)
 
-        self.label_a.grid(row=0, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_a2.grid(row=1, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_b.grid(row=1+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_c.grid(row=2+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_d.grid(row=3+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_e.grid(row=4+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_f.grid(row=5+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_g.grid(row=6+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_h.grid(row=7+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_i.grid(row=8+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_j.grid(row=9+2, column=2, sticky="w", padx=(10, 0), pady=1)
-        self.label_k.grid(row=10+2, column=2, sticky="w", padx=(10, 0), pady=1)
+        self.labels_entry_names = [self.label_a, self.label_a2, self.label_a3, self.label_b, self.label_c,
+                                   self.label_d, self.label_e, self.label_f, self.label_g, self.label_h, self.label_i,
+                                   self.label_j, self.label_k]
+
+        for i, label in enumerate(self.labels_entry_names):
+            label.grid(row=i, column=2, sticky="w", padx=(10, 0), pady=1)
 
         self.check_delay_is_on.grid(row=11, column=10)
         self.option_tempo_multiplier.grid(row=80, column=8)
@@ -506,23 +476,18 @@ class Sequencer(tk.Frame):
     def init_entries(self):
         for entry in self.entry_boxes:
             if entry is not self.entry_midi_channels:
-                entry.delete(0, tk.END)
-                entry.insert(0, self.string_constants.initial_empty_sequences)
+                insert_into_entry(entry, self.string_constants.initial_empty_sequences)
 
-        self.entry_scale_sequence.delete(0, tk.END)
-        self.entry_root_sequence.delete(0, tk.END)
-
-        self.entry_scale_sequence.insert(0, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
-        self.entry_root_sequence.insert(0, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
+        insert_into_entry(self.entry_scale_sequence, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
+        insert_into_entry(self.entry_root_sequence, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
         self.entry_octave_sequence.insert(tk.END, "-2")
         self.entry_off_array.insert(tk.END, "1")
-
         self.press_all_enters()
 
     def press_all_enters(self):
         self.set_memory_sequence(None)
         self.set_off_array(None)
-        self.set_poly(None)
+        self.set_poly_absolute(None)
         self.set_poly_relative(None)
         self.set_skip_note_sequential(None)
         self.set_skip_note_parallel(None)
@@ -542,9 +507,6 @@ class Sequencer(tk.Frame):
             print("State: %s" % state)
             print("Memory: %s" % memory)
             return InternalState(memory, state)
-
-        else:
-            pass
 
     def save_internal_state(self, typ=None):
         if typ is None:
@@ -685,6 +647,20 @@ class Sequencer(tk.Frame):
 
         self.context.sequence = self.context.note_sequences[0]
 
+    def set_note_scheduling_sequence(self, _):
+        parser = self.context.parser
+        text = str(self.entry_note_scheduling.get())
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=self.string_constants.multiple_entry_separator,
+            sequences=text)
+
+        for i, individual_seq in enumerate(individual_sequences):
+            parsed_individual_seq = parser.parse_scheduling_sequence(individual_seq)
+            self.context.scheduling_sequences[i] = [NoteSchedulingObject(seq) for seq in parsed_individual_seq]
+
+        log(logfile=self.context.logfile, msg="Scheduling sequences set to: %s" % self.context.scheduling_sequences)
+
     def add_seq_to_memory(self, typ):
         text_ = str(self.entry_sequence.get())
         self.memories[0].add_seq(text_)
@@ -734,7 +710,7 @@ class Sequencer(tk.Frame):
         self.set_memory_sequence(None)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
-    def set_poly(self, _):
+    def set_poly_absolute(self, _):
         parser = self.context.parser
         text = self.entry_poly.get()
 
@@ -1023,10 +999,10 @@ class Sequencer(tk.Frame):
                             if self.delay_is_on():
                                 for j, channel in enumerate(valid_channels):
                                     orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                    x = lambda: self.d.run_delay_with_note(
+                                    x = lambda: self.delay.run_delay_with_note(
                                         orig_note,
                                         60 / self.bpm / self.get_delay_multiplier(),
-                                        self.df.functions[self.dc.CONSTANT_DECAY],
+                                        self.delay_functions.functions[self.delay_constants.CONSTANT_DECAY],
                                         -10)
 
                                     Delay(self.context).create_thread_for_function(x)
@@ -1103,7 +1079,7 @@ class Sequencer(tk.Frame):
             self.frame_status.update()
 
             if res != "dont sleep":
-                sleep_time = NoteLengths(float(self.context.bpm.get())).eigtht
+                sleep_time = NoteLengthsOld(float(self.context.bpm.get())).eigtht
                 time.sleep(sleep_time)
 
             self.idx += 1

@@ -32,6 +32,7 @@ class Context:
         self.set_sequence_modes = SetSequenceModes()
 
         self.note_sequences = []
+        self.scheduling_sequences = [[], [], [], [], [], [], []]
         self.str_sequences = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.poly_sequences = []
         self.poly_relative_sequences = []
@@ -41,7 +42,7 @@ class Context:
         self.root_sequences = [[e2], [], [], [], [], [], []]
         self.scale_sequences = [["lydian"], [], [], [], [], [], []]
         self.off_sequences = [[], [], [], [], [], [], [1]]
-        self.midi_channels = [[10], [10], [10], [11], [11], [11], [13]]
+        self.midi_channels = [[], [], [], [], [], [], []]
         self.kick_notes = []
 
         self.poly = []

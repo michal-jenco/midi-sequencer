@@ -243,7 +243,7 @@ class Parser:
                 idx = seq.index("x")
                 seq = seq[0:idx]
 
-            for i in range(0, times):
+            for i in range(times):
                 result.append(int(seq))
 
         return result
@@ -262,7 +262,7 @@ class Parser:
             if self.is_pointer(seq):
                 return self.context.octave_sequences[self.get_pointer_destination(seq)]
 
-            for i in range(0, times):
+            for i in range(times):
                 if seq.startswith(("+", "-")):
                     result.append(int(seq[0:2])*12)
                 else:
@@ -297,11 +297,10 @@ class Parser:
 
             else:
                 try:
-                    for i in range(0, times):
+                    for i in range(times):
                         result.append(int(seq))
                 except Exception as e:
                     print("Exception in parse_memory_sequence: %s" % e)
-
         return result
 
     def parse_root_sequence(self, text):
@@ -320,12 +319,27 @@ class Parser:
                 idx = seq.index("x")
                 seq = seq[0:idx]
 
-            for i in range(0, times):
+            for i in range(times):
                 if seq in note_dict:
                     result.append(note_dict[seq])
                 else:
                     print("Invalid root skipped: %s" % seq)
+        return result
 
+    def parse_scheduling_sequence(self, text):
+        result = []
+        sequences = text.split()
+
+        for seq in sequences:
+            times = self.parse_param("x", str(seq))
+
+            if self.is_pointer(seq):
+                pass
+
+            if "x" in seq:
+                seq = seq[0:seq.index("x")]
+
+            result += [seq for _ in range(times)]
         return result
 
     @staticmethod
