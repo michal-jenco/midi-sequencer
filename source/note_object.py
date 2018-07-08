@@ -119,7 +119,6 @@ class NoteSchedulingObject:
         elif self.is_just_tuplet(seq):
             self.type_ = NoteSchedhulingTypes.JUST_TUPLET
 
-        print(seq)
         if seq in NoteDurationTypes.MAP.keys():
             self.duration_object = NoteDurationTypes.MAP[seq]
         else:
