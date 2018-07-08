@@ -88,11 +88,12 @@ class Sequencer(tk.Frame):
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
+        self.step_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         self.frame_status = StatusFrame(parent=self.root, sequencer=self)
         self.context.midi = midi_
-        self.bpm = float(self.context.bpm.get())
+        self.bpm = self.context.get_bpm()
 
         self.delay = Delay(self.context)
         self.delay_functions = DelayFunctions()
@@ -462,14 +463,10 @@ class Sequencer(tk.Frame):
         self.strvar_main_seq_current_idx.set(str(idx + 1))
 
     def reset_idx(self):
-        for i, _ in enumerate(self.actual_notes_played_counts):
-            try:
-                self.actual_notes_played_counts[i] = 0
-            except:
-                pass
-
+        for i, _ in enumerate(self.step_played_counts):
+            self.step_played_counts[i] = 0
+            self.actual_notes_played_counts[i] = 0
         self.idx = 0
-
         self.set_current_note_idx(0)
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
@@ -486,6 +483,7 @@ class Sequencer(tk.Frame):
 
     def press_all_enters(self):
         self.set_memory_sequence(None)
+        self.set_note_scheduling_sequence(None)
         self.set_off_array(None)
         self.set_poly_absolute(None)
         self.set_poly_relative(None)
@@ -946,7 +944,9 @@ class Sequencer(tk.Frame):
                 if (a() > float(self.strvars_prob_skip_note[i].get()) / 100
                         and self.idx % self.get_tempo_multiplier() == 0):
 
-                    loop_idx = self.actual_notes_played_counts[i] % len(self.context.note_sequences[i])
+                    loop_idx = self.step_played_counts[i] % len(self.context.note_sequences[i])
+                    note_scheduling_idx = (self.actual_notes_played_counts[i] % len(self.context.scheduling_sequences[i])
+                                           if self.context.scheduling_sequences[i] else None)
 
                     octave_idx = self.get_octave_idx(i)
                     self.manage_root_sequence(i)
@@ -960,6 +960,7 @@ class Sequencer(tk.Frame):
 
                     if not self.intvars_enable_channels[i].get():
                         if note != NoteTypes.NOTE_PAUSE:
+                            self.step_played_counts[i] += 1
                             self.actual_notes_played_counts[i] += 1
                         continue
 
@@ -972,12 +973,13 @@ class Sequencer(tk.Frame):
                         self.skip_note_sequentially(self.skip_sequential_idx[i], self.idx_sequential_skip[i], i)
 
                     if orig_note.type_ is NoteTypes.NOTE_PAUSE:
-                        self.actual_notes_played_counts[i] += 1
+                        self.step_played_counts[i] += 1
                         continue
 
                     if orig_note.type_ is not NoteTypes.NOTE_PAUSE:
                         if orig_note.type_ is NoteTypes.GO_TO_START:
                             self.idx = -1
+                            self.step_played_counts[i] = 0
                             self.actual_notes_played_counts[i] = 0
                             return "dont sleep"
 
@@ -987,26 +989,20 @@ class Sequencer(tk.Frame):
 
                                 if self.context.kick_notes:
                                     self.context.kick_notes[-1].end()
-                                    # self.context.midi.send_message([0x90 + 13, self.context.kick_notes[-1], 0])
                                     self.context.kick_notes = []
 
                                 if orig_note.channel == 13:
                                     self.context.kick_notes.append(orig_note)
 
+                                if note_scheduling_idx is not None:
+                                    scheduling_object = self.context.scheduling_sequences[i][note_scheduling_idx]
+                                    orig_note.supply_scheduling_object(scheduling_object)
                                 orig_note.play()
-                                # self.context.midi.send_message(orig_note)
 
                             if self.delay_is_on():
-                                for j, channel in enumerate(valid_channels):
-                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                    x = lambda: self.delay.run_delay_with_note(
-                                        orig_note,
-                                        60 / self.bpm / self.get_delay_multiplier(),
-                                        self.delay_functions.functions[self.delay_constants.CONSTANT_DECAY],
-                                        -10)
+                                self.play_delay(i, note, octave_idx, valid_channels)
 
-                                    Delay(self.context).create_thread_for_function(x)
-
+                            self.step_played_counts[i] += 1
                             self.actual_notes_played_counts[i] += 1
                             self.idx_sequential_skip[i] += 1
                             self.idx_all_off[i] += 1
@@ -1020,6 +1016,17 @@ class Sequencer(tk.Frame):
                                     param = int(self.context.str_sequences[i][loop_idx])
                                     orig_note = self.get_orig_note(note, octave_idx, i, j)
                                     self.play_relative_poly_notes(orig_note, param, i)
+
+    def play_delay(self, i, note, octave_idx, valid_channels):
+        for j, channel in enumerate(valid_channels):
+            orig_note = self.get_orig_note(note, octave_idx, i, j)
+            x = lambda: self.delay.run_delay_with_note(
+                orig_note,
+                60. / self.context.get_bpm() / self.get_delay_multiplier(),
+                self.delay_functions.functions[self.delay_constants.CONSTANT_DECAY],
+                -10)
+
+            Delay(self.context).create_thread_for_function(x)
 
     def get_octave_idx(self, i):
         try:
@@ -1075,11 +1082,10 @@ class Sequencer(tk.Frame):
 
             res = self.play_midi_notes()
             self.play_sample_notes()
-
             self.frame_status.update()
 
             if res != "dont sleep":
-                sleep_time = NoteLengthsOld(float(self.context.bpm.get())).eigtht
+                sleep_time = NoteLengthsOld(self.context.get_bpm()).eigtht
                 time.sleep(sleep_time)
 
             self.idx += 1

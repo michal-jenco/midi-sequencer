@@ -70,3 +70,6 @@ class Context:
         self.amper_max = 8
 
         self.midi_port = None
+
+    def get_bpm(self):
+        return float(self.bpm.get())

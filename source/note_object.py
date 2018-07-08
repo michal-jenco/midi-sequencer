@@ -10,10 +10,11 @@ class NoteTypes:
 
 
 class NoteObject(object):
-    def __init__(self, context, pitch=None, channel=None, velocity=None, duration=None, repetitions=0,
+    def __init__(self, context, pitch=None, channel=None, velocity=None, attack=None, duration=None, repetitions=0,
                  type_=NoteTypes.NORMAL):
         self.context = context
         self.duration = duration
+        self.attack = attack
         self.channel = channel
         self.pitch = pitch
         self.velocity = velocity
@@ -27,6 +28,10 @@ class NoteObject(object):
 
     def __str__(self):
         return self.__repr__()
+
+    def supply_scheduling_object(self, obj):
+        self.duration = obj.duration_object
+        self.attack = obj.attack_object
 
     def get_type(self):
         return self.type_
@@ -48,29 +53,43 @@ class NoteObject(object):
 
     def play(self):
         if self.type_ is NoteTypes.NORMAL:
-            self.context.midi.send_message(self.get_midi_repr())
+            if self.attack is not None and self.duration is not None:
+                self.schedule_play_end()
+            elif self.attack is not None:
+                self.schedule_play()
+            elif self.duration is not None:
+                self.context.midi.send_message(self.get_midi_repr())
+                self.schedule_end()
+            elif self.duration is None and self.attack is None:
+                self.context.midi.send_message(self.get_midi_repr())
 
     def play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
             self.context.midi.send_message(self.get_transposed_midi_repr(semitones))
 
-    def play_with_scheduling_object(self, obj):
-        if isinstance(obj, NoteSchedulingObject):
-            pass
-
-        else:
-            raise TypeError("Must supply a NoteSchedulingObject instance.")
-
     def end(self):
         self.context.midi.send_message(self.get_end_note_midi_repr())
 
-    def play_and_schedule_end(self):
-        self.play()
-        Thread(target=self.schedule_end).start()
+    def _schedule_play(self):
+        sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
+        self.context.midi.send_message(self.get_midi_repr())
+
+    def _schedule_end(self):
+        sleep(self.duration.get_duration_in_seconds(bpm=self.context.get_bpm()))
+        self.end()
+
+    def _schedule_play_end(self):
+        self._schedule_play()
+        self._schedule_end()
+
+    def schedule_play(self):
+        Thread(target=self._schedule_play).start()
 
     def schedule_end(self):
-        sleep(self.duration)
-        self.end()
+        Thread(target=self._schedule_end).start()
+
+    def schedule_play_end(self):
+        Thread(target=self._schedule_play_end).start()
 
     def transpose(self, semitones):
         self.pitch += semitones
@@ -88,15 +107,23 @@ class NoteSchedulingObject:
     def __init__(self, seq):
         self.seq = str(seq.strip())
         self.type_ = None
-        self.note_duration = None
+        self.duration_object = None
+        self.attack_object = None
 
-        if self.is_just_note_length(self.seq):
+        if self.has_attack(self.seq):
+            self.attack_object = self.get_attack(self.seq)
+            seq = self.remove_subsequence(seq, NoteSchedulingSequenceConstants.ATTACK)
+
+        if self.is_just_note_length(seq):
             self.type_ = NoteSchedhulingTypes.JUST_LENGTH
-            self.note_duration = NoteDuration(self.seq)
-
-        elif self.is_just_tuplet(self.seq):
+        elif self.is_just_tuplet(seq):
             self.type_ = NoteSchedhulingTypes.JUST_TUPLET
-            self.note_duration = NoteDuration(self.seq)
+
+        print(seq)
+        if seq in NoteDurationTypes.MAP.keys():
+            self.duration_object = NoteDurationTypes.MAP[seq]
+        else:
+            self.duration_object = NoteDurationTypes.UNKNOWN
 
     @staticmethod
     def is_just_note_length(seq):
@@ -109,8 +136,25 @@ class NoteSchedulingObject:
     def is_just_tuplet(self, seq):
         return seq[-1] in TupletTypes.MAP.keys() and self.is_just_note_length(seq[:-1])
 
+    @staticmethod
+    def has_attack(seq):
+        return NoteSchedulingSequenceConstants.ATTACK in seq
+
+    @staticmethod
+    def get_attack(seq):
+        attack_seq_start_index = seq.index(NoteSchedulingSequenceConstants.ATTACK)
+        attack_seq_end_index = seq.rindex(NoteSchedulingSequenceConstants.ATTACK)
+        attack_seq = seq[attack_seq_start_index + 1:attack_seq_end_index]
+        return NoteDurationTypes.MAP[attack_seq]
+
+    @staticmethod
+    def remove_subsequence(seq, bounded_by):
+        start_index = seq.index(bounded_by)
+        end_index = seq.rindex(bounded_by)
+        return seq[:start_index] + seq[end_index + 1:]
+
     def __repr__(self):
-        return str(NoteDurationTypes.MAP[self.seq])
+        return self.duration_object.name
 
     def __str__(self):
         return self.__repr__()
@@ -125,38 +169,57 @@ class TupletTypes:
     MAP = {"t": TRIPLET, "q": QUINTUPLET, "s": SEPTUPLET}
 
 
+class NoteSchedulingSequenceConstants:
+    ATTACK = "a"
+
+
+class NoteDurationTypesRecord:
+    def __init__(self, name, multiplier=None):
+        self.name = name
+        self.multiplier = multiplier
+
+    def get_duration_in_seconds(self, bpm):
+        if self.multiplier is not None:
+            return 60. / bpm / self.multiplier
+        else:
+            print("Trying to get_duration_in_seconds() but multiplier is None. Defaulting to Whole note duration.")
+            return 60. / bpm
+
+
 class NoteDurationTypes:
-    WHOLE = "Whole"
-    HALF = "Half"
-    QUARTER = "Quarter"
-    EIGTHT = "Eigtht"
-    SIXTEENTH = "Sixteenth"
-    THIRTYSECOND = "Thirtysecond"
-    SIXTYFOURTH = "Sixtyfourth"
+    WHOLE = NoteDurationTypesRecord(name="Whole", multiplier=1)
+    HALF = NoteDurationTypesRecord(name="Half", multiplier=2)
+    QUARTER = NoteDurationTypesRecord(name="Quarter", multiplier=4)
+    EIGTHT = NoteDurationTypesRecord(name="Eigtht", multiplier=8)
+    SIXTEENTH = NoteDurationTypesRecord(name="Sixteenth", multiplier=16)
+    THIRTYSECOND = NoteDurationTypesRecord(name="Thirtysecond", multiplier=32)
+    SIXTYFOURTH = NoteDurationTypesRecord(name="Sixtyfourth", multiplier=64)
 
-    WHOLE_TRIPLET = "WHOLE triplet"
-    HALF_TRIPLET = "HALF triplet"
-    QUARTER_TRIPLET = "QUARTER triplet"
-    EIGTHT_TRIPLET = "EIGTHT triplet"
-    SIXTEENTH_TRIPLET = "SIXTEENTH triplet"
-    THIRTYSECOND_TRIPLET = "THIRTYSECOND triplet"
-    SIXTYFOURTH_TRIPLET = "SIXTYFOURTH triplet"
+    WHOLE_TRIPLET = NoteDurationTypesRecord(name="Whole triplet", multiplier=WHOLE.multiplier * 3 / 2.)
+    HALF_TRIPLET = NoteDurationTypesRecord(name="Half triplet", multiplier=HALF.multiplier * 3 / 2.)
+    QUARTER_TRIPLET = NoteDurationTypesRecord(name="Quarter triplet", multiplier=QUARTER.multiplier * 3 / 2.)
+    EIGTHT_TRIPLET = NoteDurationTypesRecord(name="Eigtht triplet", multiplier=EIGTHT.multiplier * 3 / 2.)
+    SIXTEENTH_TRIPLET = NoteDurationTypesRecord(name="Sixteenth triplet", multiplier=SIXTEENTH.multiplier * 3 / 2.)
+    THIRTYSECOND_TRIPLET = NoteDurationTypesRecord(name="Thirtysecond triplet", multiplier=THIRTYSECOND.multiplier * 3 / 2.)
+    SIXTYFOURTH_TRIPLET = NoteDurationTypesRecord(name="Sixtyfourth triplet", multiplier=SIXTYFOURTH.multiplier * 3 / 2.)
 
-    WHOLE_QUINTUPLET = "WHOLE quintuplet"
-    HALF_QUINTUPLET = "HALF quintuplet"
-    QUARTER_QUINTUPLET = "QUARTER quintuplet"
-    EIGTHT_QUINTUPLET = "EIGTHT quintuplet"
-    SIXTEENTH_QUINTUPLET = "SIXTEENTH quintuplet"
-    THIRTYSECOND_QUINTUPLET = "THIRTYSECOND quintuplet"
-    SIXTYFOURTH_QUINTUPLET = "SIXTYFOURTH quintuplet"
+    WHOLE_QUINTUPLET = NoteDurationTypesRecord(name="Whole quintuplet", multiplier=WHOLE.multiplier * 5 / 2.)
+    HALF_QUINTUPLET = NoteDurationTypesRecord(name="Half quintuplet", multiplier=HALF.multiplier * 5 / 2.)
+    QUARTER_QUINTUPLET = NoteDurationTypesRecord(name="Quarter quintuplet", multiplier=QUARTER.multiplier * 5 / 2.)
+    EIGTHT_QUINTUPLET = NoteDurationTypesRecord(name="Eigtht quintuplet", multiplier=EIGTHT.multiplier * 5 / 2.)
+    SIXTEENTH_QUINTUPLET = NoteDurationTypesRecord(name="Sixteenth quintuplet", multiplier=SIXTEENTH.multiplier * 5 / 2.)
+    THIRTYSECOND_QUINTUPLET = NoteDurationTypesRecord(name="Thirtysecond quintuplet", multiplier=THIRTYSECOND.multiplier * 5 / 2.)
+    SIXTYFOURTH_QUINTUPLET = NoteDurationTypesRecord(name="Sixtyfourth quintuplet", multiplier=SIXTYFOURTH.multiplier * 5 / 2.)
 
-    WHOLE_SEPTUPLET = "WHOLE septuplet"
-    HALF_SEPTUPLET = "HALF septuplet"
-    QUARTER_SEPTUPLET = "QUARTER septuplet"
-    EIGTHT_SEPTUPLET = "EIGTHT septuplet"
-    SIXTEENTH_SEPTUPLET = "SIXTEENTH septuplet"
-    THIRTYSECOND_SEPTUPLET = "THIRTYSECOND septuplet"
-    SIXTYFOURTH_SEPTUPLET = "SIXTYFOURTH septuplet"
+    WHOLE_SEPTUPLET = NoteDurationTypesRecord(name="Whole septuplet", multiplier=WHOLE.multiplier * 7 / 2.)
+    HALF_SEPTUPLET = NoteDurationTypesRecord(name="Half septuplet", multiplier=HALF.multiplier * 7 / 2.)
+    QUARTER_SEPTUPLET = NoteDurationTypesRecord(name="Quarter septuplet", multiplier=QUARTER.multiplier * 7 / 2.)
+    EIGTHT_SEPTUPLET = NoteDurationTypesRecord(name="Eigtht septuplet", multiplier=EIGTHT.multiplier * 7 / 2.)
+    SIXTEENTH_SEPTUPLET = NoteDurationTypesRecord(name="Sixteenth septuplet", multiplier=SIXTEENTH.multiplier * 7 / 2.)
+    THIRTYSECOND_SEPTUPLET = NoteDurationTypesRecord(name="Thirtysecond septuplet", multiplier=THIRTYSECOND.multiplier * 7 / 2.)
+    SIXTYFOURTH_SEPTUPLET = NoteDurationTypesRecord(name="Sixtyfourth septuplet", multiplier=SIXTYFOURTH.multiplier * 7 / 2.)
+
+    UNKNOWN = NoteDurationTypesRecord(name="Unknown NoteDurationTypes object")
 
     MAP = {"1": WHOLE, "2": HALF, "4": QUARTER, "8": EIGTHT, "16": SIXTEENTH, "32": THIRTYSECOND, "64": SIXTYFOURTH,
            "1t": WHOLE_TRIPLET, "2t": HALF_TRIPLET, "4t": QUARTER_TRIPLET, "8t": EIGTHT_TRIPLET,
@@ -178,9 +241,17 @@ class NoteDurationTypes:
 
 
 class NoteDuration:
-    def __init__(self, duration_sequence):
-        if duration_sequence in NoteDurationTypes.MAP.keys():
-            self.duration = NoteDurationTypes.MAP[duration_sequence]
+    def __init__(self, duration_str_sequence):
+        self.duration = None
+
+        if duration_str_sequence in NoteDurationTypes.MAP.keys():
+            self.duration = NoteDurationTypes.MAP[duration_str_sequence]
+
+        else:
+            self.duration = NoteDurationTypes.UNKNOWN
+
+    def get(self):
+        return self.duration
 
 
 class NoteLengthsOld:
