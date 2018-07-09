@@ -10,7 +10,7 @@ class NoteTypes:
 
 
 class NoteObject(object):
-    def __init__(self, context, pitch=None, channel=None, velocity=None, attack=None, duration=None, repetitions=0,
+    def __init__(self, context, pitch=None, channel=None, velocity=None, attack=None, duration=None, play_count=1,
                  type_=NoteTypes.NORMAL):
         self.context = context
         self.duration = duration
@@ -18,7 +18,7 @@ class NoteObject(object):
         self.channel = channel
         self.pitch = pitch
         self.velocity = velocity
-        self.repetitions = repetitions
+        self.repetitions = play_count
         self.type_ = type_
 
         self._channel_prefix = 0x90
@@ -32,6 +32,7 @@ class NoteObject(object):
     def supply_scheduling_object(self, obj):
         self.duration = obj.duration_object
         self.attack = obj.attack_object
+        self.repetitions = obj.get_play_count()
 
     def get_type(self):
         return self.type_
@@ -53,15 +54,18 @@ class NoteObject(object):
 
     def play(self):
         if self.type_ is NoteTypes.NORMAL:
-            if self.attack is not None and self.duration is not None:
-                self.schedule_play_end()
-            elif self.attack is not None:
-                self.schedule_play()
-            elif self.duration is not None:
-                self.context.midi.send_message(self.get_midi_repr())
-                self.schedule_end()
-            elif self.duration is None and self.attack is None:
-                self.context.midi.send_message(self.get_midi_repr())
+            Thread(target=self._play).start()
+
+    def _play(self):
+        for i in range(self.repetitions):
+            if self.attack is not None and not i:
+                sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
+
+            self.context.midi.send_message(self.get_midi_repr())
+
+            if self.duration is not None:
+                sleep(self.duration.get_duration_in_seconds(bpm=self.context.get_bpm()))
+                self.end()
 
     def play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
@@ -69,27 +73,6 @@ class NoteObject(object):
 
     def end(self):
         self.context.midi.send_message(self.get_end_note_midi_repr())
-
-    def _schedule_play(self):
-        sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
-        self.context.midi.send_message(self.get_midi_repr())
-
-    def _schedule_end(self):
-        sleep(self.duration.get_duration_in_seconds(bpm=self.context.get_bpm()))
-        self.end()
-
-    def _schedule_play_end(self):
-        self._schedule_play()
-        self._schedule_end()
-
-    def schedule_play(self):
-        Thread(target=self._schedule_play).start()
-
-    def schedule_end(self):
-        Thread(target=self._schedule_end).start()
-
-    def schedule_play_end(self):
-        Thread(target=self._schedule_play_end).start()
 
     def transpose(self, semitones):
         self.pitch += semitones
@@ -109,14 +92,19 @@ class NoteSchedulingObject:
         self.type_ = None
         self.duration_object = None
         self.attack_object = None
+        self.repeat_count = 0
 
-        if self.has_attack(self.seq):
-            self.attack_object = self.get_attack(self.seq)
-            seq = self.remove_subsequence(seq, NoteSchedulingSequenceConstants.ATTACK)
+        if self._has_attack(self.seq):
+            self.attack_object = self._get_attack(self.seq)
+            seq = self._remove_subsequence(seq, NoteSchedulingSequenceConstants.ATTACK)
 
-        if self.is_just_note_length(seq):
+        if self._has_repeat(self.seq):
+            self.repeat_count = self._get_repeat_count(self.seq)
+            seq = self._remove_subsequence(seq, NoteSchedulingSequenceConstants.REPEAT)
+
+        if self._is_just_note_length(seq):
             self.type_ = NoteSchedhulingTypes.JUST_LENGTH
-        elif self.is_just_tuplet(seq):
+        elif self._is_just_tuplet(seq):
             self.type_ = NoteSchedhulingTypes.JUST_TUPLET
 
         if seq in NoteDurationTypes.MAP.keys():
@@ -125,35 +113,49 @@ class NoteSchedulingObject:
             self.duration_object = NoteDurationTypes.UNKNOWN
 
     @staticmethod
-    def is_just_note_length(seq):
+    def _is_just_note_length(seq):
         try:
             int(seq)
             return True
         except:
             return False
 
-    def is_just_tuplet(self, seq):
-        return seq[-1] in TupletTypes.MAP.keys() and self.is_just_note_length(seq[:-1])
+    def _is_just_tuplet(self, seq):
+        return seq[-1] in TupletTypes.MAP.keys() and self._is_just_note_length(seq[:-1])
 
     @staticmethod
-    def has_attack(seq):
+    def _has_attack(seq):
         return NoteSchedulingSequenceConstants.ATTACK in seq
 
     @staticmethod
-    def get_attack(seq):
+    def _has_repeat(seq):
+        return NoteSchedulingSequenceConstants.REPEAT in seq
+
+    @staticmethod
+    def _get_attack(seq):
         attack_seq_start_index = seq.index(NoteSchedulingSequenceConstants.ATTACK)
         attack_seq_end_index = seq.rindex(NoteSchedulingSequenceConstants.ATTACK)
         attack_seq = seq[attack_seq_start_index + 1:attack_seq_end_index]
         return NoteDurationTypes.MAP[attack_seq]
 
+    def get_play_count(self):
+        return self.repeat_count + 1
+
     @staticmethod
-    def remove_subsequence(seq, bounded_by):
+    def _get_repeat_count(seq):
+        repeat_seq_start_index = seq.index(NoteSchedulingSequenceConstants.REPEAT)
+        repeat_seq_end_index = seq.rindex(NoteSchedulingSequenceConstants.REPEAT)
+        repeat_seq = seq[repeat_seq_start_index + 1:repeat_seq_end_index]
+        return int(repeat_seq)
+
+    @staticmethod
+    def _remove_subsequence(seq, bounded_by):
         start_index = seq.index(bounded_by)
         end_index = seq.rindex(bounded_by)
         return seq[:start_index] + seq[end_index + 1:]
 
     def __repr__(self):
-        return self.duration_object.name
+        return "%s - %sx" % (self.duration_object.name, self.get_play_count())
 
     def __str__(self):
         return self.__repr__()
@@ -170,6 +172,7 @@ class TupletTypes:
 
 class NoteSchedulingSequenceConstants:
     ATTACK = "a"
+    REPEAT = "r"
 
 
 class NoteDurationTypesRecord:
@@ -194,29 +197,29 @@ class NoteDurationTypes:
     THIRTYSECOND = NoteDurationTypesRecord(name="Thirtysecond", multiplier=32)
     SIXTYFOURTH = NoteDurationTypesRecord(name="Sixtyfourth", multiplier=64)
 
-    WHOLE_TRIPLET = NoteDurationTypesRecord(name="Whole triplet", multiplier=WHOLE.multiplier * 3 / 2.)
-    HALF_TRIPLET = NoteDurationTypesRecord(name="Half triplet", multiplier=HALF.multiplier * 3 / 2.)
-    QUARTER_TRIPLET = NoteDurationTypesRecord(name="Quarter triplet", multiplier=QUARTER.multiplier * 3 / 2.)
-    EIGTHT_TRIPLET = NoteDurationTypesRecord(name="Eigtht triplet", multiplier=EIGTHT.multiplier * 3 / 2.)
-    SIXTEENTH_TRIPLET = NoteDurationTypesRecord(name="Sixteenth triplet", multiplier=SIXTEENTH.multiplier * 3 / 2.)
-    THIRTYSECOND_TRIPLET = NoteDurationTypesRecord(name="Thirtysecond triplet", multiplier=THIRTYSECOND.multiplier * 3 / 2.)
-    SIXTYFOURTH_TRIPLET = NoteDurationTypesRecord(name="Sixtyfourth triplet", multiplier=SIXTYFOURTH.multiplier * 3 / 2.)
+    WHOLE_TRIPLET = NoteDurationTypesRecord(name="Whole triplet", multiplier=WHOLE.multiplier * 3 / 4.)
+    HALF_TRIPLET = NoteDurationTypesRecord(name="Half triplet", multiplier=HALF.multiplier * 3 / 4.)
+    QUARTER_TRIPLET = NoteDurationTypesRecord(name="Quarter triplet", multiplier=QUARTER.multiplier * 3 / 4.)
+    EIGTHT_TRIPLET = NoteDurationTypesRecord(name="Eigtht triplet", multiplier=EIGTHT.multiplier * 3 / 4.)
+    SIXTEENTH_TRIPLET = NoteDurationTypesRecord(name="Sixteenth triplet", multiplier=SIXTEENTH.multiplier * 3 / 4.)
+    THIRTYSECOND_TRIPLET = NoteDurationTypesRecord(name="Thirtysecond triplet", multiplier=THIRTYSECOND.multiplier * 3 / 4.)
+    SIXTYFOURTH_TRIPLET = NoteDurationTypesRecord(name="Sixtyfourth triplet", multiplier=SIXTYFOURTH.multiplier * 3 / 4.)
 
-    WHOLE_QUINTUPLET = NoteDurationTypesRecord(name="Whole quintuplet", multiplier=WHOLE.multiplier * 5 / 2.)
-    HALF_QUINTUPLET = NoteDurationTypesRecord(name="Half quintuplet", multiplier=HALF.multiplier * 5 / 2.)
-    QUARTER_QUINTUPLET = NoteDurationTypesRecord(name="Quarter quintuplet", multiplier=QUARTER.multiplier * 5 / 2.)
-    EIGTHT_QUINTUPLET = NoteDurationTypesRecord(name="Eigtht quintuplet", multiplier=EIGTHT.multiplier * 5 / 2.)
-    SIXTEENTH_QUINTUPLET = NoteDurationTypesRecord(name="Sixteenth quintuplet", multiplier=SIXTEENTH.multiplier * 5 / 2.)
-    THIRTYSECOND_QUINTUPLET = NoteDurationTypesRecord(name="Thirtysecond quintuplet", multiplier=THIRTYSECOND.multiplier * 5 / 2.)
-    SIXTYFOURTH_QUINTUPLET = NoteDurationTypesRecord(name="Sixtyfourth quintuplet", multiplier=SIXTYFOURTH.multiplier * 5 / 2.)
+    WHOLE_QUINTUPLET = NoteDurationTypesRecord(name="Whole quintuplet", multiplier=WHOLE.multiplier * 5 / 4.)
+    HALF_QUINTUPLET = NoteDurationTypesRecord(name="Half quintuplet", multiplier=HALF.multiplier * 5 / 4.)
+    QUARTER_QUINTUPLET = NoteDurationTypesRecord(name="Quarter quintuplet", multiplier=QUARTER.multiplier * 5 / 4.)
+    EIGTHT_QUINTUPLET = NoteDurationTypesRecord(name="Eigtht quintuplet", multiplier=EIGTHT.multiplier * 5 / 4.)
+    SIXTEENTH_QUINTUPLET = NoteDurationTypesRecord(name="Sixteenth quintuplet", multiplier=SIXTEENTH.multiplier * 5 / 4.)
+    THIRTYSECOND_QUINTUPLET = NoteDurationTypesRecord(name="Thirtysecond quintuplet", multiplier=THIRTYSECOND.multiplier * 5 / 4.)
+    SIXTYFOURTH_QUINTUPLET = NoteDurationTypesRecord(name="Sixtyfourth quintuplet", multiplier=SIXTYFOURTH.multiplier * 5 / 4.)
 
-    WHOLE_SEPTUPLET = NoteDurationTypesRecord(name="Whole septuplet", multiplier=WHOLE.multiplier * 7 / 2.)
-    HALF_SEPTUPLET = NoteDurationTypesRecord(name="Half septuplet", multiplier=HALF.multiplier * 7 / 2.)
-    QUARTER_SEPTUPLET = NoteDurationTypesRecord(name="Quarter septuplet", multiplier=QUARTER.multiplier * 7 / 2.)
-    EIGTHT_SEPTUPLET = NoteDurationTypesRecord(name="Eigtht septuplet", multiplier=EIGTHT.multiplier * 7 / 2.)
-    SIXTEENTH_SEPTUPLET = NoteDurationTypesRecord(name="Sixteenth septuplet", multiplier=SIXTEENTH.multiplier * 7 / 2.)
-    THIRTYSECOND_SEPTUPLET = NoteDurationTypesRecord(name="Thirtysecond septuplet", multiplier=THIRTYSECOND.multiplier * 7 / 2.)
-    SIXTYFOURTH_SEPTUPLET = NoteDurationTypesRecord(name="Sixtyfourth septuplet", multiplier=SIXTYFOURTH.multiplier * 7 / 2.)
+    WHOLE_SEPTUPLET = NoteDurationTypesRecord(name="Whole septuplet", multiplier=WHOLE.multiplier * 7 / 4.)
+    HALF_SEPTUPLET = NoteDurationTypesRecord(name="Half septuplet", multiplier=HALF.multiplier * 7 / 4.)
+    QUARTER_SEPTUPLET = NoteDurationTypesRecord(name="Quarter septuplet", multiplier=QUARTER.multiplier * 7 / 4.)
+    EIGTHT_SEPTUPLET = NoteDurationTypesRecord(name="Eigtht septuplet", multiplier=EIGTHT.multiplier * 7 / 4.)
+    SIXTEENTH_SEPTUPLET = NoteDurationTypesRecord(name="Sixteenth septuplet", multiplier=SIXTEENTH.multiplier * 7 / 4.)
+    THIRTYSECOND_SEPTUPLET = NoteDurationTypesRecord(name="Thirtysecond septuplet", multiplier=THIRTYSECOND.multiplier * 7 / 4.)
+    SIXTYFOURTH_SEPTUPLET = NoteDurationTypesRecord(name="Sixtyfourth septuplet", multiplier=SIXTYFOURTH.multiplier * 7 / 4.)
 
     UNKNOWN = NoteDurationTypesRecord(name="Unknown NoteDurationTypes object")
 
@@ -256,7 +259,7 @@ class NoteDuration:
 class NoteLengthsOld:
     def __init__(self, bpm):
         self.whole = 60. / bpm
-        self.half = self.whole / 2.
+        self.half = self.whole / 4.
         self.quarter = self.whole / 4.
         self.eigtht = self.whole / 8.
         self.sixteenth = self.whole / 16.
