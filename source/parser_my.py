@@ -3,7 +3,7 @@ import itertools
 
 from source.scales import Scales
 from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurationTypes,
-                                convert_midi_notes_to_note_objects)
+                                convert_midi_notes_to_note_objects,gap_count_dict)
 from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE
 
@@ -11,13 +11,13 @@ from source.constants import MODE_SAMPLE, MODE_SIMPLE
 class Parser:
     def __init__(self, context):
         self.context = context
-        self.string_constants = StringConstants()
+        self.string_constants = StringConstants
 
     @staticmethod
     def _note_is_container_boundary(note):
         return note in TupletTypes.MAP.keys() and note != TupletTypes.SEPTUPLET
 
-    def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
+    def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE, offset=0):
         msg_list = []
         str_seq = ""
         parsing_container = False
@@ -39,11 +39,9 @@ class Parser:
 
             for idx, note in enumerate(notes):
                 if skipping_permutations:
-                    if note != perm_char:
-                        continue
-                    else:
+                    if note == perm_char:
                         skipping_permutations = False
-                        continue
+                    continue
 
                 msg = [0x90]
 
@@ -56,20 +54,33 @@ class Parser:
                     if not parsing_container:
                         parsing_container = True
                         container_type = TupletTypes.MAP[note]
-                        container_characters = "".join(notes[idx + 1:notes[idx + 1:].index(note) + idx + 1])
-                        container_notes, container_str_seq = self.get_notes(context=context, text=container_characters,
-                                                                            iii=iii)
+                        container_content = "".join(notes[idx + 1:notes[idx + 1:].index(note) + idx + 1])
 
-                        gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
+                        if StringConstants.container_separator in container_content:
+                            container_note_characters = container_content.split(
+                                StringConstants.container_separator)[0]
+                            gap_duration = container_content.split(StringConstants.container_separator)[1].lower()
+                        else:
+                            container_note_characters = container_content
+                            gap_duration = None
 
-                        # print("Container type: %s" % container_type)
-                        # print("Container characters: %s" % container_characters)
-                        # print("Container notes: %s" % container_notes)
+                        container_notes, container_str_seq = self.get_notes(context=context,
+                                                                            text=container_note_characters,
+                                                                            iii=iii,
+                                                                            offset=idx)
+                        print("Container type: %s" % container_type)
+                        print("Container content: %s" % container_content)
+                        print("Container notes: %s" % container_notes)
+                        print("Gap duration: %s" % gap_duration)
 
-                        a = convert_midi_notes_to_note_objects(context, container_notes)
+                        default_length = "%s%s" % (16, note)
+                        length = (default_length if 
+                                  (gap_duration is None or gap_duration not in NoteDurationTypes.MAP.keys())
+                                  else gap_duration)
+                        note_objects = convert_midi_notes_to_note_objects(context, container_notes)
                         str_seq += " %s " % (container_str_seq[0] if container_str_seq[0].isdigit() else 0)
-                        msg_list.append(NoteContainer(context=context, notes=a,
-                                                      gaps=[NoteDurationTypes.MAP["%s%s" % (16, note)]] * gap_count_dict[note]))
+                        msg_list.append(NoteContainer(context=context, notes=note_objects,
+                                                      gaps=[NoteDurationTypes.MAP[length]] * gap_count_dict[note]))
                     continue
 
                 if note.isdigit() or note in {"a", "b", "c", "d", "e"}:
@@ -376,7 +387,7 @@ class Parser:
 
     @staticmethod
     def is_pointer(seq):
-        return seq.startswith(StringConstants().pointer)
+        return seq.startswith(StringConstants.pointer)
 
     @staticmethod
     def get_pointer_destination(seq):

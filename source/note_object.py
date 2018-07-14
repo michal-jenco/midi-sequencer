@@ -3,6 +3,8 @@ from time import sleep
 from threading import Thread
 from copy import copy
 
+gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
+
 
 class NoteTypes:
     NORMAL = "Normal"
@@ -56,6 +58,7 @@ class NoteObject(object):
     def play(self):
         if self.type_ is NoteTypes.NORMAL:
             Thread(target=self._play).start()
+            print("Playing note value: %s" % self.pitch)
 
     def _play(self):
         for i in range(self.repetitions):
@@ -101,7 +104,8 @@ class NoteContainer(object):
         for i, note in enumerate(self.notes):
             if isinstance(note.pitch, int):
                 orig_pitch = note.pitch
-                note.pitch += self.pitch
+                note.pitch += int(self.pitch // 2)
+                print("Pitch offset: %s" % self.pitch)
 
             if transposed_semitones:
                 note.play_transposed(transposed_semitones)
@@ -372,9 +376,7 @@ class NoteDurationTypes:
            "8n": EIGTHT_NONUPLET,
            "16n": SIXTEENTH_NONUPLET,
            "32n": THIRTYSECOND_NONUPLET,
-           "64n": SIXTYFOURTH_NONUPLET,
-
-           }
+           "64n": SIXTYFOURTH_NONUPLET}
 
 
 class NoteDuration:
@@ -435,5 +437,4 @@ def convert_midi_notes_to_note_objects(context, midi_notes):
 
         elif isinstance(note, NoteContainer):
             result.append(note)
-
     return result

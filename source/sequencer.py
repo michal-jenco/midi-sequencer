@@ -31,7 +31,6 @@ class Sequencer(tk.Frame):
         self.root["bg"] = "black"
         self.root.geometry('+0+0')
 
-        self.string_constants = StringConstants()
         self.threads = []
 
         self.frame_delay = tk.Frame(self.root)
@@ -55,7 +54,7 @@ class Sequencer(tk.Frame):
 
         self.midi_input_listener = MIDIInputListener(sequencer=self,
                                                      context=self.context,
-                                                     input_name=self.string_constants.AKAI_MIDIMIX_NAME,
+                                                     input_name=StringConstants.AKAI_MIDIMIX_NAME,
                                                      interval=SleepTimes.MIDI_INPUT_MAINLOOP)
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
@@ -471,7 +470,7 @@ class Sequencer(tk.Frame):
     def init_entries(self):
         for entry in self.entry_boxes:
             if entry is not self.entry_midi_channels:
-                insert_into_entry(entry, self.string_constants.initial_empty_sequences)
+                insert_into_entry(entry, StringConstants.initial_empty_sequences)
 
         insert_into_entry(self.entry_scale_sequence, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
         insert_into_entry(self.entry_root_sequence, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
@@ -582,7 +581,7 @@ class Sequencer(tk.Frame):
         self.context.note_sequences = []
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         for i, result in enumerate(individual_sequences):
@@ -638,7 +637,7 @@ class Sequencer(tk.Frame):
         text = str(self.entry_note_scheduling.get())
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         for i, individual_seq in enumerate(individual_sequences):
@@ -656,7 +655,7 @@ class Sequencer(tk.Frame):
         text = self.entry_root_sequence.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         for i, seq in enumerate(individual_sequences):
@@ -671,7 +670,7 @@ class Sequencer(tk.Frame):
         text = self.entry_octave_sequence.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         for i, seq in enumerate(individual_sequences):
@@ -685,7 +684,7 @@ class Sequencer(tk.Frame):
         text = self.entry_scale_sequence.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         for i, seq in enumerate(individual_sequences):
@@ -701,7 +700,7 @@ class Sequencer(tk.Frame):
         text = self.entry_poly.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         self.context.poly_sequences = [list(map(int, voices.split())) for voices in individual_sequences]
@@ -714,7 +713,7 @@ class Sequencer(tk.Frame):
         text = self.entry_poly_relative.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         self.context.poly_relative_sequences = [list(map(int, voices.split())) for voices in individual_sequences]
@@ -727,7 +726,7 @@ class Sequencer(tk.Frame):
         text = self.entry_skip_note_parallel.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         self.context.skip_note_parallel_sequences = [list(map(int, skips.split())) for skips in individual_sequences]
@@ -740,7 +739,7 @@ class Sequencer(tk.Frame):
         text = self.entry_skip_note_sequential.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         self.context.skip_notes_sequential_sequences = [list(map(int, skips.split())) for skips in individual_sequences]
@@ -756,10 +755,10 @@ class Sequencer(tk.Frame):
         for i, _ in enumerate(self.context.scale_sequences):
             self.context.scale_sequences[i] = [scale_]
 
-        sequences = self.entry_scale_sequence.get().split(StringConstants().multiple_entry_separator)
+        sequences = self.entry_scale_sequence.get().split(StringConstants.multiple_entry_separator)
         new_content = [" %s " % scale_] + sequences[1:]
         insert_into_entry(self.entry_scale_sequence,
-                          StringConstants().multiple_entry_separator.join(new_content))
+                          StringConstants.multiple_entry_separator.join(new_content))
         self.set_scale_sequence(None)
         self.context.scales_individual = [scale_]*7
 
@@ -768,7 +767,7 @@ class Sequencer(tk.Frame):
         text = self.entry_off_array.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         parsed_individual_sequences = [parser.parse_off_array(seq) for seq in individual_sequences]
@@ -782,7 +781,7 @@ class Sequencer(tk.Frame):
         text = self.entry_midi_channels.get()
 
         individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=self.string_constants.multiple_entry_separator,
+            separator=StringConstants.multiple_entry_separator,
             sequences=text)
 
         parsed_individual_sequences = [parser.parse_midi_channels(seq) for seq in individual_sequences]
@@ -897,16 +896,16 @@ class Sequencer(tk.Frame):
         if self.context.octave_sequences:
             octave_offset = 0 if not self.context.octave_sequences[i] else self.context.octave_sequences[i][octave_idx]
 
-        orig_note = copy.copy(note)
-        orig_note.set_channel(self.context.midi_channels[i][j])
+        note_copy = copy.copy(note)
+        note_copy.set_channel(self.context.midi_channels[i][j])
 
-        if orig_note.type_ is NoteTypes.NORMAL:
-            if isinstance(orig_note, NoteContainer):
-                orig_note.pitch = self.context.roots[i] - c2 - 4 + octave_offset
-            orig_note.pitch += self.context.roots[i] - c2 - 4 + octave_offset
+        if note_copy.type_ is NoteTypes.NORMAL:
+            if isinstance(note_copy, NoteContainer):
+                note_copy.pitch = (self.context.roots[i] - c2 - 4 + octave_offset)
+            note_copy.pitch += self.context.roots[i] - c2 - 4 + octave_offset
 
-        orig_note.set_velocity(random.randint(vel_min, vel_max))
-        return orig_note
+        note_copy.set_velocity(random.randint(vel_min, vel_max))
+        return note_copy
 
     def turn_off_notes(self, off_note_idx, idx_all_off, i):
         if self.context.off_sequences:
@@ -1055,26 +1054,16 @@ class Sequencer(tk.Frame):
             pass
 
     def play_sequence(self):
-        log(logfile=self.context.logfile, msg="Play sequence is running.")
-
-        # mc = MidiClock(self.context)
-
-        ########################################################
-        ########################################################
-        ################    M A I N   L O O P   ################
-        ########################################################
-        ########################################################
-
         while True:
             if not self.context.playback_on:
                 time.sleep(.02)
                 continue
 
-            res = self.play_midi_notes()
-            self.play_sample_notes()
+            result = self.play_midi_notes()
             self.frame_status.update()
+            self.play_sample_notes()
 
-            if res != "dont sleep":
+            if result != "dont sleep":
                 sleep_time = NoteLengthsOld(self.context.get_bpm()).eigtht
                 time.sleep(sleep_time)
 
