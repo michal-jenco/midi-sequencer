@@ -82,6 +82,52 @@ class NoteObject(object):
         return [self._channel_prefix + self.channel, self.pitch + semitones, self.velocity]
 
 
+class NoteContainer(object):
+    def __init__(self, context, notes, gaps):
+        self.context = context
+        self.notes = notes
+        self.gaps = gaps  # NoteDurationTypes
+        self.type_ = NoteTypes.NORMAL
+        self.channel = None
+        self.pitch = 0
+
+    def play(self, transposed=0):
+        Thread(target=self._play, args=(transposed,)).start()
+
+    def play_transposed(self, semitones):
+        self.play(transposed=semitones)
+
+    def _play(self, transposed_semitones):
+        for i, note in enumerate(self.notes):
+            if isinstance(note.pitch, int):
+                orig_pitch = note.pitch
+                note.pitch += self.pitch
+
+            if transposed_semitones:
+                note.play_transposed(transposed_semitones)
+            else:
+                note.play()
+
+            if i < len(self.gaps):
+                sleep(self.gaps[i].get_duration_in_seconds(self.context.get_bpm()))
+
+            if isinstance(note.pitch, int):
+                note.pitch = orig_pitch
+
+    def set_channel(self, channel):
+        self.channel = channel
+        for note in self.notes:
+            note.set_channel(channel)
+
+    def set_velocity(self, velocity):
+        for note in self.notes:
+            note.set_velocity(velocity)
+
+    def supply_scheduling_object(self, scheduling_object):
+        for note in self.notes:
+            note.supply_scheduling_object(scheduling_object)
+
+
 class NoteSchedhulingTypes:
     JUST_LENGTH = "Just note length"
     JUST_TUPLET = "Just tuplet"
@@ -115,7 +161,7 @@ class NoteSchedulingObject:
         elif self._is_just_tuplet(seq):
             self.type_ = NoteSchedhulingTypes.JUST_TUPLET
 
-        pure_seq = self.get_pure_seq(seq)
+        pure_seq = self._get_pure_seq(seq)
 
         if pure_seq in NoteDurationTypes.MAP.keys():
             self.duration_object = copy(NoteDurationTypes.MAP[pure_seq])
@@ -126,9 +172,7 @@ class NoteSchedulingObject:
         else:
             self.duration_object = NoteDurationTypes.UNKNOWN
 
-        self.debug_print()
-
-    def debug_print(self):
+    def _debug_print(self):
         print("duration obj: %s" % (None if self.duration_object is None else self.duration_object.name))
         print("divider: %s" % (None if self.duration_object is None else self.duration_object.divider))
         print("attack obj: %s" % (None if self.attack_object is None else self.attack_object.name))
@@ -136,7 +180,7 @@ class NoteSchedulingObject:
         print("dotted: %s times" % self.number_of_dots)
         print("times: %s" % self.times)
 
-    def get_pure_seq(self, seq):
+    def _get_pure_seq(self, seq):
         for bound in NoteSchedulingSequenceConstants.BOUNDED:
             seq = self._remove_subsequence(seq, bounded_by=bound)
 
@@ -146,7 +190,7 @@ class NoteSchedulingObject:
 
     def _is_just_note_length(self, seq):
         try:
-            int(self.get_pure_seq(seq))
+            int(self._get_pure_seq(seq))
             return True
         except:
             return False
@@ -192,7 +236,7 @@ class NoteSchedulingObject:
         attack_seq = seq[attack_seq_start_index + 1:attack_seq_end_index]
 
         times = self._get_times(attack_seq) if self._has_times(attack_seq) else 1
-        pure_attack_seq = self.get_pure_seq(attack_seq)
+        pure_attack_seq = self._get_pure_seq(attack_seq)
 
         if pure_attack_seq in NoteDurationTypes.MAP.keys():
             duration_obj = copy(NoteDurationTypes.MAP[pure_attack_seq])
@@ -237,7 +281,7 @@ class TupletTypes:
     SEPTUPLET = "Septuplet"
     NONUPLET = "Nonuplet"
 
-    MAP = {"t": TRIPLET, "q": QUINTUPLET, "s": SEPTUPLET}
+    MAP = {"t": TRIPLET, "q": QUINTUPLET, "s": SEPTUPLET, "n": NONUPLET}
 
 
 class NoteSchedulingSequenceConstants:
@@ -295,6 +339,14 @@ class NoteDurationTypes:
     THIRTYSECOND_SEPTUPLET = NoteDurationTypesRecord("Thirtysecond septuplet", THIRTYSECOND.divider * 7 / 2.)
     SIXTYFOURTH_SEPTUPLET = NoteDurationTypesRecord("Sixtyfourth septuplet", SIXTYFOURTH.divider * 7 / 2.)
 
+    WHOLE_NONUPLET = NoteDurationTypesRecord("Whole septuplet", WHOLE.divider * 9 / 2.)
+    HALF_NONUPLET = NoteDurationTypesRecord("Half septuplet", HALF.divider * 9 / 2.)
+    QUARTER_NONUPLET = NoteDurationTypesRecord("Quarter septuplet", QUARTER.divider * 9 / 2.)
+    EIGTHT_NONUPLET = NoteDurationTypesRecord("Eigtht septuplet", EIGTHT.divider * 9 / 2.)
+    SIXTEENTH_NONUPLET = NoteDurationTypesRecord("Sixteenth septuplet", SIXTEENTH.divider * 9 / 2.)
+    THIRTYSECOND_NONUPLET = NoteDurationTypesRecord("Thirtysecond septuplet", THIRTYSECOND.divider * 9 / 2.)
+    SIXTYFOURTH_NONUPLET = NoteDurationTypesRecord("Sixtyfourth septuplet", SIXTYFOURTH.divider * 9 / 2.)
+
     UNKNOWN = NoteDurationTypesRecord(name="Unknown NoteDurationTypes object")
 
     MAP = {"1": WHOLE, "2": HALF, "4": QUARTER, "8": EIGTHT, "16": SIXTEENTH, "32": THIRTYSECOND, "64": SIXTYFOURTH,
@@ -313,7 +365,16 @@ class NoteDurationTypes:
            "8s": EIGTHT_SEPTUPLET,
            "16s": SIXTEENTH_SEPTUPLET,
            "32s": THIRTYSECOND_SEPTUPLET,
-           "64s": SIXTYFOURTH_SEPTUPLET}
+           "64s": SIXTYFOURTH_SEPTUPLET,
+           "1n": WHOLE_NONUPLET,
+           "2n": HALF_NONUPLET,
+           "4n": QUARTER_NONUPLET,
+           "8n": EIGTHT_NONUPLET,
+           "16n": SIXTEENTH_NONUPLET,
+           "32n": THIRTYSECOND_NONUPLET,
+           "64n": SIXTYFOURTH_NONUPLET,
+
+           }
 
 
 class NoteDuration:
@@ -359,9 +420,20 @@ class NoteLengthsOld:
 
 
 def convert_midi_notes_to_note_objects(context, midi_notes):
-    return [NoteObject(context=context,
-                       channel=ch,
-                       pitch=pitch if isinstance(pitch, int) else None,
-                       velocity=vel,
-                       type_=NoteTypes.NORMAL if isinstance(pitch, int) else pitch)
-            for ch, pitch, vel in midi_notes]
+    result = []
+
+    for note in midi_notes:
+        if isinstance(note, list):
+            ch, pitch, vel = note
+
+            result.append(
+                NoteObject(context=context,
+                           channel=ch,
+                           pitch=pitch if isinstance(pitch, int) else None,
+                           velocity=vel,
+                           type_=NoteTypes.NORMAL if isinstance(pitch, int) else pitch))
+
+        elif isinstance(note, NoteContainer):
+            result.append(note)
+
+    return result

@@ -6,7 +6,7 @@ import copy
 import random
 import os
 
-from source.note_object import NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects
+from source.note_object import NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects, NoteContainer
 from source.context import Context
 from source.wobbler import Wobbler
 from source.constants import *
@@ -560,11 +560,11 @@ class Sequencer(tk.Frame):
 
     def set_sequence(self, _, mode=None):
         parser = self.context.parser
-        text_ = str(self.entry_sequence.get())
+        text = str(self.entry_sequence.get())
 
         if mode is None:
-            log(logfile=self.context.logfile, msg="\"%s\"" % text_)
-            notes, str_seq = parser.get_notes(self.context, text_, None)
+            log(logfile=self.context.logfile, msg="\"%s\"" % text)
+            notes, str_seq = parser.get_notes(self.context, text, None)
             self.context.str_sequence = str_seq
 
         elif mode is self.context.set_sequence_modes.dont_regenerate:
@@ -572,9 +572,7 @@ class Sequencer(tk.Frame):
 
         notes = convert_midi_notes_to_note_objects(self.context, notes)
         self.context.sequence = notes
-        self.entry_str_seq.delete(0, tk.END)
-        self.entry_str_seq.insert(0, self.context.str_sequence)
-
+        insert_into_entry(self.entry_str_seq, self.context.str_sequence)
         self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
 
     def set_memory_sequence(self, _):
@@ -903,6 +901,8 @@ class Sequencer(tk.Frame):
         orig_note.set_channel(self.context.midi_channels[i][j])
 
         if orig_note.type_ is NoteTypes.NORMAL:
+            if isinstance(orig_note, NoteContainer):
+                orig_note.pitch = self.context.roots[i] - c2 - 4 + octave_offset
             orig_note.pitch += self.context.roots[i] - c2 - 4 + octave_offset
 
         orig_note.set_velocity(random.randint(vel_min, vel_max))

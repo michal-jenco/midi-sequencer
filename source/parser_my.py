@@ -2,7 +2,8 @@ import random
 import itertools
 
 from source.scales import Scales
-from source.note_object import NoteTypes
+from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurationTypes,
+                                convert_midi_notes_to_note_objects)
 from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE
 
@@ -12,9 +13,15 @@ class Parser:
         self.context = context
         self.string_constants = StringConstants()
 
+    @staticmethod
+    def _note_is_container_boundary(note):
+        return note in TupletTypes.MAP.keys() and note != TupletTypes.SEPTUPLET
+
     def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
         msg_list = []
         str_seq = ""
+        parsing_container = False
+        container_type = None
 
         if mode == MODE_SIMPLE:
             separator = " "
@@ -39,6 +46,31 @@ class Parser:
                         continue
 
                 msg = [0x90]
+
+                if parsing_container:
+                    if self._note_is_container_boundary(note):
+                        parsing_container = False
+                    continue
+
+                if self._note_is_container_boundary(note):
+                    if not parsing_container:
+                        parsing_container = True
+                        container_type = TupletTypes.MAP[note]
+                        container_characters = "".join(notes[idx + 1:notes[idx + 1:].index(note) + idx + 1])
+                        container_notes, container_str_seq = self.get_notes(context=context, text=container_characters,
+                                                                            iii=iii)
+
+                        gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
+
+                        # print("Container type: %s" % container_type)
+                        # print("Container characters: %s" % container_characters)
+                        # print("Container notes: %s" % container_notes)
+
+                        a = convert_midi_notes_to_note_objects(context, container_notes)
+                        str_seq += " %s " % (container_str_seq[0] if container_str_seq[0].isdigit() else 0)
+                        msg_list.append(NoteContainer(context=context, notes=a,
+                                                      gaps=[NoteDurationTypes.MAP["%s%s" % (16, note)]] * gap_count_dict[note]))
+                    continue
 
                 if note.isdigit() or note in {"a", "b", "c", "d", "e"}:
                     oct_ = self.parse_plus_minus(notes, idx)
