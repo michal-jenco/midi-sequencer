@@ -985,7 +985,8 @@ class Sequencer(tk.Frame):
 
                                 if note_scheduling_idx is not None:
                                     scheduling_object = self.context.scheduling_sequences[i][note_scheduling_idx]
-                                    orig_note.supply_scheduling_object(scheduling_object)
+                                    if not isinstance(orig_note, NoteContainer):
+                                        orig_note.supply_scheduling_object(scheduling_object)
                                 orig_note.play()
 
                             if self.delay_is_on():

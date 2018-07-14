@@ -58,7 +58,6 @@ class NoteObject(object):
     def play(self):
         if self.type_ is NoteTypes.NORMAL:
             Thread(target=self._play).start()
-            print("Playing note value: %s" % self.pitch)
 
     def _play(self):
         for i in range(self.repetitions):
@@ -105,7 +104,6 @@ class NoteContainer(object):
             if isinstance(note.pitch, int):
                 orig_pitch = note.pitch
                 note.pitch += int(self.pitch // 2)
-                print("Pitch offset: %s" % self.pitch)
 
             if transposed_semitones:
                 note.play_transposed(transposed_semitones)

@@ -3,7 +3,7 @@ import itertools
 
 from source.scales import Scales
 from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurationTypes,
-                                convert_midi_notes_to_note_objects,gap_count_dict)
+                                convert_midi_notes_to_note_objects, gap_count_dict, NoteSchedulingObject)
 from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE
 
@@ -79,8 +79,11 @@ class Parser:
                                   else gap_duration)
                         note_objects = convert_midi_notes_to_note_objects(context, container_notes)
                         str_seq += " %s " % (container_str_seq[0] if container_str_seq[0].isdigit() else 0)
-                        msg_list.append(NoteContainer(context=context, notes=note_objects,
-                                                      gaps=[NoteDurationTypes.MAP[length]] * gap_count_dict[note]))
+
+                        note_container = NoteContainer(context=context, notes=note_objects,
+                                                       gaps=[NoteDurationTypes.MAP[length]] * gap_count_dict[note])
+                        note_container.supply_scheduling_object(NoteSchedulingObject(default_length))
+                        msg_list.append(note_container)
                     continue
 
                 if note.isdigit() or note in {"a", "b", "c", "d", "e"}:
