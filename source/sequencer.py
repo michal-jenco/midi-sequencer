@@ -538,7 +538,6 @@ class Sequencer(tk.Frame):
                         lines = f.readlines()
 
                     print(lines)
-
                     self.memories[0].clear_all()
 
                     for line in lines:
@@ -551,22 +550,15 @@ class Sequencer(tk.Frame):
 
                             elif typ == "memory":
                                 self.memories[0].add_seq(content)
-
                             else:
                                 print("Something weird in state file: %s" % typ)
-
                 except Exception as e:
                     print("Couldn't L O A D state, because: %s" % e)
-
                 else:
                     self.press_all_enters()
-
-        else:
-            pass
+                    self.reset_idx()
 
     def set_sequence(self, _, mode=None):
-        return
-
         parser = self.context.parser
         text_ = str(self.entry_sequence.get())
 
