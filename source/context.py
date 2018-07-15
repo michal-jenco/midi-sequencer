@@ -3,12 +3,14 @@ import tkinter as tk
 from source.scales import Scales
 from source.parser_my import Parser
 from source.constants import SetSequenceModes
+from source.functions import insert_into_entry, log
 from source.notes import *
 
 
 class Context:
     def __init__(self, root, sequencer):
         self.midi = None
+        self.sequencer = sequencer
 
         self.scale = None
         self.scales_individual = [""] * 7
@@ -18,7 +20,7 @@ class Context:
         self.root = None
         self.roots = [0] * 7
         self.mode = None
-        self.scale_mode = None
+        self.scale_mode = 0
 
         self.memory_sequences = {"main melody": []}
         self.memory_filepath = "../memory/"
@@ -28,7 +30,7 @@ class Context:
 
         self.get_delay_multiplier = sequencer.strvar_delay_multiplier.get
 
-        self.scales = Scales()
+        self.scales = Scales(self)
         self.parser = Parser(self)
         self.set_sequence_modes = SetSequenceModes()
 
@@ -74,3 +76,17 @@ class Context:
 
     def get_bpm(self):
         return float(self.bpm.get())
+
+    def change_mode(self, offset=None, set_to=None):
+        if set_to is not None:
+            self.scale_mode = set_to
+        else:
+            if offset < 0 and not self.scale_mode:
+                return
+            self.scale_mode += offset
+
+        insert_into_entry(self.sequencer.entry_mode, self.scale_mode)
+        self.sequencer.set_memory_sequence(None)
+        self.sequencer.set_status_bar_content()
+
+        log(msg="Mode set to: %s" % self.scale_mode)

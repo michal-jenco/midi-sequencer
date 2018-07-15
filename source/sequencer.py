@@ -19,6 +19,7 @@ from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 from source.status_frame import StatusFrame
+from source.scales import ModeNames
 
 
 class Sequencer(tk.Frame):
@@ -142,7 +143,7 @@ class Sequencer(tk.Frame):
         self.scales_prob_poly_abs = []
         self.scales_prob_poly_rel = []
 
-        self.create_prob_sliders()
+        self._create_prob_sliders()
 
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,
                                   sliderlength=30, variable=self.context.bpm, length=500)
@@ -194,24 +195,7 @@ class Sequencer(tk.Frame):
                       command=lambda x=root[0]: set_root(x)).grid(row=row_, column=col_)
             col_ += 1
 
-        button_font = ("Courier", "8")
-        row_ = 0
-        col_ = 0
-        for scale in self.context.scales.get_all_names():
-            scale_name = self.context.scales.get_display_scale_name(scale)
-
-            tk.Button(self.frame_scale_buttons,
-                      text=scale_name,
-                      width=18,
-                      height=1,
-                      font=button_font,
-                      command=lambda y=scale: self.set_scale(y)).grid(
-                row=row_, column=(col_ % InitialValues.SCALE_BUTTONS_WRAP), sticky="nsew")
-            col_ += 1
-
-            if col_ % InitialValues.SCALE_BUTTONS_WRAP == 0:
-                row_ += 1
-                col_ = 0
+        self._fill_scale_buttons_frame()
 
         self.entry_str_seq = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
@@ -265,7 +249,42 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_midi_channels, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
         self.init_entries()
 
-    def create_prob_sliders(self):
+    def _fill_scale_buttons_frame(self):
+        font = ("Courier", "8")
+        font_bold = ("Courier", "10", "bold")
+        row_ = 0
+        col_ = 0
+        for scale in self.context.scales.get_all_names():
+            scale_name = self.context.scales.get_display_scale_name(scale)
+
+            tk.Button(self.frame_scale_buttons,
+                      text=scale_name, width=18, height=1, font=font,
+                      command=lambda y=scale: self.set_scale(y)).grid(
+                row=row_, column=(col_ % InitialValues.SCALE_BUTTONS_WRAP), sticky="nsew")
+            col_ += 1
+
+            if col_ % InitialValues.SCALE_BUTTONS_WRAP == 0:
+                row_ += 1
+                col_ = 0
+
+        frame_mode = tk.Frame(self.frame_scale_buttons)
+        self.entry_mode = tk.Entry(frame_mode, width=5)
+        self.entry_mode.bind('<Return>', lambda _: self.context.change_mode(set_to=int(self.entry_mode.get())))
+
+        insert_into_entry(self.entry_mode, str(self.context.scale_mode))
+
+        button_plus = tk.Button(frame_mode, text=" + ", font=font_bold,
+                                command=lambda: self.context.change_mode(offset=1))
+        button_minus = tk.Button(frame_mode, text=" - ", font=font_bold,
+                                 command=lambda: self.context.change_mode(offset=-1))
+
+        self.entry_mode.grid(column=5, row=5, padx=10)
+        button_minus.grid(column=2, row=5)
+        button_plus.grid(column=8, row=5)
+        self.entry_mode["bg"] = "red"
+        frame_mode.grid(row=row_, column=col_)
+
+    def _create_prob_sliders(self):
         for i in range(NumberOf.VELOCITY_SLIDERS):
             self.velocities_strvars_min.append(tk.StringVar(self.frame_prob_sliders))
             self.velocities_strvars_min[-1].set(InitialValues.VELOCITY_MIN)
@@ -759,7 +778,8 @@ class Sequencer(tk.Frame):
     def set_scale(self, scale_):
         self.context.scale = self.context.scales.get_scale_by_name(scale_)
         log(logfile=self.context.logfile, msg="Scale: %s" % self.context.scales.get_display_scale_name(scale_))
-        self.strvar_status_bar.set("%s --- %s" % (self.context.scales.get_display_scale_name(scale_), self.context.scale))
+
+        self.set_status_bar_content(scale_str=scale_)
 
         for i, _ in enumerate(self.context.scale_sequences):
             self.context.scale_sequences[i] = [scale_]
@@ -770,6 +790,20 @@ class Sequencer(tk.Frame):
                           StringConstants.multiple_entry_separator.join(new_content))
         self.set_scale_sequence(None)
         self.context.scales_individual = [scale_]*7
+
+    def set_status_bar_content(self, scale_str=None):
+        if scale_str is None:
+            scale_str = self.context.scales_individual[0]
+
+        scale = self.context.scales.get_scale_by_name(scale_str)
+        slice_idx = 5 if 12 not in scale else scale.index(12)
+        msg = "%s --- %s" % (scale_str.capitalize(), scale[:slice_idx])
+        msg += " --- Mode %s" % self.context.scale_mode
+        msg += " (%s)" % ((ModeNames.MAP[scale_str][self.context.scale_mode]
+                           if self.context.scale_mode in ModeNames.MAP[scale_str] else "Unknown")
+                          if scale_str in ModeNames.MAP.keys() else "")
+
+        self.strvar_status_bar.set(msg.center(70))
 
     def set_off_array(self, _):
         parser = self.context.parser
@@ -1061,6 +1095,7 @@ class Sequencer(tk.Frame):
             except:
                 pass
 
+            self.set_status_bar_content(scale_str=self.context.scales_individual[i])
             log(logfile=self.context.logfile,
                 msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 

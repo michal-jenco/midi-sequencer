@@ -92,10 +92,11 @@ class Parser:
                     add = self.get_plus_or_minus_add(oct_)
                     print("Individual scale #%s: %s" % (iii, self.context.scales_individual[iii]))
 
-                    note_value = Scales.get_note_by_index_wrap(int(note, 16),
-                                                               context.scales.get_scale_by_name(
-                                                                   context.scales_individual[iii]))
-                    str_seq += (str(context.scales.get_scale_by_name(context.scales_individual[iii]).index(note_value))
+                    scale_list = context.scales.get_scale_by_name(context.scales_individual[iii])
+                    note_value = context.scales.get_note_by_index_wrap(int(note, 16), scale_list)
+                    print("scale_list: %s" % scale_list)
+                    print("note_value: %s" % note_value)
+                    str_seq += (str(scale_list.index(note_value))
                                 + add + ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " ")
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp
                     velocity = 100

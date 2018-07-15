@@ -4,7 +4,8 @@ from source.functions import log
 
 
 class Scales:
-    def __init__(self):
+    def __init__(self, context):
+        self._context = context
         self.major = [0, 2, 4, 5, 7, 9, 11, 12]
         self.minor = [0, 2, 3, 5, 7, 8, 10, 12]
 
@@ -57,16 +58,18 @@ class Scales:
         # self.arabic = self.double_harm_major
         # self.gypsy_major = self.double_harm_major
         # self.gypsy_minor = self.hungarian_minor
-        # self.geez = self.minor
+        # self.geez = self.dorian
         # self.gypsy = self.hungarian_minor
         # self.romanian_minor = self.ukrainian_dorian
 
-        for scale in self.get_all_names():
-            scale = self.get_scale_by_name(scale)
+        for scale_name in self.get_all_names():
+            scale = self.get_scale_by_name(scale_name)
             orig_len = len(scale)
-            for octave in range(0, 2):
-                for tone in range(1, orig_len):
-                    scale.append(scale[tone] + (octave + 1) * 12)
+            for octave in range(2):
+                for tone in range(orig_len):
+                    scale.append(scale[tone + 1] + (octave + 1) * 12)
+
+            self.__setattr__(scale_name, scale)
 
     def get_random(self):
         scale_list = sorted(list(self.__dict__.keys()))
@@ -76,18 +79,35 @@ class Scales:
 
     def get_all_names(self):
         all_scales = sorted(list(self.__dict__.keys()))
+        all_scales.remove("_context")
         return all_scales
 
     def get_scale_by_name(self, name):
-        return self.__getattribute__(name)
+        orig_result = self.__getattribute__(name)[self._context.scale_mode:]
+        result = [item - self.__getattribute__(name)[self._context.scale_mode] for item in orig_result]
+        return result
 
     @staticmethod
     def get_display_scale_name(scale):
         return scale.replace("_", " ").capitalize()
 
-    @staticmethod
-    def get_note_by_index_wrap(idx, scale, mode=0):
+    def get_note_by_index_wrap(self, idx, scale):
         return scale[idx % len(scale)]
+
+
+class ModeNames:
+    MAJOR = {0: "Major", 1: "Dorian", 2: "Phrygian", 3: "Lydian", 4: "Mixolydian", 5: "Aeolian", 6: "Locrian"}
+    MINOR = {0: "Minor", 1: "Locrian", 2: "Major", 3: "Dorian", 4: "Phrygian", 5: "Lydian", 6: "Mixolydian"}
+    MELODIC_MINOR = {0: "Melodic minor", 1: "Phrygian #6 (Dorian b2)", 2: "Lydian augmented", 3: "Lydian dominant",
+                     4: "Mixolydian b6", 5: "Half-diminished", 6: "Altered dominant"}
+    HARMONIC_MINOR = {0: "Harmonic minor", 1: "Locrian #6", 2: "Ionian #5", 3: "Ukrainian dorian",
+                      4: "Phrygian dominant", 5: "Lydian #9", 6: "Altered diminished"}
+    DOUBLE_HARM_MAJOR = {0: "Double harmonic major", 1: "Lydian #6 #9", 2: "Phrygian bb7 b4",
+                         3: "Hungarian minor", 4: "Locrian ♮6 ♮3 (Mixolydian b5 b2)",
+                         5: "Ionian #5 #2", 6: "Locrian bb3 bb7"}
+
+    MAP = {"major": MAJOR, "ionian": MAJOR, "minor": MINOR, "aeolian": MINOR, "melodic_minor": MELODIC_MINOR,
+           "harmonic_minor": HARMONIC_MINOR, "double_harm_major": DOUBLE_HARM_MAJOR}
 
 
 def check_duplicates():
