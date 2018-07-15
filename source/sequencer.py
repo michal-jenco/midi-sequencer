@@ -147,19 +147,32 @@ class Sequencer(tk.Frame):
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,
                                   sliderlength=30, variable=self.context.bpm, length=500)
 
-        self.label_a = tk.Label(self.frame_entries, font=label_font, text="Main Sequence".ljust(20), height=1)
-        self.label_a2 = tk.Label(self.frame_entries, font=label_font, text="Memory Sequence".ljust(20), height=1)
-        self.label_a3 = tk.Label(self.frame_entries, font=label_font, text="Scheduling Sequence".ljust(20), height=1)
-        self.label_b = tk.Label(self.frame_entries, font=label_font, text="Main Seq Repr".ljust(20), height=1)
-        self.label_c = tk.Label(self.frame_entries, font=label_font, text="Stop Notes".ljust(20), height=1)
-        self.label_d = tk.Label(self.frame_entries, font=label_font, text="Polyphony".ljust(20), height=1)
-        self.label_e = tk.Label(self.frame_entries, font=label_font, text="Polyphony Relative".ljust(20), height=1)
-        self.label_f = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Seq".ljust(20), height=1)
-        self.label_g = tk.Label(self.frame_entries, font=label_font, text="Skip Notes Par".ljust(20), height=1)
-        self.label_h = tk.Label(self.frame_entries, font=label_font, text="Octave Sequence".ljust(20), height=1)
-        self.label_i = tk.Label(self.frame_entries, font=label_font, text="Root Sequence".ljust(20), height=1)
-        self.label_j = tk.Label(self.frame_entries, font=label_font, text="Scale Sequence".ljust(20), height=1)
-        self.label_k = tk.Label(self.frame_entries, font=label_font, text="MIDI Channels".ljust(20), height=1)
+        self.label_a = tk.Label(self.frame_entries, font=label_font,
+                                text="Main Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_a2 = tk.Label(self.frame_entries, font=label_font,
+                                 text="Memory Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_a3 = tk.Label(self.frame_entries, font=label_font,
+                                 text="Scheduling Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_b = tk.Label(self.frame_entries, font=label_font,
+                                text="Main Seq Repr".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_c = tk.Label(self.frame_entries, font=label_font,
+                                text="Stop Notes".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_d = tk.Label(self.frame_entries, font=label_font,
+                                text="Polyphony".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_e = tk.Label(self.frame_entries, font=label_font,
+                                text="Polyphony Relative".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_f = tk.Label(self.frame_entries, font=label_font,
+                                text="Skip Notes Seq".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_g = tk.Label(self.frame_entries, font=label_font,
+                                text="Skip Notes Par".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_h = tk.Label(self.frame_entries, font=label_font,
+                                text="Octave Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_i = tk.Label(self.frame_entries, font=label_font,
+                                text="Root Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_j = tk.Label(self.frame_entries, font=label_font,
+                                text="Scale Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_k = tk.Label(self.frame_entries, font=label_font,
+                                text="MIDI Channels".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.daemon = True
@@ -170,19 +183,18 @@ class Sequencer(tk.Frame):
                  (e2, "E"), (f2, "F"), (fs2, "F#",), (g2, "G"),
                  (gs2, "G#"), (a2, "A"), (as2, "Bb"), (b2, "B")]
 
-        def set_root(root, context):
-            context.root = root
+        def set_root(root):
+            self.context.root = root
 
         row_ = 0
         col_ = 0
         for root in roots:
             tk.Button(self.frame_roots,
                       text=root[1],
-                      command=lambda x=root[0]: set_root(x, self.context)).grid(row=row_, column=col_)
+                      command=lambda x=root[0]: set_root(x)).grid(row=row_, column=col_)
             col_ += 1
 
         button_font = ("Courier", "8")
-        wrap = 8
         row_ = 0
         col_ = 0
         for scale in self.context.scales.get_all():
@@ -193,52 +205,51 @@ class Sequencer(tk.Frame):
                       width=18,
                       height=1,
                       font=button_font,
-                      command=lambda y=scale: self.set_scale(y)) \
-                .grid(row=row_, column=(col_ % wrap), sticky="nsew")
-
+                      command=lambda y=scale: self.set_scale(y)).grid(
+                row=row_, column=(col_ % InitialValues.SCALE_BUTTONS_WRAP), sticky="nsew")
             col_ += 1
 
-            if col_ % wrap == 0:
+            if col_ % InitialValues.SCALE_BUTTONS_WRAP == 0:
                 row_ += 1
                 col_ = 0
 
-        self.entry_str_seq = tk.Entry(self.frame_entries, width=80)
-        self.entry_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_str_seq = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_sequence.bind('<Return>', self.set_sequence)
         self.entry_sequence.bind('<Control-Return>', lambda typ=MemoryType().melody: self.add_seq_to_memory(typ))
         self.entry_sequence.delete(0, tk.END)
 
-        self.entry_memory_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_memory_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_memory_sequence.bind('<Return>', self.set_memory_sequence)
 
-        self.entry_note_scheduling = tk.Entry(self.frame_entries, width=80)
+        self.entry_note_scheduling = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_note_scheduling.bind('<Return>', self.set_note_scheduling_sequence)
 
-        self.entry_off_array = tk.Entry(self.frame_entries, width=80)
+        self.entry_off_array = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_off_array.bind('<Return>', self.set_off_array)
 
-        self.entry_poly = tk.Entry(self.frame_entries, width=80)
+        self.entry_poly = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_poly.bind('<Return>', self.set_poly_absolute)
 
-        self.entry_poly_relative = tk.Entry(self.frame_entries, width=80)
+        self.entry_poly_relative = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
 
-        self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
 
-        self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=80)
+        self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
-        self.entry_root_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_root_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_root_sequence.bind('<Return>', self.set_root_sequence)
 
-        self.entry_octave_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_octave_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_octave_sequence.bind('<Return>', self.set_octave_sequence)
 
-        self.entry_scale_sequence = tk.Entry(self.frame_entries, width=80)
+        self.entry_scale_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_scale_sequence.bind('<Return>', self.set_scale_sequence)
 
-        self.entry_midi_channels = tk.Entry(self.frame_entries, width=80)
+        self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
 
         self.entry_boxes = [self.entry_off_array, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequence,

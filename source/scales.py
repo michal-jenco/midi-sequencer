@@ -6,12 +6,11 @@ from source.functions import log
 class Scales:
     def __init__(self):
         self.major = [0, 2, 4, 5, 7, 9, 11, 12]
-        self.minor = [0, 2, 3, 5, 7, 9, 10, 12]
+        self.minor = [0, 2, 3, 5, 7, 8, 10, 12]
 
         self.melodic_minor = [0, 2, 3, 5, 7, 9, 11, 12]
         self.harmonic_minor = [0, 2, 3, 5, 7, 8, 11, 12]
 
-        self.gypsy = [0, 2, 3, 6, 7, 8, 11, 12]
         self.octatonic = [0, 1, 3, 4, 6, 7, 9, 10, 12]
 
         self.pentatonic = [0, 3, 5, 7, 10, 12]
@@ -45,10 +44,22 @@ class Scales:
         self.persian = [0, 1, 4, 5, 6, 8, 11, 12]
         self.mixolydian_b6 = [0, 2, 4, 5, 7, 8, 10, 12]
 
+        self.augmented = [0, 3, 4, 7, 8, 11, 12]
+        self.balinese = [0, 1, 3, 7, 8, 12]
+        self.chinese = [0, 4, 6, 7, 11, 12]
+        self.egyptian = [0, 2, 5, 6, 9, 12]
+        self.spanish = [0, 1, 3, 4, 5, 6, 8, 10, 12]
+        self.in_sen = [0, 1, 5, 7, 10, 12]
+        self.oriental = [0, 1, 4, 5, 6, 9, 10, 12]
+        self.super_locrian = [0, 1, 3, 4, 6, 8, 10, 12]
+
         # self.byzantine = self.double_harm_major
         # self.arabic = self.double_harm_major
         # self.gypsy_major = self.double_harm_major
         # self.gypsy_minor = self.hungarian_minor
+        # self.geez = self.minor
+        # self.gypsy = self.hungarian_minor
+        # self.romanian_minor = self.ukrainian_dorian
 
         for scale in self.get_all():
             scale = self.get_scale_by_name(scale)
@@ -77,3 +88,33 @@ class Scales:
     @staticmethod
     def get_note_by_index_wrap(idx, scale):
         return scale[idx % len(scale)]
+
+
+def check_duplicates():
+    scale_names = Scales().get_all()
+    scale_names.remove("fifths")
+    scale_lists = {name: Scales().get_scale_by_name(name)[:Scales().get_scale_by_name(name).index(12)]
+                   for name in scale_names}
+
+    ok_duplicates = [("aeolian", "minor"), ("minor", "aeolian"),
+                     ("ionian", "major"), ("major", "ionian")]
+    duplicates = []
+
+    for outer_name, outer_list in scale_lists.items():
+        for inner_name, inner_list in scale_lists.items():
+            if outer_list == inner_list and inner_name != outer_name:
+                if (outer_name, inner_name) not in ok_duplicates:
+                    duplicates.append((outer_name, inner_name))
+
+    if duplicates:
+        for one, two in duplicates:
+            if (one, two) not in ok_duplicates:
+                print("%s is the same as %s" % (one, two))
+        return 1
+    else:
+        print("There are no duplicates __:)__.")
+        return 0
+
+
+if __name__ == '__main__':
+    check_duplicates()

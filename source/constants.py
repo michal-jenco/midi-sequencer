@@ -30,22 +30,23 @@ class InitialValues:
     SKIP_NOTE_SLIDER_LEN = 100
     POLY_SLIDER_LEN = 100
     CENTER_JUST_BUTTON = 16
+    MAIN_LABEL_JUST = 20
 
     PROB_POLY = 50
+    MAIN_ENTRY_WIDTH = 100
+    SCALE_BUTTONS_WRAP = 10
 
 
 class DelayFunctions:
     def __init__(self):
         self.dc = DelayConstants
         self.functions = {}
-
         self.functions[self.dc.CONSTANT_DECAY] = (lambda note, value:
                                                   [note[0], note[1], note[2] + value])
 
 
 class DelayConstants:
     CONSTANT_DECAY = "Constant decay"
-
     UP = 1
     DOWN = -1
 
