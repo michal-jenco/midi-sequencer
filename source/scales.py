@@ -61,7 +61,7 @@ class Scales:
         # self.gypsy = self.hungarian_minor
         # self.romanian_minor = self.ukrainian_dorian
 
-        for scale in self.get_all():
+        for scale in self.get_all_names():
             scale = self.get_scale_by_name(scale)
             orig_len = len(scale)
             for octave in range(0, 2):
@@ -74,24 +74,24 @@ class Scales:
         log(msg="Random scale: \"%s\"" % chosen_scale)
         return self.__dict__[chosen_scale]
 
-    def get_all(self):
+    def get_all_names(self):
         all_scales = sorted(list(self.__dict__.keys()))
         return all_scales
 
-    def get_scale_by_name(self, name_):
-        return self.__getattribute__(name_)
+    def get_scale_by_name(self, name):
+        return self.__getattribute__(name)
 
     @staticmethod
     def get_display_scale_name(scale):
         return scale.replace("_", " ").capitalize()
 
     @staticmethod
-    def get_note_by_index_wrap(idx, scale):
+    def get_note_by_index_wrap(idx, scale, mode=0):
         return scale[idx % len(scale)]
 
 
 def check_duplicates():
-    scale_names = Scales().get_all()
+    scale_names = Scales().get_all_names()
     scale_names.remove("fifths")
     scale_lists = {name: Scales().get_scale_by_name(name)[:Scales().get_scale_by_name(name).index(12)]
                    for name in scale_names}

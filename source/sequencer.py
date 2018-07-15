@@ -197,7 +197,7 @@ class Sequencer(tk.Frame):
         button_font = ("Courier", "8")
         row_ = 0
         col_ = 0
-        for scale in self.context.scales.get_all():
+        for scale in self.context.scales.get_all_names():
             scale_name = self.context.scales.get_display_scale_name(scale)
 
             tk.Button(self.frame_scale_buttons,
@@ -215,9 +215,11 @@ class Sequencer(tk.Frame):
 
         self.entry_str_seq = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_sequence.bind('<Return>', self.set_sequence)
-        self.entry_sequence.bind('<Control-Return>', lambda typ=MemoryType().melody: self.add_seq_to_memory(typ))
-        self.entry_sequence.delete(0, tk.END)
+
+        _func = lambda typ=MemoryType().melody: self.add_seq_to_memory(typ)
+        self.entry_sequence.bind('<Return>', _func)
+        self.entry_sequence.bind('<Control-Return>', _func)
+        del _func
 
         self.entry_memory_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_memory_sequence.bind('<Return>', self.set_memory_sequence)
@@ -580,23 +582,6 @@ class Sequencer(tk.Frame):
                 else:
                     self.press_all_enters()
                     self.reset_idx()
-
-    def set_sequence(self, _, mode=None):
-        parser = self.context.parser
-        text = str(self.entry_sequence.get())
-
-        if mode is None:
-            log(logfile=self.context.logfile, msg="\"%s\"" % text)
-            notes, str_seq = parser.get_notes(self.context, text, None)
-            self.context.str_sequence = str_seq
-
-        elif mode is self.context.set_sequence_modes.dont_regenerate:
-            notes, str_seq = parser.get_notes(self.context, self.context.str_sequence.replace(" ", ""))
-
-        notes = convert_midi_notes_to_note_objects(self.context, notes)
-        self.context.sequence = notes
-        insert_into_entry(self.entry_str_seq, self.context.str_sequence)
-        self.strvar_main_seq_len.set(str(self.context.sequence.__len__()))
 
     def set_memory_sequence(self, _):
         parser = self.context.parser
@@ -1063,20 +1048,21 @@ class Sequencer(tk.Frame):
             pass
 
     def manage_scale_sequence(self, i):
-        try:
-            scale_idx = self.step_played_counts[i] % len(self.context.scale_sequences[i])
+        scale_idx = self.step_played_counts[i] % len(self.context.scale_sequences[i])
 
-            if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
-                self.end_all_notes(i)
-                self.context.scales_individual[i] = self.context.scale_sequences[i][scale_idx]
-                self.set_sequence(None, self.context.set_sequence_modes.dont_regenerate)
+        if self.context.scale_sequences[i][scale_idx] != self.context.scales_individual[i]:
+            self.end_all_notes(i)
+            self.context.scales_individual[i] = self.context.scale_sequences[i][scale_idx]
+
+            # this is here because I want to edit the memory sequence while the sequence is playing, which might result
+            # in an invalid sequence being entered
+            try:
                 self.set_memory_sequence(None)
+            except:
+                pass
 
-                log(logfile=self.context.logfile,
-                    msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
-
-        except:
-            pass
+            log(logfile=self.context.logfile,
+                msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 
     def play_sequence(self):
         while True:

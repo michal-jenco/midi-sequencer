@@ -18,6 +18,7 @@ class Context:
         self.root = None
         self.roots = [0] * 7
         self.mode = None
+        self.scale_mode = None
 
         self.memory_sequences = {"main melody": []}
         self.memory_filepath = "../memory/"

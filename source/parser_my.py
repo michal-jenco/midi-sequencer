@@ -68,10 +68,10 @@ class Parser:
                                                                             text=container_note_characters,
                                                                             iii=iii,
                                                                             offset=idx)
-                        print("Container type: %s" % container_type)
-                        print("Container content: %s" % container_content)
-                        print("Container notes: %s" % container_notes)
-                        print("Gap duration: %s" % gap_duration)
+                        # print("Container type: %s" % container_type)
+                        # print("Container content: %s" % container_content)
+                        # print("Container notes: %s" % container_notes)
+                        # print("Gap duration: %s" % gap_duration)
 
                         default_length = "%s%s" % (16, note)
                         length = (default_length if 
@@ -90,6 +90,7 @@ class Parser:
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
                     add = self.get_plus_or_minus_add(oct_)
+                    print("Individual scale #%s: %s" % (iii, self.context.scales_individual[iii]))
 
                     note_value = Scales.get_note_by_index_wrap(int(note, 16),
                                                                context.scales.get_scale_by_name(
@@ -399,7 +400,7 @@ class Parser:
     def parse_scale_sequence(self, context, text):
         result = []
         sequences = list(text.split())
-        available_scales = context.scales.get_all()
+        available_scales = context.scales.get_all_names()
 
         for seq in sequences:
             times = self.parse_param("x", str(seq))
