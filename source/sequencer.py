@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from collections import OrderedDict
 import threading
 import time
 import copy
@@ -493,11 +494,15 @@ class Sequencer(tk.Frame):
 
     def get_internal_state(self, typ=None):
         if typ is None:
-            state = {}
+            state = OrderedDict()
             memory = self.memories[0].get_all()
+            sample_seqs = self.sample_frame.get_all_sequences()
 
             for i, entry in enumerate(self.entry_boxes):
                 state[self.entry_boxes_names[i]] = str(entry.get())
+
+            for i, sample_seq in enumerate(sample_seqs):
+                state["sample %s" % i] = sample_seq
 
             print("State: %s" % state)
             print("Memory: %s" % memory)
@@ -515,13 +520,12 @@ class Sequencer(tk.Frame):
 
                     for seq in internal_state.memory:
                         f.write("memory\t%s\n" % seq)
+
+                    f.write("bpm\t%s" % self.context.get_bpm())
                     f.flush()
 
             except Exception as e:
                 print("Couldn't S A V E state, because: %s" % e)
-
-        else:
-            pass
 
     def load_internal_state(self, typ=None):
         if typ is None:
@@ -542,13 +546,22 @@ class Sequencer(tk.Frame):
                     for line in lines:
                         if line != "\n":
                             typ, content = line.split("\t")
+                            content = content.replace("\n", "").replace("\t", "")
 
                             if typ in self.entry_boxes_names:
                                 idx = self.entry_boxes_names.index(typ)
                                 insert_into_entry(entry=self.entry_boxes[idx], seq=content)
 
+                            elif "sample" in typ:
+                                if content:
+                                    idx = int(typ.split()[-1])
+                                    self.sample_frame.insert(content, idx)
+                                    self.sample_frame.set_sequence(event=None, channel=idx, seq=content)
+
                             elif typ == "memory":
                                 self.memories[0].add_seq(content)
+                            elif typ == "bpm":
+                                self.context.bpm.set(content)
                             else:
                                 print("Something weird in state file: %s" % typ)
                 except Exception as e:

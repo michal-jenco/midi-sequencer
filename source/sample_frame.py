@@ -1,5 +1,5 @@
 import tkinter as tk
-import random
+from source.functions import insert_into_entry
 
 from source.constants import MODE_SAMPLE
 
@@ -70,8 +70,9 @@ class SampleFrame(tk.Frame):
             self.labels[i].grid(row=offset + i, column=11, pady=2, sticky="w")
         self.checkbutton_solo.grid(row=offset + self.cnt + 1, column=9, pady=2, sticky="w")
 
-    def set_sequence(self, event, channel):
-        notes, str_seq = self.parser.get_notes(self.context, event.widget.get(), mode=MODE_SAMPLE)
+    def set_sequence(self, event, channel, seq=None):
+        seq = event.widget.get() if seq is None else seq
+        notes, str_seq = self.parser.get_notes(self.context, seq, mode=MODE_SAMPLE)
 
         for note in notes:
             if note:
@@ -93,3 +94,9 @@ class SampleFrame(tk.Frame):
     def invert_mute(self):
         for i in range(self.cnt):
             self.intvars_mutes[i].set(not self.intvars_mutes[i].get())
+
+    def get_all_sequences(self):
+        return [entry.get() for entry in self.seq_entries]
+
+    def insert(self, seq, idx):
+        insert_into_entry(self.seq_entries[idx], seq)

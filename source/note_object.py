@@ -27,7 +27,7 @@ class NoteObject(object):
         self._channel_prefix = 0x90
 
     def __repr__(self):
-        return "Channel: %s, Pitch: %s, Velocity: %s\n" % (self.channel, self.pitch, self.velocity)
+        return "[NoteObject - Channel: %s, Pitch: %s, Velocity: %s]" % (self.channel, self.pitch, self.velocity)
 
     def __str__(self):
         return self.__repr__()
@@ -92,6 +92,15 @@ class NoteContainer(object):
         self.type_ = NoteTypes.NORMAL
         self.channel = None
         self.pitch = 0
+
+    def __repr__(self):
+        return "NoteContainer - %s notes%s%s" % (len(self.notes),
+                                                 ", %s gaps" % self.gaps[0].name,
+                                                 ", %s duration" % (self.notes[0].duration.name
+                                                                    if self.notes[0].duration is not None else ""))
+
+    def __str__(self):
+        return self.__repr__()
 
     def play(self, transposed=0):
         Thread(target=self._play, args=(transposed,)).start()
@@ -341,13 +350,13 @@ class NoteDurationTypes:
     THIRTYSECOND_SEPTUPLET = NoteDurationTypesRecord("Thirtysecond septuplet", THIRTYSECOND.divider * 7 / 2.)
     SIXTYFOURTH_SEPTUPLET = NoteDurationTypesRecord("Sixtyfourth septuplet", SIXTYFOURTH.divider * 7 / 2.)
 
-    WHOLE_NONUPLET = NoteDurationTypesRecord("Whole septuplet", WHOLE.divider * 9 / 2.)
-    HALF_NONUPLET = NoteDurationTypesRecord("Half septuplet", HALF.divider * 9 / 2.)
-    QUARTER_NONUPLET = NoteDurationTypesRecord("Quarter septuplet", QUARTER.divider * 9 / 2.)
-    EIGTHT_NONUPLET = NoteDurationTypesRecord("Eigtht septuplet", EIGTHT.divider * 9 / 2.)
-    SIXTEENTH_NONUPLET = NoteDurationTypesRecord("Sixteenth septuplet", SIXTEENTH.divider * 9 / 2.)
-    THIRTYSECOND_NONUPLET = NoteDurationTypesRecord("Thirtysecond septuplet", THIRTYSECOND.divider * 9 / 2.)
-    SIXTYFOURTH_NONUPLET = NoteDurationTypesRecord("Sixtyfourth septuplet", SIXTYFOURTH.divider * 9 / 2.)
+    WHOLE_NONUPLET = NoteDurationTypesRecord("Whole nonuplet", WHOLE.divider * 9 / 2.)
+    HALF_NONUPLET = NoteDurationTypesRecord("Half nonuplet", HALF.divider * 9 / 2.)
+    QUARTER_NONUPLET = NoteDurationTypesRecord("Quarter nonuplet", QUARTER.divider * 9 / 2.)
+    EIGTHT_NONUPLET = NoteDurationTypesRecord("Eigtht nonuplet", EIGTHT.divider * 9 / 2.)
+    SIXTEENTH_NONUPLET = NoteDurationTypesRecord("Sixteenth nonuplet", SIXTEENTH.divider * 9 / 2.)
+    THIRTYSECOND_NONUPLET = NoteDurationTypesRecord("Thirtysecond nonuplet", THIRTYSECOND.divider * 9 / 2.)
+    SIXTYFOURTH_NONUPLET = NoteDurationTypesRecord("Sixtyfourth nonuplet", SIXTYFOURTH.divider * 9 / 2.)
 
     UNKNOWN = NoteDurationTypesRecord(name="Unknown NoteDurationTypes object")
 
