@@ -1,4 +1,5 @@
 import random
+import math
 from time import sleep
 from threading import Thread
 from copy import copy
@@ -10,6 +11,10 @@ class NoteTypes:
     NORMAL = "Normal"
     NOTE_PAUSE = "Note Pause"
     GO_TO_START = "Go To Start"
+
+
+class DecayFunctions:
+    sine = lambda step, smooth: math.sin(float(step / smooth))
 
 
 class NoteObject(object):
@@ -68,7 +73,6 @@ class NoteObject(object):
 
             if self.duration is not None:
                 sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
-                print("Sleep time: %s" % sleep_time)
                 sleep(sleep_time)
                 self.end()
 

@@ -1115,13 +1115,11 @@ class Sequencer(tk.Frame):
                 msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 
     def manage_mode_sequence(self, i):
-        original_mode = self.context.scale_mode
-        current_mode = self.context.get_current_mode_wrap(steps_played=self.step_played_counts[0])
-
-        if isinstance(current_mode, int):
-            self.context.change_mode(set_to=current_mode)
+        original_mode = int(self.context.scale_mode)
+        current_mode = int(self.context.get_current_mode_wrap(steps_played=self.step_played_counts[0]))
 
         if current_mode != original_mode:
+            self.context.change_mode(set_to=current_mode)
             # self.end_all_notes(i)
 
             log(logfile=self.context.logfile, msg="Mode changed to: %s" % current_mode)
