@@ -20,7 +20,9 @@ class Scales:
         return result
 
     def get_corresponding_mode_name(self, scale_name):
+        print("Scale name: %s" % scale_name)
         scale_name = ModeNames.convert_scale_name_from_scales__dict___to_dict_scale_name(scale_name)
+        print("Scale name after conversion: %s" % scale_name)
 
         if scale_name not in ModeNames:
             return None
@@ -34,7 +36,11 @@ class Scales:
             inverse_dict_which_contains_mode_name = get_inverse_dict(dict_which_contains_mode_name)
             mode_name_key = inverse_dict_which_contains_mode_name[scale_name.capitalize()]
             final_key = (mode_name_key + self.context.scale_mode) % len(dict_which_contains_mode_name.keys())
-            mode_name = dict_which_contains_mode_name[final_key]
+
+            if final_key in dict_which_contains_mode_name:
+                mode_name = dict_which_contains_mode_name[final_key]
+            else:
+                mode_name = None
         else:
             mode_name = None
 
@@ -64,10 +70,10 @@ class Scales:
         self.aeolian = [0, 2, 3, 5, 7, 8, 10, 12]
         self.locrian = [0, 1, 3, 5, 6, 8, 10, 12]
 
-        self.lydian_sharp_9 = [0, 3, 4, 6, 7, 9, 11, 12]
+        self.lydian_dominant = [0, 2, 4, 6, 7, 9, 10, 12]
         self.lydian_augmented = [0, 2, 4, 6, 8, 9, 11, 12]
+        self.lydian_sharp_9 = [0, 3, 4, 6, 7, 9, 11, 12]
 
-        self.acoustic = [0, 2, 4, 6, 7, 9, 10, 12]
         self.ukrainian_dorian = [0, 2, 3, 6, 7, 9, 10, 12]
         self.phrygian_dominant = [0, 1, 4, 5, 7, 8, 10, 12]
         self.double_harm_major = [0, 1, 4, 5, 7, 8, 11, 12]
@@ -142,22 +148,25 @@ class MetaModeNames(type):
 class ModeNames(metaclass=MetaModeNames):
     MAJOR = {0: "Major", 1: "Dorian", 2: "Phrygian", 3: "Lydian", 4: "Mixolydian", 5: "Aeolian", 6: "Locrian"}
     MINOR = {0: "Minor", 1: "Locrian", 2: "Major", 3: "Dorian", 4: "Phrygian", 5: "Lydian", 6: "Mixolydian"}
-    MELODIC_MINOR = {0: "Melodic minor", 1: "Phrygian #6 (Dorian b2)", 2: "Lydian augmented", 3: "Lydian dominant",
+    MELODIC_MINOR = {0: "Melodic minor", 1: "Phrygian #6 (Dorian b2)", 2: "Lydian augmented",
+                     3: "Lydian dominant",
                      4: "Mixolydian b6", 5: "Half-diminished", 6: "Altered dominant"}
     HARMONIC_MINOR = {0: "Harmonic minor", 1: "Locrian #6", 2: "Ionian #5", 3: "Ukrainian dorian",
                       4: "Phrygian dominant", 5: "Lydian #9", 6: "Altered diminished"}
     DOUBLE_HARM_MAJOR = {0: "Double harmonic major", 1: "Lydian #6 #9", 2: "Phrygian bb7 b4",
                          3: "Hungarian minor", 4: "Locrian ♮6 ♮3 (Mixolydian b5 b2)",
                          5: "Ionian #5 #2", 6: "Locrian bb3 bb7"}
+    PENTATONIC = {0: "Pentatonic", 1: "", 2: "", 3: "", 4: "Yo"}
 
     _MAJOR_INVERSE = get_inverse_dict(MAJOR)
     _MINOR_INVERSE = get_inverse_dict(MINOR)
     _MELODIC_MINOR_INVERSE = get_inverse_dict(MELODIC_MINOR)
     _HARMONIC_MINOR_INVERSE = get_inverse_dict(HARMONIC_MINOR)
     _DOUBLE_HARMONIC_MAJOR_INVERSE = get_inverse_dict(DOUBLE_HARM_MAJOR)
+    _PENTATONIC_INVERSE = get_inverse_dict(PENTATONIC)
 
     MAP = {"major": MAJOR, "ionian": MAJOR, "minor": MINOR, "aeolian": MINOR, "melodic_minor": MELODIC_MINOR,
-           "harmonic_minor": HARMONIC_MINOR, "double_harm_major": DOUBLE_HARM_MAJOR}
+           "harmonic_minor": HARMONIC_MINOR, "double_harm_major": DOUBLE_HARM_MAJOR, "pentatonic": PENTATONIC}
 
     @staticmethod
     def convert_scale_name_from_scales__dict___to_dict_scale_name(scale_name):
@@ -177,7 +186,7 @@ class ModeNames(metaclass=MetaModeNames):
     @staticmethod
     def get_all_dicts():
         return [ModeNames.MAJOR, ModeNames.MINOR, ModeNames.MELODIC_MINOR, ModeNames.HARMONIC_MINOR,
-                ModeNames.DOUBLE_HARM_MAJOR]
+                ModeNames.DOUBLE_HARM_MAJOR, ModeNames.PENTATONIC]
 
     @staticmethod
     def get_all_inverse_dicts():
@@ -197,9 +206,9 @@ class ModeNames(metaclass=MetaModeNames):
 
 
 def check_duplicates():
-    scale_names = Scales().get_all_names()
+    scale_names = Scales(None).get_all_names()
     scale_names.remove("fifths")
-    scale_lists = {name: Scales().get_scale_by_name(name)[:Scales().get_scale_by_name(name).index(12)]
+    scale_lists = {name: Scales(None).get_scale_by_name(name)[:Scales(None).get_scale_by_name(name).index(12)]
                    for name in scale_names}
 
     ok_duplicates = [("aeolian", "minor"), ("minor", "aeolian"),
