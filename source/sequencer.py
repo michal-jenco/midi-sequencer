@@ -19,7 +19,6 @@ from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 from source.status_frame import StatusFrame
-from source.scales import ModeNames
 
 
 class Sequencer(tk.Frame):

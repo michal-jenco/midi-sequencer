@@ -22,7 +22,7 @@ class Scales:
     def get_corresponding_mode_name(self, scale_name):
         scale_name = ModeNames.convert_scale_name_from_scales__dict___to_dict_scale_name(scale_name)
 
-        if scale_name not in ModeNames.get_all_mode_names():
+        if scale_name not in ModeNames:
             return None
 
         if self.context.scale_mode == 0:
@@ -133,7 +133,13 @@ class Scales:
         return scale[idx % len(scale)]
 
 
-class ModeNames:
+class MetaModeNames(type):
+    @staticmethod
+    def __contains__(mode_name):
+        return mode_name in ModeNames.get_all_mode_names()
+
+
+class ModeNames(metaclass=MetaModeNames):
     MAJOR = {0: "Major", 1: "Dorian", 2: "Phrygian", 3: "Lydian", 4: "Mixolydian", 5: "Aeolian", 6: "Locrian"}
     MINOR = {0: "Minor", 1: "Locrian", 2: "Major", 3: "Dorian", 4: "Phrygian", 5: "Lydian", 6: "Mixolydian"}
     MELODIC_MINOR = {0: "Melodic minor", 1: "Phrygian #6 (Dorian b2)", 2: "Lydian augmented", 3: "Lydian dominant",
@@ -144,11 +150,11 @@ class ModeNames:
                          3: "Hungarian minor", 4: "Locrian ♮6 ♮3 (Mixolydian b5 b2)",
                          5: "Ionian #5 #2", 6: "Locrian bb3 bb7"}
 
-    _MAJOR_INVERSE = {value: key for key, value in MAJOR.items()}
-    _MINOR_INVERSE = {value: key for key, value in MINOR.items()}
-    _MELODIC_MINOR_INVERSE = {value: key for key, value in MELODIC_MINOR.items()}
-    _HARMONIC_MINOR_INVERSE = {value: key for key, value in HARMONIC_MINOR.items()}
-    _DOUBLE_HARMONIC_MAJOR_INVERSE = {value: key for key, value in DOUBLE_HARM_MAJOR.items()}
+    _MAJOR_INVERSE = get_inverse_dict(MAJOR)
+    _MINOR_INVERSE = get_inverse_dict(MINOR)
+    _MELODIC_MINOR_INVERSE = get_inverse_dict(MELODIC_MINOR)
+    _HARMONIC_MINOR_INVERSE = get_inverse_dict(HARMONIC_MINOR)
+    _DOUBLE_HARMONIC_MAJOR_INVERSE = get_inverse_dict(DOUBLE_HARM_MAJOR)
 
     MAP = {"major": MAJOR, "ionian": MAJOR, "minor": MINOR, "aeolian": MINOR, "melodic_minor": MELODIC_MINOR,
            "harmonic_minor": HARMONIC_MINOR, "double_harm_major": DOUBLE_HARM_MAJOR}
@@ -179,7 +185,7 @@ class ModeNames:
 
     @staticmethod
     def get_dict_which_contains_mode_name(mode_name):
-        if mode_name not in ModeNames.get_all_mode_names():
+        if mode_name not in ModeNames:
             return None
 
         all_dicts = ModeNames.get_all_dicts()
@@ -188,9 +194,6 @@ class ModeNames:
                 return dic
 
         return None
-
-    def __contains__(self, mode_name):
-        return mode_name in ModeNames.get_all_mode_names()
 
 
 def check_duplicates():
