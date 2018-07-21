@@ -90,9 +90,9 @@ class Parser:
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
                     add = self.get_plus_or_minus_add(oct_)
-                    print("Individual scale #%s: %s" % (iii, self.context.scales_individual[iii]))
+                    print("Individual scale #%s: %s" % (iii, self.context.current_scales[iii]))
 
-                    scale_list = context.scales.get_scale_by_name(context.scales_individual[iii])
+                    scale_list = context.scales.get_scale_by_name(context.current_scales[iii])
                     note_value = context.scales.get_note_by_index_wrap(int(note, 16), scale_list)
                     print("scale_list: %s" % scale_list)
                     print("note_value: %s" % note_value)
@@ -109,8 +109,8 @@ class Parser:
                     flat_sharp = self.parse_flat_sharp(notes, idx)
                     add = self.get_plus_or_minus_add(oct_)
 
-                    note_value = random.choice(context.scales.get_scale_by_name(context.scales_individual[iii])[:9])
-                    str_seq += (str(context.scales.get_scale_by_name(context.scales_individual[iii]).index(note_value))
+                    note_value = random.choice(context.scales.get_scale_by_name(context.current_scales[iii])[:9])
+                    str_seq += (str(context.scales.get_scale_by_name(context.current_scales[iii]).index(note_value))
                                 + add + ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " ")
 
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp
@@ -183,8 +183,8 @@ class Parser:
                     count = random.randint(context.paragraph_min, context.paragraph_max)
 
                     for i in range(0, count):
-                        note_value = random.choice(context.scales_individual[iii])
-                        str_seq += str(context.scales_individual[iii].index(note_value)) + " "
+                        note_value = random.choice(context.current_scales[iii])
+                        str_seq += str(context.current_scales[iii].index(note_value)) + " "
                         note_value += context.root + self.get_octave(control)
                         msg_list.append([0x90, note_value, 100])
 
@@ -337,7 +337,9 @@ class Parser:
                 seq = seq[0:idx]
 
             if seq.startswith(self.string_constants.literal_memory_sequence):
-                if seq[1] == "(":
+                if not len(seq) - 1:
+                    pass
+                elif seq[1] == "(":
                     seq = seq[seq.index("("):seq.index(")")].replace(
                         self.string_constants.literal_memory_sequence_separator, " ")
 

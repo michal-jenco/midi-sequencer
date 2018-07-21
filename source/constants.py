@@ -18,7 +18,7 @@ class SleepTimes:
     MIDI_INPUT_MAINLOOP = .001
 
 
-class Misc:
+class MiscConstants:
     KNOB_SYNC_DISTANCE = 5
     NO_OCTAVE_SCALE_INDEX = 6
 

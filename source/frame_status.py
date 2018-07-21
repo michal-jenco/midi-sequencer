@@ -9,16 +9,15 @@ class StatusFrame(tk.Frame):
         tk.Frame.__init__(self, parent, padx=5, pady=5)
 
         self.sequencer = sequencer
+        self.context = self.sequencer.context
         self.midi_input_listener = sequencer.midi_input_listener
-        self.midi_input_listener_state = self.midi_input_listener.state
 
         self.big_font = "Courier New", "15", "bold"
         self.small_font = "Courier New", "10"
 
         self.limit = 7
 
-        self.state_colors = {AkaiMidimixStates.MAIN: "lightgreen",
-                             AkaiMidimixStates.SAMPLE_FRAME: "lightgray"}
+        self.state_colors = {AkaiMidimixStates.MAIN: "lightgreen", AkaiMidimixStates.SAMPLE_FRAME: "lightgray"}
         self.mode_colors = {True: "lightgreen", False: "orange"}
 
         self.frame_midi_input_listener_state = tk.Frame(self)
@@ -26,30 +25,21 @@ class StatusFrame(tk.Frame):
         self.label_midi_input_listener_state = tk.Label(self.frame_midi_input_listener_state,
                                                         textvariable=self.strvar_midi_input_listener_state,
                                                         font=self.big_font)
-
         self.frame_scale_mode = tk.Frame(self)
         self.strvar_scale_mode = tk.StringVar(self.frame_scale_mode)
-        self.label_scale_mode = tk.Label(self.frame_scale_mode,
-                                         textvariable=self.strvar_scale_mode,
-                                         font=self.big_font)
+        self.label_scale_mode = tk.Label(self.frame_scale_mode, textvariable=self.strvar_scale_mode, font=self.big_font)
 
         self.frame_sequence_indices = tk.Frame(self)
         self.strvar_sequence_indices = tk.StringVar(self.frame_sequence_indices)
-        self.label_sequence_indices = tk.Label(self.frame_sequence_indices,
-                                               textvariable=self.strvar_sequence_indices,
+        self.label_sequence_indices = tk.Label(self.frame_sequence_indices, textvariable=self.strvar_sequence_indices,
                                                font=self.small_font)
-
         self.frame_scales = tk.Frame(self)
         self.strvar_scales = tk.StringVar(self.frame_scales)
-        self.label_scales = tk.Label(self.frame_scales,
-                                     textvariable=self.strvar_scales,
-                                     font=self.small_font)
+        self.label_scales = tk.Label(self.frame_scales, textvariable=self.strvar_scales, font=self.small_font)
 
         self.frame_roots = tk.Frame(self)
         self.strvar_roots = tk.StringVar(self.frame_roots)
-        self.label_roots = tk.Label(self.frame_roots,
-                                    textvariable=self.strvar_roots,
-                                    font=self.small_font)
+        self.label_roots = tk.Label(self.frame_roots, textvariable=self.strvar_roots, font=self.small_font)
 
         self["bg"] = "gold"
         self._grid()
@@ -72,7 +62,7 @@ class StatusFrame(tk.Frame):
         self.update()
 
     def midi_input_listener_state_changed(self):
-        state = self.midi_input_listener_state.get()
+        state = self.midi_input_listener.state.get()
         value = state.center(14)
         self.strvar_midi_input_listener_state.set(value)
         self.label_midi_input_listener_state["bg"] = self.state_colors[state]
@@ -85,20 +75,20 @@ class StatusFrame(tk.Frame):
 
     def _update_scales(self):
         msg = ""
-        for i, item in enumerate(self.sequencer.context.scales_individual[:self.limit]):
+        for i, item in enumerate(self.context.current_scales[:self.limit]):
             msg += ("Seq %s: %s" % (i, item)).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_scales.set(msg)
 
     def _update_roots(self):
         msg = ""
-        for i, item in enumerate(self.sequencer.context.roots[:self.limit]):
+        for i, item in enumerate(self.context.roots[:self.limit]):
             msg += ("Seq %s: %s" % (i, get_note_name_from_integer(item))).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_roots.set(msg)
 
     def update_scale_mode(self):
         self.strvar_scale_mode.set(("Scale mode: %s"
-                                   % ("ON" if self.sequencer.context.scale_mode_changing_on else "OFF")).center(16))
-        self.label_scale_mode["bg"] = self.mode_colors[self.sequencer.context.scale_mode_changing_on]
+                                   % ("ON" if self.context.scale_mode_changing_on else "OFF")).center(16))
+        self.label_scale_mode["bg"] = self.mode_colors[self.context.scale_mode_changing_on]
 
     def update(self):
         self.midi_input_listener_state_changed()

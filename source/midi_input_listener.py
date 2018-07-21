@@ -6,7 +6,7 @@ from rtmidi.midiutil import open_midiinput
 from source.akai_midimix_message import AkaiMidimixMessage
 from source.akai_midimix_state import AkaiMidimixStates, AkaiMidimixState
 from source.functions import range_to_range
-from source.constants import Ranges, Misc
+from source.constants import Ranges, MiscConstants
 
 
 class MIDIInputListener(object):
@@ -177,7 +177,7 @@ class MIDIInputListener(object):
             value = int(range_to_range(Ranges.MIDI_RANGE, Ranges.PERC_RANGE, value))
 
             if not sync[i]:
-                if abs(int(strvars[i].get()) - value) < Misc.KNOB_SYNC_DISTANCE:
+                if abs(int(strvars[i].get()) - value) < MiscConstants.KNOB_SYNC_DISTANCE:
                     sync[i] = True
 
             strvars[i].set(value)
@@ -208,7 +208,7 @@ class MIDIInputListener(object):
                     velocities = self.sequencer.velocities_strvars_max
 
                 if not self.fader_synced[i]:
-                    if abs(int(velocities[i // 2].get()) - value) < Misc.KNOB_SYNC_DISTANCE:
+                    if abs(int(velocities[i // 2].get()) - value) < MiscConstants.KNOB_SYNC_DISTANCE:
                         self.fader_synced[i] = True
                         velocities[i // 2].set(value)
                 else:

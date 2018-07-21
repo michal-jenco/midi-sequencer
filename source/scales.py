@@ -1,7 +1,7 @@
 import random
 
 from source.functions import log, get_inverse_dict
-from source.constants import Misc
+from source.constants import MiscConstants
 
 
 class Scales:
@@ -15,7 +15,7 @@ class Scales:
         full_dict = self.dict() if dic is None else dic
 
         for name, lst in full_dict.items():
-            index = full_dict[name].index(12) if 12 in full_dict[name] else Misc.NO_OCTAVE_SCALE_INDEX
+            index = full_dict[name].index(12) if 12 in full_dict[name] else MiscConstants.NO_OCTAVE_SCALE_INDEX
             result[name] = full_dict[name][:index]
         return result
 
@@ -95,14 +95,9 @@ class Scales:
         self.oriental = [0, 1, 4, 5, 6, 9, 10, 12]
         self.super_locrian = [0, 1, 3, 4, 6, 8, 10, 12]
 
-        # self.byzantine = self.double_harm_major
-        # self.arabic = self.double_harm_major
-        # self.gypsy_major = self.double_harm_major
-        # self.gypsy_minor = self.hungarian_minor
-        # self.gypsy = self.hungarian_minor
-        # self.geez = self.dorian
-        # self.romanian_minor = self.ukrainian_dorian
+        self._expand_scales()
 
+    def _expand_scales(self):
         for scale_name in self.get_all_names():
             scale = self.get_scale_by_name(scale_name)
             orig_len = len(scale)
@@ -150,11 +145,11 @@ class ModeNames(metaclass=MetaModeNames):
     MINOR = {0: "Minor", 1: "Locrian", 2: "Major", 3: "Dorian", 4: "Phrygian", 5: "Lydian", 6: "Mixolydian"}
     MELODIC_MINOR = {0: "Melodic minor", 1: "Phrygian #6 (Dorian b2)", 2: "Lydian augmented",
                      3: "Lydian dominant",
-                     4: "Mixolydian b6", 5: "Half-diminished", 6: "Altered dominant"}
+                     4: "Mixolydian b6", 5: "Half-diminished", 6: "Super locrian"}
     HARMONIC_MINOR = {0: "Harmonic minor", 1: "Locrian #6", 2: "Ionian #5", 3: "Ukrainian dorian",
                       4: "Phrygian dominant", 5: "Lydian #9", 6: "Altered diminished"}
     DOUBLE_HARM_MAJOR = {0: "Double harmonic major", 1: "Lydian #6 #9", 2: "Phrygian bb7 b4",
-                         3: "Hungarian minor", 4: "Locrian ♮6 ♮3 (Mixolydian b5 b2)",
+                         3: "Hungarian minor", 4: "Locrian ♮6 ♮3 (Mixolydian b5 b2, Oriental)",
                          5: "Ionian #5 #2", 6: "Locrian bb3 bb7"}
     PENTATONIC = {0: "Pentatonic", 1: "", 2: "", 3: "", 4: "Yo"}
 
@@ -236,3 +231,11 @@ if __name__ == '__main__':
 
     print("All mode names: %s\n" % ModeNames.get_all_mode_names())
     print("All inverse dicts: %s\n" % ModeNames.get_all_inverse_dicts())
+
+# self.byzantine = self.double_harm_major
+# self.arabic = self.double_harm_major
+# self.gypsy_major = self.double_harm_major
+# self.gypsy_minor = self.hungarian_minor
+# self.gypsy = self.hungarian_minor
+# self.geez = self.dorian
+# self.romanian_minor = self.ukrainian_dorian

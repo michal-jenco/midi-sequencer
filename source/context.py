@@ -13,7 +13,7 @@ class Context:
         self.sequencer = sequencer
 
         self.scale = None
-        self.scales_individual = [""] * 7
+        self.current_scales = [""] * 7
         self.bpm = tk.StringVar(root, "60")
         self.sequence = None
         self.str_sequence = None
@@ -44,6 +44,7 @@ class Context:
         self.octave_sequences = [[], [], [], [], [], [], [-2]]
         self.root_sequences = [[e2], [], [], [], [], [], []]
         self.scale_sequences = [["lydian"], [], [], [], [], [], []]
+        # self.mode_sequences = [[], [], [], [], [], [], []]
         self.off_sequences = [[], [], [], [], [], [], [1]]
         self.midi_channels = [[], [], [], [], [], [], []]
         self.kick_notes = []
@@ -55,6 +56,7 @@ class Context:
         self.octave_sequence = []
         self.root_sequence = []
         self.scale_sequence = []
+        self.mode_sequence = []
         self.sample_seqs = [[], [], [], [], [], [], [], [], [], []]
 
         self.playback_on = False
@@ -77,6 +79,10 @@ class Context:
 
     def get_bpm(self):
         return float(self.bpm.get())
+
+    def get_current_mode_wrap(self, steps_played):
+        return self.mode_sequence[(steps_played % self.mode_sequence.__len__())]  if self.mode_sequence \
+            else self.sequencer.entry_mode.get()
 
     def change_mode(self, offset=None, set_to=None):
         if set_to is not None:

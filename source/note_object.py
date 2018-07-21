@@ -67,7 +67,9 @@ class NoteObject(object):
             self.context.midi.send_message(self.get_midi_repr())
 
             if self.duration is not None:
-                sleep(self.duration.get_duration_in_seconds(bpm=self.context.get_bpm()))
+                sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
+                print("Sleep time: %s" % sleep_time)
+                sleep(sleep_time)
                 self.end()
 
     def play_transposed(self, semitones):
