@@ -11,14 +11,14 @@ from source.note_object import NoteLengthsOld, NoteTypes, NoteSchedulingObject, 
 from source.context import Context
 from source.wobbler import Wobbler
 from source.constants import *
-from source.sample_frame import SampleFrame
+from source.frame_sample import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
 from source.functions import log, get_date_string, insert_into_entry
 from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
-from source.status_frame import StatusFrame
+from source.frame_status import StatusFrame
 
 
 class Sequencer(tk.Frame):

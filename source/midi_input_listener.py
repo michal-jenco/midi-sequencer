@@ -68,7 +68,8 @@ class MIDIInputListener(object):
         self.sequencer.reset_idx()
 
     def recarm_4_callback(self):
-        self.context.mode_changing_on = not self.context.mode_changing_on
+        self.context.scale_mode_changing_on = not self.context.scale_mode_changing_on
+        self.sequencer.frame_status.update_scale_mode()
 
     def recarm_5_callback(self):
         self.sequencer.press_all_enters()
@@ -106,14 +107,14 @@ class MIDIInputListener(object):
 
     def bank_callback(self, direction):
         if direction.lower() == "left":
-            if self.context.mode_changing_on:
-                self.context.change_mode(offset=1)
+            if self.context.scale_mode_changing_on:
+                self.context.change_mode(offset=-1)
             else:
                 self.state.previous()
 
         elif direction.lower() == "right":
-            if self.context.mode_changing_on:
-                self.context.change_mode(offset=-1)
+            if self.context.scale_mode_changing_on:
+                self.context.change_mode(offset=1)
             else:
                 self.state.next()
 
@@ -193,10 +194,7 @@ class MIDIInputListener(object):
 
             if device.intvar_solo.get():
                 for j, item in enumerate(intvars):
-                    if i != j:
-                        intvars[j].set(False)
-                    else:
-                        intvars[j].set(True)
+                    intvars[j].set(i == j)
             else:
                 intvars[i].set(not intvars[i].get())
 

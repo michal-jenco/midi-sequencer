@@ -59,7 +59,7 @@ class Context:
 
         self.playback_on = False
         self.solo_on = False
-        self.mode_changing_on = False
+        self.scale_mode_changing_on = False
         self.off_list = []
         self.prob_skip_note = tk.StringVar(root)
 
@@ -86,8 +86,9 @@ class Context:
                 return
             self.scale_mode += offset
 
-        insert_into_entry(self.sequencer.entry_mode, self.scale_mode)
+        insert_into_entry(self.sequencer.entry_mode, str(self.scale_mode))
         self.sequencer.set_memory_sequence(None)
         self.sequencer.set_status_bar_content()
+        self.sequencer.frame_status.update()
 
         log(msg="Mode set to: %s" % self.scale_mode)

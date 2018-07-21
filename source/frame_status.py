@@ -19,12 +19,20 @@ class StatusFrame(tk.Frame):
 
         self.state_colors = {AkaiMidimixStates.MAIN: "lightgreen",
                              AkaiMidimixStates.SAMPLE_FRAME: "lightgray"}
+        self.mode_colors = {True: "lightgreen", False: "orange"}
 
         self.frame_midi_input_listener_state = tk.Frame(self)
         self.strvar_midi_input_listener_state = tk.StringVar(self.frame_midi_input_listener_state)
         self.label_midi_input_listener_state = tk.Label(self.frame_midi_input_listener_state,
                                                         textvariable=self.strvar_midi_input_listener_state,
                                                         font=self.big_font)
+
+        self.frame_scale_mode = tk.Frame(self)
+        self.strvar_scale_mode = tk.StringVar(self.frame_scale_mode)
+        self.label_scale_mode = tk.Label(self.frame_scale_mode,
+                                         textvariable=self.strvar_scale_mode,
+                                         font=self.big_font)
+
         self.frame_sequence_indices = tk.Frame(self)
         self.strvar_sequence_indices = tk.StringVar(self.frame_sequence_indices)
         self.label_sequence_indices = tk.Label(self.frame_sequence_indices,
@@ -49,11 +57,13 @@ class StatusFrame(tk.Frame):
 
     def _grid(self):
         self.frame_midi_input_listener_state.grid(row=10, column=10)
+        self.frame_scale_mode.grid(row=11, column=10, pady=(10, 0))
         self.frame_sequence_indices.grid(row=15, column=10, pady=(10, 0))
         self.frame_scales.grid(row=20, column=10, pady=(10, 0))
         self.frame_roots.grid(row=25, column=10, pady=(10, 0))
 
         self.label_midi_input_listener_state.grid()
+        self.label_scale_mode.grid()
         self.label_sequence_indices.grid()
         self.label_scales.grid()
         self.label_roots.grid()
@@ -67,26 +77,32 @@ class StatusFrame(tk.Frame):
         self.strvar_midi_input_listener_state.set(value)
         self.label_midi_input_listener_state["bg"] = self.state_colors[state]
 
-    def update_sequence_indices(self):
+    def _update_sequence_indices(self):
         msg = ""
         for i, item in enumerate(self.sequencer.step_played_counts[:self.limit]):
             msg += ("Seq %s: %s" % (i, item)).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_sequence_indices.set(msg)
 
-    def update_scales(self):
+    def _update_scales(self):
         msg = ""
         for i, item in enumerate(self.sequencer.context.scales_individual[:self.limit]):
             msg += ("Seq %s: %s" % (i, item)).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_scales.set(msg)
 
-    def update_roots(self):
+    def _update_roots(self):
         msg = ""
         for i, item in enumerate(self.sequencer.context.roots[:self.limit]):
             msg += ("Seq %s: %s" % (i, get_note_name_from_integer(item))).center(18) + ("\n" if i < self.limit - 1 else "")
         self.strvar_roots.set(msg)
 
+    def update_scale_mode(self):
+        self.strvar_scale_mode.set(("Scale mode: %s"
+                                   % ("ON" if self.sequencer.context.scale_mode_changing_on else "OFF")).center(16))
+        self.label_scale_mode["bg"] = self.mode_colors[self.sequencer.context.scale_mode_changing_on]
+
     def update(self):
         self.midi_input_listener_state_changed()
-        self.update_sequence_indices()
-        self.update_scales()
-        self.update_roots()
+        self.update_scale_mode()
+        self._update_sequence_indices()
+        self._update_scales()
+        self._update_roots()
