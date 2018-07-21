@@ -30,7 +30,7 @@ class Context:
 
         self.get_delay_multiplier = sequencer.strvar_delay_multiplier.get
 
-        self.scales = Scales(self)
+        self.scales = Scales(context=self)
         self.parser = Parser(self)
         self.set_sequence_modes = SetSequenceModes()
 
@@ -59,6 +59,7 @@ class Context:
 
         self.playback_on = False
         self.solo_on = False
+        self.mode_changing_on = False
         self.off_list = []
         self.prob_skip_note = tk.StringVar(root)
 

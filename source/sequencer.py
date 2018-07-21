@@ -789,19 +789,19 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_scale_sequence,
                           StringConstants.multiple_entry_separator.join(new_content))
         self.set_scale_sequence(None)
-        self.context.scales_individual = [scale_]*7
+        self.context.scales_individual = [scale_] * 7
 
     def set_status_bar_content(self, scale_str=None):
         if scale_str is None:
             scale_str = self.context.scales_individual[0]
 
         scale = self.context.scales.get_scale_by_name(scale_str)
-        slice_idx = 5 if 12 not in scale else scale.index(12)
+        slice_idx = Misc.NO_OCTAVE_SCALE_INDEX if 12 not in scale else scale.index(12)
         msg = "%s --- %s" % (scale_str.capitalize(), scale[:slice_idx])
         msg += " --- Mode %s" % self.context.scale_mode
-        msg += " (%s)" % ((ModeNames.MAP[scale_str][self.context.scale_mode]
-                           if self.context.scale_mode in ModeNames.MAP[scale_str] else "Unknown")
-                          if scale_str in ModeNames.MAP.keys() else "")
+
+        mode_name = self.context.scales.get_corresponding_mode_name(scale_str)
+        msg += " (%s)" % mode_name
 
         self.strvar_status_bar.set(msg.center(70))
 

@@ -47,3 +47,6 @@ def range_to_range(r1, r2, value):
 def get_note_name_from_integer(note_int):
     note_letters = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
     return "%s%s" % (note_letters[note_int % 12], note_int // 12 - 2)
+
+def get_inverse_dict(dic):
+    return {value: key for key, value in dic.items()}

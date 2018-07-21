@@ -1,20 +1,55 @@
 import random
 
-from source.functions import log
+from source.functions import log, get_inverse_dict
+from source.constants import Misc
 
 
 class Scales:
+    def dict(self):
+        a = sorted(self.get_all_names())
+        b = [self.__dict__[name] for name in a]
+        return {key: value for key, value in zip(a, b)}
+
+    def dict_minimal(self, dic=None):
+        result = {}
+        full_dict = self.dict() if dic is None else dic
+
+        for name, lst in full_dict.items():
+            index = full_dict[name].index(12) if 12 in full_dict[name] else Misc.NO_OCTAVE_SCALE_INDEX
+            result[name] = full_dict[name][:index]
+        return result
+
+    def get_corresponding_mode_name(self, scale_name):
+        scale_name = ModeNames.convert_scale_name_from_scales__dict___to_dict_scale_name(scale_name)
+
+        if scale_name not in ModeNames.get_all_mode_names():
+            return None
+
+        if self.context.scale_mode == 0:
+            return scale_name.capitalize()
+
+        dict_which_contains_mode_name = ModeNames.get_dict_which_contains_mode_name(scale_name)
+
+        if dict_which_contains_mode_name is not None:
+            inverse_dict_which_contains_mode_name = get_inverse_dict(dict_which_contains_mode_name)
+            mode_name_key = inverse_dict_which_contains_mode_name[scale_name.capitalize()]
+            final_key = (mode_name_key + self.context.scale_mode) % len(dict_which_contains_mode_name.keys())
+            mode_name = dict_which_contains_mode_name[final_key]
+        else:
+            mode_name = None
+
+        return mode_name
+
     def __init__(self, context):
-        self._context = context
+        self.context = context
         self.major = [0, 2, 4, 5, 7, 9, 11, 12]
         self.minor = [0, 2, 3, 5, 7, 8, 10, 12]
 
         self.melodic_minor = [0, 2, 3, 5, 7, 9, 11, 12]
         self.harmonic_minor = [0, 2, 3, 5, 7, 8, 11, 12]
 
-        self.octatonic = [0, 1, 3, 4, 6, 7, 9, 10, 12]
-
         self.pentatonic = [0, 3, 5, 7, 10, 12]
+        self.octatonic = [0, 1, 3, 4, 6, 7, 9, 10, 12]
         self.wholetone = [0, 2, 4, 6, 8, 10, 12]
 
         self.thirds = [0, 3, 6, 9, 12]
@@ -58,8 +93,8 @@ class Scales:
         # self.arabic = self.double_harm_major
         # self.gypsy_major = self.double_harm_major
         # self.gypsy_minor = self.hungarian_minor
-        # self.geez = self.dorian
         # self.gypsy = self.hungarian_minor
+        # self.geez = self.dorian
         # self.romanian_minor = self.ukrainian_dorian
 
         for scale_name in self.get_all_names():
@@ -79,12 +114,15 @@ class Scales:
 
     def get_all_names(self):
         all_scales = sorted(list(self.__dict__.keys()))
-        all_scales.remove("_context")
+        all_scales.remove("context")
         return all_scales
 
     def get_scale_by_name(self, name):
-        orig_result = self.__getattribute__(name)[self._context.scale_mode:]
-        result = [item - self.__getattribute__(name)[self._context.scale_mode] for item in orig_result]
+        if self.context is None:
+            return self.__getattribute__(name)
+
+        orig_result = self.__getattribute__(name)[self.context.scale_mode:]
+        result = [item - self.__getattribute__(name)[self.context.scale_mode] for item in orig_result]
         return result
 
     @staticmethod
@@ -106,8 +144,53 @@ class ModeNames:
                          3: "Hungarian minor", 4: "Locrian ♮6 ♮3 (Mixolydian b5 b2)",
                          5: "Ionian #5 #2", 6: "Locrian bb3 bb7"}
 
+    _MAJOR_INVERSE = {value: key for key, value in MAJOR.items()}
+    _MINOR_INVERSE = {value: key for key, value in MINOR.items()}
+    _MELODIC_MINOR_INVERSE = {value: key for key, value in MELODIC_MINOR.items()}
+    _HARMONIC_MINOR_INVERSE = {value: key for key, value in HARMONIC_MINOR.items()}
+    _DOUBLE_HARMONIC_MAJOR_INVERSE = {value: key for key, value in DOUBLE_HARM_MAJOR.items()}
+
     MAP = {"major": MAJOR, "ionian": MAJOR, "minor": MINOR, "aeolian": MINOR, "melodic_minor": MELODIC_MINOR,
            "harmonic_minor": HARMONIC_MINOR, "double_harm_major": DOUBLE_HARM_MAJOR}
+
+    @staticmethod
+    def convert_scale_name_from_scales__dict___to_dict_scale_name(scale_name):
+        if "_harm_" in scale_name:
+            scale_name = scale_name.replace("_harm_", "_harmonic_")
+        if "sharp_" in scale_name:
+            scale_name = scale_name.replace("sharp_", "#")
+
+        return scale_name.replace("_", " ").lower()
+
+    @staticmethod
+    def get_all_mode_names():
+        return set(item.lower() for sublist in
+                   [list(value.values()) for value in ModeNames.MAP.values()]
+                   for item in sublist)
+
+    @staticmethod
+    def get_all_dicts():
+        return [ModeNames.MAJOR, ModeNames.MINOR, ModeNames.MELODIC_MINOR, ModeNames.HARMONIC_MINOR,
+                ModeNames.DOUBLE_HARM_MAJOR]
+
+    @staticmethod
+    def get_all_inverse_dicts():
+        return [getattr(ModeNames, item) for item in ModeNames.__dict__ if "_INVERSE" in item]
+
+    @staticmethod
+    def get_dict_which_contains_mode_name(mode_name):
+        if mode_name not in ModeNames.get_all_mode_names():
+            return None
+
+        all_dicts = ModeNames.get_all_dicts()
+        for dic in all_dicts:
+            if mode_name in {value.lower() for value in dic.values()}:
+                return dic
+
+        return None
+
+    def __contains__(self, mode_name):
+        return mode_name in ModeNames.get_all_mode_names()
 
 
 def check_duplicates():
@@ -132,9 +215,12 @@ def check_duplicates():
                 print("%s is the same as %s" % (one, two))
         return 1
     else:
-        print("There are no duplicates __:)__.")
+        print("There are no duplicates __:)__.\n")
         return 0
 
 
 if __name__ == '__main__':
     check_duplicates()
+
+    print("All mode names: %s\n" % ModeNames.get_all_mode_names())
+    print("All inverse dicts: %s\n" % ModeNames.get_all_inverse_dicts())

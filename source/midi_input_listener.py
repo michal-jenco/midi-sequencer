@@ -48,15 +48,39 @@ class MIDIInputListener(object):
         self.main_loop_thread.start()
 
     def get_callback_dict(self):
-        return {"RecArm 1 Pressed": self.playback_on_callback,
-                "RecArm 2 Pressed": self.sequencer.end_all_notes,
-                "RecArm 3 Pressed": self.sequencer.reset_idx,
-                "RecArm 4 Pressed": lambda: 0,
-                "RecArm 5 Pressed": self.sequencer.press_all_enters,
-                "RecArm 6 Pressed": lambda: self.mute_callback(mode="mute"),
-                "RecArm 7 Pressed": lambda: self.mute_callback(mode="unmute"),
-                "RecArm 8 Pressed": lambda: self.mute_callback(mode="invert"),
+        return {"RecArm 1 Pressed": self.recarm_1_callback,
+                "RecArm 2 Pressed": self.recarm_2_callback,
+                "RecArm 3 Pressed": self.recarm_3_callback,
+                "RecArm 4 Pressed": self.recarm_4_callback,
+                "RecArm 5 Pressed": self.recarm_5_callback,
+                "RecArm 6 Pressed": self.recarm_6_callback,
+                "RecArm 7 Pressed": self.recarm_7_callback,
+                "RecArm 8 Pressed": self.recarm_8_callback,
                 "Solo Pressed": self.solo_callback}
+
+    def recarm_1_callback(self):
+        self.playback_on_callback()
+
+    def recarm_2_callback(self):
+        self.sequencer.end_all_notes()
+
+    def recarm_3_callback(self):
+        self.sequencer.reset_idx()
+
+    def recarm_4_callback(self):
+        self.context.mode_changing_on = not self.context.mode_changing_on
+
+    def recarm_5_callback(self):
+        self.sequencer.press_all_enters()
+
+    def recarm_6_callback(self):
+        self.mute_callback("mute")
+
+    def recarm_7_callback(self):
+        self.mute_callback("unmute")
+
+    def recarm_8_callback(self):
+        self.mute_callback("invert")
 
     def get_state_and_device(self):
         state = self.state.get()
@@ -82,10 +106,16 @@ class MIDIInputListener(object):
 
     def bank_callback(self, direction):
         if direction.lower() == "left":
-            self.state.previous()
+            if self.context.mode_changing_on:
+                self.context.change_mode(offset=1)
+            else:
+                self.state.previous()
 
         elif direction.lower() == "right":
-            self.state.next()
+            if self.context.mode_changing_on:
+                self.context.change_mode(offset=-1)
+            else:
+                self.state.next()
 
     def bpm_callback(self, value):
         bpm_range_value = range_to_range(Ranges.MIDI_RANGE, Ranges.BPM_RANGE, value)
