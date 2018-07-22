@@ -87,6 +87,8 @@ class NoteObject(object):
                 sleep(sleep_time)
                 self.end()
 
+        self.velocity = original_velocity
+
     def play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
             self.context.midi.send_message(self.get_transposed_midi_repr(semitones))
