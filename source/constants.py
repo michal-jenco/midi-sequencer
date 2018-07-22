@@ -82,6 +82,13 @@ class Ranges:
     LOGICAL = LOGICAL_MIN, LOGICAL_MAX
 
 
+class MIDIChannels:
+    volca_keys = 10
+    volca_fm = 11
+    volca_kick = 13
+    monologue = 15
+
+
 note_dict = {"c": c2, "cs": cs2, "d": d2, "ds": ds2, "e": e2, "f": f2, "fs": fs2, "g": g2, "gs": gs2,
              "a": a2, "as": as2, "h": b2, "b": b2, "df": cs2, "ef": ds2, "gf": fs2, "af": gs2, "bf": as2}
 

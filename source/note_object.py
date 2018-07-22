@@ -4,8 +4,9 @@ from time import sleep
 from threading import Thread
 from copy import copy
 
-from source.constants import StringConstants, Ranges
+from source.constants import StringConstants, Ranges, MIDIChannels
 from source.functions import range_to_range
+from source.cc import CCFM
 
 gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
 
@@ -80,6 +81,10 @@ class NoteObject(object):
             if self.attack is not None and not i:
                 sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
 
+            if self.channel == MIDIChannels.volca_fm:
+                msg = [0xb0 + self.channel, CCFM().velocity, self.velocity]
+                self.context.midi.send_message(msg)
+
             self.context.midi.send_message(self.get_midi_repr())
 
             if self.duration is not None:
@@ -123,6 +128,10 @@ class NoteContainer(object):
 
     def play(self, transposed=0):
         Thread(target=self._play, args=(transposed,)).start()
+
+    def end(self):
+        for note in self.notes:
+            note.end()
 
     def play_transposed(self, semitones):
         self.play(transposed=semitones)
