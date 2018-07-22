@@ -307,13 +307,13 @@ class NoteSchedulingObject:
 
     @staticmethod
     def _get_number_of_dots(seq):
-        indices = [0]
+        indices = []
 
         for item in NoteSchedulingSequenceConstants.BOUNDED:
             if item in seq:
                 indices.append(seq.index(item))
 
-        return seq[:min(indices)].count(NoteSchedulingSequenceConstants.DOT)
+        return seq[:min(indices) if indices else len(seq)].count(NoteSchedulingSequenceConstants.DOT)
 
     def get_play_count(self):
         return self.repeat_count + 1

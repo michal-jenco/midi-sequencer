@@ -90,12 +90,9 @@ class Parser:
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
                     add = self.get_plus_or_minus_add(oct_)
-                    print("Individual scale #%s: %s" % (iii, self.context.current_scales[iii]))
 
                     scale_list = context.scales.get_scale_by_name(context.current_scales[iii])
                     note_value = context.scales.get_note_by_index_wrap(int(note, 16), scale_list)
-                    print("scale_list: %s" % scale_list)
-                    print("note_value: %s" % note_value)
                     str_seq += (str(scale_list.index(note_value))
                                 + add + ({"-1": "f", "0": "", "1": "s"}[str(flat_sharp)]) + " ")
                     note_value += context.root + self.get_octave(control) + oct_ + flat_sharp

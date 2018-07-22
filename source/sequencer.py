@@ -1116,7 +1116,11 @@ class Sequencer(tk.Frame):
 
     def manage_mode_sequence(self, i):
         original_mode = int(self.context.scale_mode)
-        current_mode = int(self.context.get_current_mode_wrap(steps_played=self.step_played_counts[0]))
+
+        try:
+            current_mode = int(self.context.get_current_mode_wrap(steps_played=self.step_played_counts[0]))
+        except ValueError:
+            current_mode = 0
 
         if current_mode != original_mode:
             self.context.change_mode(set_to=current_mode)
