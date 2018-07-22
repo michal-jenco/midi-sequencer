@@ -1,0 +1,11 @@
+skip_par	   |    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+octave_seq	  -1x3 0x4 -1x6 |    |    |    |    |    | -2
+poly_relative	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+scale_seq	 acoustic | *0 | *0 | *0 | *0 | *0 | *0 
+off array	   |    |    |    |    |    | 1
+memory_seq	 &0.3.,2=  |    |    |    |    |    | 
+note_scheduling	  4r3r |    |    |    |    |    | 
+midi_channels	 15 | 11 | 10 | 11 | 11 | 11 | 13 
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 

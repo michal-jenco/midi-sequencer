@@ -1,0 +1,21 @@
+midi_channels	 15 | 11 | 10 | 11 | 11 | 11 | 13 
+sample 1	00000
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 
+sample 3	
+sample 7	
+memory_seq	   |    |    |    |    |    | 
+scale_seq	 lydian | *0 | *0 | *0 | *0 | *0 | *0 
+off array	   |    |    |    |    |    | 1
+octave_seq	   |    |    |    |    |    | -2
+sample 4	
+note_scheduling	   |    |    |    |    |    | 
+sample 5	
+sample 9	
+skip_seq	   |    |    |    |    |    | 
+sample 8	
+skip_par	   |    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+sample 0	10010101
+sample 2	0011010
+sample 6	
+poly_relative	   |    |    |    |    |    | 

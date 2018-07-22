@@ -1,0 +1,22 @@
+off array	   |    |    |    |    |    | 1
+poly	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+memory_seq	&0123456789   |    |    |    |    |    | 
+note_scheduling	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+midi_channels	 15  | 11 | 10 | 11 | 11 | 11 | 13 
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 
+octave_seq	   |    |    |    |    |    | -2
+scale_seq	 persianx10 super_locrianx10 | *0 | *0 | *0 | *0 | *0 | *0 
+sample 0	
+sample 1	
+sample 2	1
+sample 3	
+sample 4	
+sample 5	
+sample 6	
+sample 7	
+sample 8	
+sample 9	
+bpm	23.62992125984252

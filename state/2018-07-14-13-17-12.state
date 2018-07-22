@@ -1,0 +1,11 @@
+octave_seq	   |    |    |    |    |    | -2
+poly_relative	   |    |    |    |    |    | 
+midi_channels	 15 | 11 | 10 | 11 | 11 | 11 | 13 
+off array	   |    |    |    |    |    | 1
+note_scheduling	 1,2 4 8r3ra16q,3a 4 8 16a4t,3a  |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 
+memory_seq	   &0,,2,,3,,5,,6,9,|    |    |    |    |    | 
+poly	   |    |    |    |    |    | 
+scale_seq	 neapolitan_major | *0 | *0 | *0 | *0 | *0 | *0 

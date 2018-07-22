@@ -1,0 +1,11 @@
+note_scheduling	8 8. 4 8. 8.  1.  |   1. |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+skip_par	   |    |    |    |    |    | 
+midi_channels	 15 | 11 | 10 | 11 | 11 | 11 | 13 
+poly_relative	   |    |    |    |    |    | 
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 
+off array	   |    |    |    |    |    | 1
+poly	   |    |    |    |    |    | 
+octave_seq	   |    |    |    |    |    | -2
+memory_seq	&0,2,t978;4Qt,q98.5;16Sqnacdedcba9n   |  &032t954;8t  |    |    |    |    | &02325427
+scale_seq	 lydian | *0 | *0 | *0 | *0 | *0 | *0 
