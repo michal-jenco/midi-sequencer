@@ -164,16 +164,11 @@ class MIDIInputListener(object):
             if i == 7:
                 return
 
-            if knob_row == 1:
-                sync = self.know_row_1_synced
-                strvars = self.sequencer.strvars_prob_skip_note
-            elif knob_row == 2:
-                sync = self.know_row_2_synced
-                strvars = self.sequencer.strvars_prob_poly_abs
-            else:
-                sync = self.know_row_3_synced
-                strvars = self.sequencer.strvars_prob_poly_rel
+            self.dict_sync_strvars = {1: (self.know_row_1_synced, self.sequencer.strvars_prob_skip_note),
+                                      2: (self.know_row_2_synced, self.sequencer.strvars_prob_poly_abs),
+                                      3: (self.know_row_3_synced, self.sequencer.strvars_prob_poly_rel)}
 
+            sync, strvars = self.dict_sync_strvars[knob_row]
             value = int(range_to_range(Ranges.MIDI_RANGE, Ranges.PERC_RANGE, value))
 
             if not sync[i]:

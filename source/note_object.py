@@ -4,6 +4,9 @@ from time import sleep
 from threading import Thread
 from copy import copy
 
+from source.constants import StringConstants
+from source.functions import range_to_range
+
 gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
 
 
@@ -19,7 +22,7 @@ class DecayFunctions:
 
 class NoteObject(object):
     def __init__(self, context, pitch=None, channel=None, velocity=None, attack=None, duration=None, play_count=1,
-                 type_=NoteTypes.NORMAL):
+                 decay_function=None, type_=NoteTypes.NORMAL):
         self.context = context
         self.duration = duration
         self.attack = attack
@@ -27,6 +30,7 @@ class NoteObject(object):
         self.pitch = pitch
         self.velocity = velocity
         self.repetitions = play_count
+        self.decay_function = decay_function
         self.type_ = type_
 
         self._channel_prefix = 0x90
@@ -41,6 +45,7 @@ class NoteObject(object):
         self.duration = obj.duration_object
         self.attack = obj.attack_object
         self.repetitions = obj.get_play_count()
+        self.decay_function = obj.decay_function
 
     def get_type(self):
         return self.type_
@@ -65,7 +70,13 @@ class NoteObject(object):
             Thread(target=self._play).start()
 
     def _play(self):
+        original_velocity = self.velocity
+
         for i in range(self.repetitions):
+            if self.decay_function is not None:
+                self.velocity = original_velocity * self.decay_function(
+                    i, *self.decay_function.parameters if self.decay_function.parameters else ())
+
             if self.attack is not None and not i:
                 sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
 
@@ -145,7 +156,7 @@ class NoteContainer(object):
             note.supply_scheduling_object(scheduling_object)
 
 
-class NoteSchedhulingTypes:
+class NoteSchedulingTypes:
     JUST_LENGTH = "Just note length"
     JUST_TUPLET = "Just tuplet"
 
@@ -158,8 +169,9 @@ class NoteSchedulingObject:
         self.attack_object = None
         self.repeat_count = 0
         self.times = 1
-        self.is_dotted = (lambda: self._is_dotted(self.seq))()
-        self.number_of_dots = (lambda: self.seq.count(NoteSchedulingSequenceConstants.DOTTED))()
+        self.decay_function = None
+        self.number_of_dots = (lambda: self._get_number_of_dots(self.seq))()
+        self.is_dotted = (lambda: self._get_number_of_dots(self.seq) > 0)()
         self.is_times = (lambda: self.times > 1)
 
         if self._has_times(self.seq):
@@ -173,10 +185,13 @@ class NoteSchedulingObject:
         if self._has_repeat(self.seq):
             self.repeat_count = self._get_repeat_count(self.seq)
 
+        if self._has_decay_function(self.seq):
+            self.decay_function = DecayFunction(self._get_decay_function(self.seq))
+
         if self._is_just_note_length(seq):
-            self.type_ = NoteSchedhulingTypes.JUST_LENGTH
+            self.type_ = NoteSchedulingTypes.JUST_LENGTH
         elif self._is_just_tuplet(seq):
-            self.type_ = NoteSchedhulingTypes.JUST_TUPLET
+            self.type_ = NoteSchedulingTypes.JUST_TUPLET
 
         pure_seq = self._get_pure_seq(seq)
 
@@ -188,6 +203,19 @@ class NoteSchedulingObject:
             self.duration_object.divider /= self.times
         else:
             self.duration_object = NoteDurationTypes.UNKNOWN
+
+    def __repr__(self):
+        return "%s%s%s%s%s" % (
+            "%sx " % self.times if self.times - 1 else "",
+            self.duration_object.name,
+            "-%sx" % self.get_play_count() if self.get_play_count() - 1 else "",
+            " %s%s" % (self.number_of_dots, "x dotted") if self.is_dotted else "",
+            (" (%s: %s, params: %s)" % (self.decay_function.__class__.__name__,
+                                        self.decay_function.name, self.decay_function.parameters))
+            if self.decay_function is not None else "")
+
+    def __str__(self):
+        return self.__repr__()
 
     def _debug_print(self):
         print("duration obj: %s" % (None if self.duration_object is None else self.duration_object.name))
@@ -201,7 +229,7 @@ class NoteSchedulingObject:
         for bound in NoteSchedulingSequenceConstants.BOUNDED:
             seq = self._remove_subsequence(seq, bounded_by=bound)
 
-        seq = seq.replace(NoteSchedulingSequenceConstants.DOTTED, "")
+        seq = seq.replace(NoteSchedulingSequenceConstants.DOT, "")
         seq = self._remove_times_subseq(seq)
         return seq
 
@@ -217,7 +245,7 @@ class NoteSchedulingObject:
 
     @staticmethod
     def _is_dotted(seq):
-        return NoteSchedulingSequenceConstants.DOTTED in seq
+        return NoteSchedulingSequenceConstants.DOT in seq
 
     @staticmethod
     def _has_attack(seq):
@@ -230,6 +258,10 @@ class NoteSchedulingObject:
     @staticmethod
     def _has_times(seq):
         return NoteSchedulingSequenceConstants.TIMES in seq
+
+    @staticmethod
+    def _has_decay_function(seq):
+        return NoteSchedulingSequenceConstants.DECAY_FUNCTION in seq
 
     @staticmethod
     def _get_times(seq):
@@ -262,6 +294,17 @@ class NoteSchedulingObject:
         else:
             return None
 
+    @staticmethod
+    def _get_number_of_dots(seq):
+        indices = []
+
+        for item in NoteSchedulingSequenceConstants.BOUNDED:
+            if item in seq:
+                indices.append(seq.index(item))
+
+        return seq[:min(indices)].count(NoteSchedulingSequenceConstants.DOT)
+
+
     def get_play_count(self):
         return self.repeat_count + 1
 
@@ -273,6 +316,13 @@ class NoteSchedulingObject:
         return int(repeat_seq)
 
     @staticmethod
+    def _get_decay_function(seq):
+        start_index = seq.index(NoteSchedulingSequenceConstants.DECAY_FUNCTION)
+        end_index = seq.rindex(NoteSchedulingSequenceConstants.DECAY_FUNCTION)
+        decay_function_seq = seq[start_index + 1:end_index]
+        return decay_function_seq
+
+    @staticmethod
     def _remove_subsequence(seq, bounded_by):
         if bounded_by not in seq:
             return seq
@@ -281,15 +331,78 @@ class NoteSchedulingObject:
         end_index = seq.rindex(bounded_by)
         return seq[:start_index] + seq[end_index + 1:]
 
+
+class DecayFunction:
+    def __init__(self, entry_box_string):
+        self.original_entry_box_string = entry_box_string
+        self.func, self.parameters, self.name = self._parse_original_entry_box_string()
+
     def __repr__(self):
-        return "%s%s%s%s" % (
-            "%sx " % self.times if self.times - 1 else "",
-            self.duration_object.name,
-            "-%sx" % self.get_play_count() if self.get_play_count() - 1 else "",
-            " %s%s" % (self.number_of_dots, "x dotted") if self.is_dotted else "")
+        msg = "DecayFunction \"%s\". Parameters: %s." % (self.func.__name__ if self.func is not None else None,
+                                                         self.parameters)
+        return msg
 
     def __str__(self):
         return self.__repr__()
+
+    def __call__(self, *args):
+        return self.func(*args)
+
+    def _parse_original_entry_box_string(self):
+        items = (self.original_entry_box_string.split(StringConstants.container_separator)
+                 if StringConstants.container_separator in self.original_entry_box_string
+                 else [self.original_entry_box_string])
+
+        if not self.original_entry_box_string:
+            return None, None, None
+
+        if len(items) == 1:
+            func = DecayFunctionDict[items[0]]
+            return func, None, func.__name__
+
+        elif len(items) > 1:
+            func = DecayFunctionDict[items[0]]
+            return func, [float(item) for item in items[1:]], func.__name__
+
+
+class DecayFunctionParameter:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __repr__(self):
+        msg = "%s \"%s\": value \"%s\"." % (self.__class__.__name__, self.name, self.value)
+        return msg
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class DecayFunctionDictMetaclass(type):
+    @staticmethod
+    def __delitem__(key):
+        delattr(DecayFunctionDict, key.lower())
+
+    @staticmethod
+    def __getitem__(key):
+        return getattr(DecayFunctionDict, key.lower())
+
+    @staticmethod
+    def __setitem__(key, value):
+        setattr(DecayFunctionDict, key.lower(), value)
+
+
+class DecayFunctionDict(metaclass=DecayFunctionDictMetaclass):
+    @staticmethod
+    def _logical_sin(i, smooth=1, min=0., *args):
+        return range_to_range((0., 1.), (min, 1.), (math.sin(i / smooth) + 1) / 2.)
+
+    @staticmethod
+    def _logical_cos(i, smooth=1, min=0., *args):
+        return range_to_range((0., 1.), (min, 1.), (math.cos(i / smooth) + 1) / 2.)
+
+    sin = _logical_sin
+    cos = _logical_cos
 
 
 class TupletTypes:
@@ -304,10 +417,11 @@ class TupletTypes:
 class NoteSchedulingSequenceConstants:
     ATTACK = "a"
     REPEAT = "r"
-    DOTTED = "."
+    DOT = "."
     TIMES = ","
+    DECAY_FUNCTION = "f"
 
-    BOUNDED = ATTACK, REPEAT
+    BOUNDED = ATTACK, REPEAT, DECAY_FUNCTION
 
 
 class NoteDurationTypesRecord:
