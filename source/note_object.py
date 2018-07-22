@@ -4,7 +4,7 @@ from time import sleep
 from threading import Thread
 from copy import copy
 
-from source.constants import StringConstants
+from source.constants import StringConstants, Ranges
 from source.functions import range_to_range
 
 gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
@@ -298,14 +298,13 @@ class NoteSchedulingObject:
 
     @staticmethod
     def _get_number_of_dots(seq):
-        indices = []
+        indices = [0]
 
         for item in NoteSchedulingSequenceConstants.BOUNDED:
             if item in seq:
                 indices.append(seq.index(item))
 
         return seq[:min(indices)].count(NoteSchedulingSequenceConstants.DOT)
-
 
     def get_play_count(self):
         return self.repeat_count + 1
@@ -396,12 +395,16 @@ class DecayFunctionDictMetaclass(type):
 
 class DecayFunctionDict(metaclass=DecayFunctionDictMetaclass):
     @staticmethod
-    def _logical_sin(i, smooth=1, min=0., *args):
-        return range_to_range((0., 1.), (min, 1.), (math.sin(i / smooth) + 1) / 2.)
+    def _logical_sin(i, smooth=1, min=0., max=1., *args):
+        return range_to_range(Ranges.LOGICAL, (min, max), (math.sin(i / smooth) + 1) / 2.)
 
     @staticmethod
-    def _logical_cos(i, smooth=1, min=0., *args):
-        return range_to_range((0., 1.), (min, 1.), (math.cos(i / smooth) + 1) / 2.)
+    def _logical_cos(i, smooth=1, min=0., max=1., *args):
+        return range_to_range(Ranges.LOGICAL, (min, max), (math.cos(i / smooth) + 1) / 2.)
+    #
+    # @staticmethod
+    # def _logical_periodic(func, i, smooth=1, min=0., max=1., *args):
+    #     return range_to_range((0., 1.), (min, max), (getattr(math, func)(i / smooth) + 1) / 2.)
 
     sin = _logical_sin
     cos = _logical_cos

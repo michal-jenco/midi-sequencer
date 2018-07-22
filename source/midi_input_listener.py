@@ -119,7 +119,7 @@ class MIDIInputListener(object):
                 self.state.next()
 
     def bpm_callback(self, value):
-        bpm_range_value = range_to_range(Ranges.MIDI_RANGE, Ranges.BPM_RANGE, value)
+        bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
         self.context.bpm.set(bpm_range_value)
         print("Set BPM to %s" % bpm_range_value)
 
@@ -153,7 +153,7 @@ class MIDIInputListener(object):
             self.callback_dict[msg_name]()
 
         elif msg_name == "Knob Row 1 Col 8":
-            bpm_range_value = range_to_range(Ranges.MIDI_RANGE, Ranges.BPM_RANGE, value)
+            bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
             self.context.bpm.set(bpm_range_value)
             print("Set BPM to %s" % bpm_range_value)
 
@@ -169,7 +169,7 @@ class MIDIInputListener(object):
                                       3: (self.know_row_3_synced, self.sequencer.strvars_prob_poly_rel)}
 
             sync, strvars = self.dict_sync_strvars[knob_row]
-            value = int(range_to_range(Ranges.MIDI_RANGE, Ranges.PERC_RANGE, value))
+            value = int(range_to_range(Ranges.MIDI_CC, Ranges.PERCENT, value))
 
             if not sync[i]:
                 if abs(int(strvars[i].get()) - value) < MiscConstants.KNOB_SYNC_DISTANCE:
