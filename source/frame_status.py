@@ -41,6 +41,9 @@ class StatusFrame(tk.Frame):
         self.strvar_roots = tk.StringVar(self.frame_roots)
         self.label_roots = tk.Label(self.frame_roots, textvariable=self.strvar_roots, font=self.small_font)
 
+        self.strvar_sequence_lengths = tk.StringVar(self)
+        self.label_sequence_lengths = tk.Label(self, textvariable=self.strvar_sequence_lengths, font="courier 8")
+
         self["bg"] = "gold"
         self._grid()
         self._init()
@@ -57,6 +60,7 @@ class StatusFrame(tk.Frame):
         self.label_sequence_indices.grid()
         self.label_scales.grid()
         self.label_roots.grid()
+        self.label_sequence_lengths.grid(column=10, pady=(10, 0))
 
     def _init(self):
         self.update()
@@ -82,7 +86,8 @@ class StatusFrame(tk.Frame):
     def _update_roots(self):
         msg = ""
         for i, item in enumerate(self.context.roots[:self.limit]):
-            msg += ("Seq %s: %s" % (i, get_note_name_from_integer(item))).center(18) + ("\n" if i < self.limit - 1 else "")
+            msg += ("Seq %s: %s" % (i, get_note_name_from_integer(item))).center(18)\
+                   + ("\n" if i < self.limit - 1 else "")
         self.strvar_roots.set(msg)
 
     def update_scale_mode(self):
@@ -90,9 +95,13 @@ class StatusFrame(tk.Frame):
                                    % ("ON" if self.context.scale_mode_changing_on else "OFF")).center(16))
         self.label_scale_mode["bg"] = self.mode_colors[self.context.scale_mode_changing_on]
 
+    def update_sequence_lengths(self):
+        self.strvar_sequence_lengths.set((" | ".join([str(len(seq)) for seq in self.context.note_sequences])).center(30))
+
     def update(self):
         self.midi_input_listener_state_changed()
         self.update_scale_mode()
         self._update_sequence_indices()
         self._update_scales()
         self._update_roots()
+        self.update_sequence_lengths()

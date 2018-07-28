@@ -6,8 +6,10 @@ import time
 import copy
 import random
 import os
+import re
 
-from source.note_object import NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects, NoteContainer
+from source.note_object import (
+    NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects, NoteContainer, NoteObject)
 from source.context import Context
 from source.wobbler import Wobbler
 from source.constants import *
@@ -169,12 +171,16 @@ class Sequencer(tk.Frame):
                                 text="Octave Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_i = tk.Label(self.frame_entries, font=label_font,
                                 text="Root Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_i2 = tk.Label(self.frame_entries, font=label_font,
+                                 text="Transpose Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_j = tk.Label(self.frame_entries, font=label_font,
                                 text="Scale Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_k = tk.Label(self.frame_entries, font=label_font,
                                 text="MIDI Channels".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_l = tk.Label(self.frame_entries, font=label_font,
                                 text="Mode sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_m = tk.Label(self.frame_entries, font=label_font,
+                                text="R E  P L  A C  E".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.daemon = True
@@ -228,27 +234,35 @@ class Sequencer(tk.Frame):
         self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
 
         self.entry_root_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_root_sequences.bind('<Return>', self.set_root_sequence)
+        self.entry_root_sequences.bind('<Return>', self.set_root_sequences)
 
         self.entry_octave_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_octave_sequences.bind('<Return>', self.set_octave_sequence)
+        self.entry_octave_sequences.bind('<Return>', self.set_octave_sequences)
+
+        self.entry_transpose_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_transpose_sequences.bind('<Return>', self.set_transpose_sequences)
 
         self.entry_scale_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_scale_sequences.bind('<Return>', self.set_scale_sequence)
+        self.entry_scale_sequences.bind('<Return>', self.set_scale_sequences)
 
         self.entry_mode_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_mode_sequence.bind('<Return>', self.set_mode_sequence)
+        self.entry_mode_sequence.bind('<Return>', self.set_mode_sequences)
 
         self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
 
+        self.entry_replace = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_replace.bind('<Return>', self.replace)
+
         self.entry_boxes = [self.entry_off_arrays, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequences,
                             self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
-                            self.entry_midi_channels, self.entry_root_sequences, self.entry_octave_sequences,
-                            self.entry_scale_sequences]
+                            self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
+                            self.entry_octave_sequences,
+                            self.entry_scale_sequences, self.entry_replace]
 
         self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
-                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "octave_seq", "scale_seq"]
+                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "octave_seq", "transpose_seq",
+                                  "scale_seq", "replace"]
 
         insert_into_entry(self.entry_midi_channels, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
         self.init_entries()
@@ -441,8 +455,8 @@ class Sequencer(tk.Frame):
         self.entry_names = [self.entry_sequence, self.entry_memory_sequences, self.entry_note_scheduling,
                             self.entry_str_seq, self.entry_off_arrays, self.entry_poly, self.entry_poly_relative,
                             self.entry_skip_note_sequential, self.entry_skip_note_parallel, self.entry_octave_sequences,
-                            self.entry_root_sequences, self.entry_scale_sequences, self.entry_mode_sequence,
-                            self.entry_midi_channels]
+                            self.entry_root_sequences, self.entry_transpose_sequences, self.entry_scale_sequences,
+                            self.entry_mode_sequence, self.entry_midi_channels, self.entry_replace]
 
         for i, entry_name in enumerate(self.entry_names):
             entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10)
@@ -453,7 +467,7 @@ class Sequencer(tk.Frame):
 
         self.labels_entry_names = [self.label_a, self.label_a2, self.label_a3, self.label_b, self.label_c,
                                    self.label_d, self.label_e, self.label_f, self.label_g, self.label_h, self.label_i,
-                                   self.label_j, self.label_l, self.label_k]
+                                   self.label_i2, self.label_j, self.label_l, self.label_k, self.label_m]
 
         for i, label in enumerate(self.labels_entry_names):
             label.grid(row=i, column=2, sticky="w", padx=(10, 0), pady=1)
@@ -507,11 +521,12 @@ class Sequencer(tk.Frame):
 
     def init_entries(self):
         for entry in self.entry_boxes:
-            if entry is not self.entry_midi_channels:
+            if entry not in (self.entry_midi_channels, self.entry_replace):
                 insert_into_entry(entry, StringConstants.initial_empty_sequences)
 
         insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
+        insert_into_entry(self.entry_replace, "")
         self.entry_octave_sequences.insert(tk.END, "-2")
         self.entry_off_arrays.insert(tk.END, "1")
         self.press_all_enters()
@@ -524,9 +539,9 @@ class Sequencer(tk.Frame):
         self.set_poly_relative(None)
         self.set_skip_note_sequential(None)
         self.set_skip_note_parallel(None)
-        self.set_octave_sequence(None)
-        self.set_root_sequence(None)
-        self.set_scale_sequence(None)
+        self.set_octave_sequences(None)
+        self.set_root_sequences(None)
+        self.set_scale_sequences(None)
         self.set_midi_channels(None)
 
     def get_internal_state(self, typ=None):
@@ -683,7 +698,7 @@ class Sequencer(tk.Frame):
         text_ = str(self.entry_sequence.get())
         self.memories[0].add_seq(text_)
 
-    def set_root_sequence(self, _):
+    def set_root_sequences(self, _):
         parser = self.context.parser
         text = self.entry_root_sequences.get()
 
@@ -698,7 +713,7 @@ class Sequencer(tk.Frame):
 
         log(logfile=self.context.logfile, msg="Root sequences set to: %s" % self.context.root_sequences)
 
-    def set_octave_sequence(self, _):
+    def set_octave_sequences(self, _):
         parser = self.context.parser
         text = self.entry_octave_sequences.get()
 
@@ -712,7 +727,20 @@ class Sequencer(tk.Frame):
 
         log(logfile=self.context.logfile, msg="Octave sequences set to: %s" % self.context.octave_sequences)
 
-    def set_scale_sequence(self, _):
+    def set_transpose_sequences(self, _):
+        parser = self.context.parser
+        text = self.entry_transpose_sequences.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(
+            separator=StringConstants.multiple_entry_separator,
+            sequences=text)
+
+        for i, seq in enumerate(individual_sequences):
+            self.context.transpose_sequences[i] = parser.parse_transpose_sequence(seq)
+
+        log(logfile=self.context.logfile, msg="Transpose sequences set to: %s" % self.context.transpose_sequences)
+
+    def set_scale_sequences(self, _):
         parser = self.context.parser
         text = self.entry_scale_sequences.get()
 
@@ -728,7 +756,7 @@ class Sequencer(tk.Frame):
         self.set_memory_sequence(None)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
-    def set_mode_sequence(self, _):
+    def set_mode_sequences(self, _):
         parser = self.context.parser
         text = self.entry_mode_sequence.get()
 
@@ -802,7 +830,7 @@ class Sequencer(tk.Frame):
         new_content = [" %s " % scale_] + sequences[1:]
         insert_into_entry(self.entry_scale_sequences,
                           StringConstants.multiple_entry_separator.join(new_content))
-        self.set_scale_sequence(None)
+        self.set_scale_sequences(None)
         self.context.current_scales = [scale_] * 7
 
     def set_status_bar_content(self, scale_str=None):
@@ -845,6 +873,26 @@ class Sequencer(tk.Frame):
         self.context.midi_channels = parsed_individual_sequences
 
         log(logfile=self.context.logfile, msg="MIDI Channels: %s" % self.context.midi_channels)
+
+    def replace(self, _):
+        text = self.entry_replace.get()
+
+        if not text.strip():
+            return
+
+        memory_seq_text = self.entry_memory_sequences.get()
+        individual_replacements = text.split(StringConstants.container_separator)
+
+        for ind in individual_replacements:
+            try:
+                old, new = ind.split(StringConstants.replacement_separator)
+            except ValueError:
+                pass
+            else:
+                memory_seq_text = memory_seq_text.replace(old, new)
+                log(logfile=self.context.logfile, msg="Replaced \"%s\" with \"%s\"." % (old, new))
+                insert_into_entry(self.entry_memory_sequences, memory_seq_text)
+                self.set_memory_sequence(None)
 
     def stop_sequence(self):
         self.context.playback_on = False
@@ -948,20 +996,61 @@ class Sequencer(tk.Frame):
 
     def get_orig_note(self, note, octave_idx, i, j=0):
         vel_min, vel_max = self.get_velocity_min_max(i)
+        transpose_idx = self.get_transpose_idx(i)
+        scales = self.context.scales
 
         octave_offset = 0
         if self.context.octave_sequences:
             octave_offset = 0 if not self.context.octave_sequences[i] else self.context.octave_sequences[i][octave_idx]
 
+        if isinstance(note, NoteObject):
+            transpose = 0
+        elif isinstance(note, NoteContainer):
+            transpose = [0] * len(note.notes)
+
         note_copy = copy.copy(note)
         note_copy.set_channel(self.context.midi_channels[i][j])
 
+        pitch = self.context.roots[i] - c2 - 4 + octave_offset
+
         if note_copy.type_ is NoteTypes.NORMAL:
             if isinstance(note_copy, NoteContainer):
-                note_copy.pitch = (self.context.roots[i] - c2 - 4 + octave_offset)
-            note_copy.pitch += self.context.roots[i] - c2 - 4 + octave_offset
+                note_copy.pitch = pitch
+            note_copy.pitch += pitch
+
+        if self.context.transpose_sequences:
+            scale = scales.get_scale_by_name(self.context.current_scales[i])
+            transpose_offset = 0 if not self.context.transpose_sequences[i] else self.context.transpose_sequences[i][transpose_idx]
+
+            if transpose_offset:
+                try:
+                    if isinstance(note, NoteObject):
+                        _unrooted_pitch = note.pitch - self.context.root_sequences[i][j]
+                        _idx_in_scale = scale.index(abs(_unrooted_pitch) % 12)
+                        transpose = scale[_idx_in_scale + transpose_offset] - scale[_idx_in_scale]
+
+                    elif isinstance(note, NoteContainer):
+                        _unrooted_pitches = [(note.pitch - self.context.root_sequence[i])
+                                             if note.pitch is not None
+                                             else None
+                                             for note in note.notes]
+                        _idxs_in_scale = [(scale.index(abs(unrooted_pitch) % 12)
+                                           if unrooted_pitch is not None
+                                           else None)
+                                          for unrooted_pitch in _unrooted_pitches]
+                        transpose = [(scale[idx + transpose_offset] - scale[idx])
+                                     if idx is not None
+                                     else 0
+                                     for idx in _idxs_in_scale]
+
+                except (ValueError, TypeError):
+                    if isinstance(note, NoteObject):
+                        transpose = 0
+                    elif isinstance(note, NoteContainer):
+                        transpose = [0] * len(note.notes)
 
         note_copy.set_velocity(random.randint(vel_min, vel_max))
+        note_copy.set_transpose(transpose)
         return note_copy
 
     def turn_off_notes(self, off_note_idx, idx_all_off, i):
@@ -995,6 +1084,7 @@ class Sequencer(tk.Frame):
                                            if self.context.scheduling_sequences[i] else None)
 
                     octave_idx = self.get_octave_idx(i)
+                    transpose_idx = self.get_transpose_idx(i)
                     self.manage_root_sequence(i)
                     self.manage_scale_sequence(i)
                     self.manage_mode_sequence(i)
@@ -1079,6 +1169,12 @@ class Sequencer(tk.Frame):
     def get_octave_idx(self, i):
         try:
             return self.step_played_counts[i] % len(self.context.octave_sequences[i])
+        except:
+            return 0
+
+    def get_transpose_idx(self, i):
+        try:
+            return self.step_played_counts[i] % len(self.context.transpose_sequences[i])
         except:
             return 0
 

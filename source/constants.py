@@ -167,6 +167,7 @@ class StringConstants(object):
     literal_memory_sequence = "&"
     literal_memory_sequence_separator = ";"
     container_separator = literal_memory_sequence_separator
+    replacement_separator = "-"
     pointer = "*"
     AKAI_MIDIMIX_NAME = "MIDI Mix"
     BESPECO_MIDI_NAME = "USB MIDI Interface"

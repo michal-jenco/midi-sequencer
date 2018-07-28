@@ -22,14 +22,15 @@ class DecayFunctions:
 
 
 class NoteObject(object):
-    def __init__(self, context, pitch=None, channel=None, velocity=None, attack=None, duration=None, play_count=1,
-                 decay_function=None, type_=NoteTypes.NORMAL):
+    def __init__(self, context, pitch=None, channel=None, velocity=None, attack=None, duration=None, transpose=0,
+                 play_count=1, decay_function=None, type_=NoteTypes.NORMAL):
         self.context = context
         self.duration = duration
         self.attack = attack
         self.channel = channel
         self.pitch = pitch
         self.velocity = velocity
+        self.transpose = transpose
         self.repetitions = play_count
         self.decay_function = decay_function
         self.type_ = type_
@@ -60,8 +61,11 @@ class NoteObject(object):
     def set_duration(self, duration):
         self.duration = duration
 
+    def set_transpose(self, transpose):
+        self.transpose = transpose
+
     def get_midi_repr(self):
-        return [self._channel_prefix + self.channel, self.pitch, self.velocity]
+        return [self._channel_prefix + self.channel, self.pitch + self.transpose, self.velocity]
 
     def get_end_note_midi_repr(self):
         return self.get_midi_repr()[:2] + [0]
@@ -82,8 +86,7 @@ class NoteObject(object):
                 sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
 
             if self.channel == MIDIChannels.volca_fm:
-                msg = [0xb0 + self.channel, CCFM().velocity, self.velocity]
-                self.context.midi.send_message(msg)
+                self.context.midi.send_message([0xb0 + self.channel, CCFM().velocity, self.velocity])
 
             self.context.midi.send_message(self.get_midi_repr())
 
@@ -135,6 +138,10 @@ class NoteContainer(object):
 
     def play_transposed(self, semitones):
         self.play(transposed=semitones)
+
+    def set_transpose(self, transpose):
+        for i, note in enumerate(self.notes):
+            note.set_transpose(transpose[i])
 
     def _play(self, transposed_semitones):
         for i, note in enumerate(self.notes):

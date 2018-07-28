@@ -315,6 +315,25 @@ class Parser:
 
         return result
 
+    def parse_transpose_sequence(self, text):
+        result = []
+
+        if not text:
+            return []
+
+        sequences = list(text.split())
+
+        for seq in sequences:
+            times = self.parse_param("x", str(seq))
+
+            if self.is_pointer(seq):
+                return self.context.transpose_sequences[self.get_pointer_destination(seq)]
+
+            for i in range(times):
+                result.append(int(seq[0]))
+
+        return result
+
     def parse_midi_channels(self, text):
         return list(map(int, text.split()))
 
@@ -381,7 +400,7 @@ class Parser:
             times = self.parse_param("x", str(seq))
 
             if self.is_pointer(seq):
-                pass
+                return self.context.scheduling_sequences[self.get_pointer_destination(seq)]
 
             if "x" in seq:
                 seq = seq[0:seq.index("x")]
@@ -391,7 +410,7 @@ class Parser:
 
     @staticmethod
     def is_pointer(seq):
-        return seq.startswith(StringConstants.pointer)
+        return seq.strip().startswith(StringConstants.pointer)
 
     @staticmethod
     def get_pointer_destination(seq):
