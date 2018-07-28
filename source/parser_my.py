@@ -330,7 +330,10 @@ class Parser:
                 return self.context.transpose_sequences[self.get_pointer_destination(seq)]
 
             for i in range(times):
-                result.append(int(seq[0]))
+                iiiii = 1
+                if seq[0] in ("+", "-"):
+                    iiiii = 2
+                result.append(int(seq[:iiiii]))
 
         return result
 

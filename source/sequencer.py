@@ -996,17 +996,10 @@ class Sequencer(tk.Frame):
 
     def get_orig_note(self, note, octave_idx, i, j=0):
         vel_min, vel_max = self.get_velocity_min_max(i)
-        transpose_idx = self.get_transpose_idx(i)
-        scales = self.context.scales
 
         octave_offset = 0
         if self.context.octave_sequences:
             octave_offset = 0 if not self.context.octave_sequences[i] else self.context.octave_sequences[i][octave_idx]
-
-        if isinstance(note, NoteObject):
-            transpose = 0
-        elif isinstance(note, NoteContainer):
-            transpose = [0] * len(note.notes)
 
         note_copy = copy.copy(note)
         note_copy.set_channel(self.context.midi_channels[i][j])
@@ -1018,40 +1011,57 @@ class Sequencer(tk.Frame):
                 note_copy.pitch = pitch
             note_copy.pitch += pitch
 
-        if self.context.transpose_sequences:
-            scale = scales.get_scale_by_name(self.context.current_scales[i])
-            transpose_offset = 0 if not self.context.transpose_sequences[i] else self.context.transpose_sequences[i][transpose_idx]
-
-            if transpose_offset:
-                try:
-                    if isinstance(note, NoteObject):
-                        _unrooted_pitch = note.pitch - self.context.root_sequences[i][j]
-                        _idx_in_scale = scale.index(abs(_unrooted_pitch) % 12)
-                        transpose = scale[_idx_in_scale + transpose_offset] - scale[_idx_in_scale]
-
-                    elif isinstance(note, NoteContainer):
-                        _unrooted_pitches = [(note.pitch - self.context.root_sequence[i])
-                                             if note.pitch is not None
-                                             else None
-                                             for note in note.notes]
-                        _idxs_in_scale = [(scale.index(abs(unrooted_pitch) % 12)
-                                           if unrooted_pitch is not None
-                                           else None)
-                                          for unrooted_pitch in _unrooted_pitches]
-                        transpose = [(scale[idx + transpose_offset] - scale[idx])
-                                     if idx is not None
-                                     else 0
-                                     for idx in _idxs_in_scale]
-
-                except (ValueError, TypeError):
-                    if isinstance(note, NoteObject):
-                        transpose = 0
-                    elif isinstance(note, NoteContainer):
-                        transpose = [0] * len(note.notes)
+        transpose = self._get_transpose(i, j, note)
 
         note_copy.set_velocity(random.randint(vel_min, vel_max))
         note_copy.set_transpose(transpose)
         return note_copy
+
+    def _get_transpose(self, i, j, note):
+        default_transpose = self._get_transpose_zero(note)
+
+        if not self.context.transpose_sequences:
+            return default_transpose
+
+        transpose_idx = self.get_transpose_idx(i)
+        scale = self.context.scales.get_scale_by_name(self.context.current_scales[i])
+        transpose_offset = 0 if not self.context.transpose_sequences[i] else self.context.transpose_sequences[i][
+            transpose_idx]
+
+        if transpose_offset:
+            try:
+                if isinstance(note, NoteObject):
+                    _unrooted_pitch = note.pitch - self.context.root_sequences[i][j]
+                    _idx_in_scale = scale.index(abs(_unrooted_pitch) % 12)
+                    transpose = scale[_idx_in_scale + transpose_offset] - scale[_idx_in_scale]
+
+                elif isinstance(note, NoteContainer):
+                    _unrooted_pitches = [(note.pitch - self.context.root_sequences[i][j])
+                                         if note.pitch is not None
+                                         else None
+                                         for note in note.notes]
+                    _idxs_in_scale = [(scale.index(abs(unrooted_pitch) % 12)
+                                       if unrooted_pitch is not None
+                                       else None)
+                                      for unrooted_pitch in _unrooted_pitches]
+                    transpose = [(scale[idx + transpose_offset] - scale[idx])
+                                 if idx is not None
+                                 else 0
+                                 for idx in _idxs_in_scale]
+
+            except (ValueError, TypeError):
+                transpose = default_transpose
+        else:
+            transpose = default_transpose
+
+        return transpose
+
+    @staticmethod
+    def _get_transpose_zero(note):
+        if isinstance(note, NoteObject):
+            return 0
+        elif isinstance(note, NoteContainer):
+            return [0] * len(note.notes)
 
     def turn_off_notes(self, off_note_idx, idx_all_off, i):
         if self.context.off_sequences:
