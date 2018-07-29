@@ -330,10 +330,8 @@ class Parser:
                 return self.context.transpose_sequences[self.get_pointer_destination(seq)]
 
             for i in range(times):
-                iiiii = 1
-                if seq[0] in ("+", "-"):
-                    iiiii = 2
-                result.append(int(seq[:iiiii]))
+                slice_idx = {False: 1, True: 2}[seq[0] in ("+", "-")]
+                result.append(int(seq[:slice_idx]))
 
         return result
 
