@@ -1184,10 +1184,16 @@ class Sequencer(tk.Frame):
                                 self.play_poly_notes(orig_note, i)
 
                             for j, channel in enumerate(valid_channels):
-                                if self.context.str_sequences[i][loop_idx].isdigit():
-                                    param = int(self.context.str_sequences[i][loop_idx])
-                                    orig_note = self.get_orig_note(note, octave_idx, i, j)
-                                    self.play_relative_poly_notes(orig_note, param, i)
+                                print("aaaaaaa %s" % self.context.str_sequences[i])
+                                print("Loop_idx: %s" % loop_idx)
+
+                                try:
+                                    if self.context.str_sequences[i][loop_idx].isdigit():
+                                        param = int(self.context.str_sequences[i][loop_idx])
+                                        orig_note = self.get_orig_note(note, octave_idx, i, j)
+                                        self.play_relative_poly_notes(orig_note, param, i)
+                                except IndexError:
+                                    traceback.print_exc()
 
     def play_delay(self, i, note, octave_idx, valid_channels):
         for j, channel in enumerate(valid_channels):
