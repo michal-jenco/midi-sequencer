@@ -89,6 +89,7 @@ class NoteObject(object):
                 self.context.midi.send_message([0xb0 + self.channel, CCFM().velocity, self.velocity])
 
             self.context.midi.send_message(self.get_midi_repr())
+            print("Sending MIDI message: %s" % self.get_midi_repr())
 
             if self.duration is not None:
                 sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
@@ -121,10 +122,12 @@ class NoteContainer(object):
         self.pitch = 0
 
     def __repr__(self):
-        return "NoteContainer - %s notes%s%s" % (len(self.notes),
-                                                 ", %s gaps" % self.gaps[0].name,
-                                                 ", %s duration" % (self.notes[0].duration.name
-                                                                    if self.notes[0].duration is not None else ""))
+        return "NoteContainer - %s notes (pitches: %s)%s%s"\
+               % (len(self.notes),
+                  [note.pitch for note in self.notes],
+                  ", %s gaps" % self.gaps[0].name,
+                  ", %s duration" % (self.notes[0].duration.name
+                                     if self.notes[0].duration is not None else ""))
 
     def __str__(self):
         return self.__repr__()
@@ -146,8 +149,7 @@ class NoteContainer(object):
     def _play(self, transposed_semitones):
         for i, note in enumerate(self.notes):
             if isinstance(note.pitch, int):
-                orig_pitch = note.pitch
-                note.pitch += int(self.pitch // 2)
+                note.pitch += self.pitch // 2
 
             if transposed_semitones:
                 note.play_transposed(transposed_semitones)
@@ -158,7 +160,7 @@ class NoteContainer(object):
                 sleep(self.gaps[i].get_duration_in_seconds(self.context.get_bpm()))
 
             if isinstance(note.pitch, int):
-                note.pitch = orig_pitch
+                note.pitch -= self.pitch // 2
 
     def set_channel(self, channel):
         self.channel = channel
@@ -231,9 +233,6 @@ class NoteSchedulingObject:
             (" (%s: %s, params: %s)" % (self.decay_function.__class__.__name__,
                                         self.decay_function.name, self.decay_function.parameters))
             if self.decay_function is not None else "")
-
-    def __str__(self):
-        return self.__repr__()
 
     def _debug_print(self):
         print("duration obj: %s" % (None if self.duration_object is None else self.duration_object.name))
@@ -359,9 +358,6 @@ class DecayFunction:
                                                          self.parameters)
         return msg
 
-    def __str__(self):
-        return self.__repr__()
-
     def __call__(self, *args):
         return self.func(*args)
 
@@ -417,10 +413,6 @@ class DecayFunctionDict(metaclass=DecayFunctionDictMetaclass):
     @staticmethod
     def _logical_cos(i, smooth=1, min=0., max=1., *args):
         return range_to_range(Ranges.LOGICAL, (min, max), (math.cos(i / smooth) + 1) / 2.)
-    #
-    # @staticmethod
-    # def _logical_periodic(func, i, smooth=1, min=0., max=1., *args):
-    #     return range_to_range((0., 1.), (min, max), (getattr(math, func)(i / smooth) + 1) / 2.)
 
     sin = _logical_sin
     cos = _logical_cos

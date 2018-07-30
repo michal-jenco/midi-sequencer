@@ -1006,12 +1006,13 @@ class Sequencer(tk.Frame):
         note_copy = copy.copy(note)
         note_copy.set_channel(self.context.midi_channels[i][j])
 
-        pitch = self.context.roots[i] - c2 - 4 + octave_offset
+        pitch_offset = self.context.roots[i] - c2 - 4 + octave_offset
+        print("Pitch: %s" % pitch_offset)
 
         if note_copy.type_ is NoteTypes.NORMAL:
             if isinstance(note_copy, NoteContainer):
-                note_copy.pitch = pitch
-            note_copy.pitch += pitch
+                note_copy.pitch = pitch_offset
+            note_copy.pitch += pitch_offset
 
         transpose = self._get_transpose(i, note_copy)
 
@@ -1049,31 +1050,32 @@ class Sequencer(tk.Frame):
                 elif isinstance(note, NoteContainer):
                     _unrooted_pitches = []
 
-                    for note in note.notes:
-                        if note.pitch is not None:
-                            octave_multiplier = self._get_octave_multiplier(note, i)
+                    for container_note in note.notes:
+                        if container_note.pitch is not None:
+                            octave_multiplier = self._get_octave_multiplier(container_note, i, container=True)
 
-                            unrooted_pitch = (note.pitch - self.context.roots[i]
-                                              if self.context.roots[i] < note.pitch
-                                              else 12 * octave_multiplier + note.pitch - self.context.roots[i])
+                            unrooted_pitch = (container_note.pitch - 52
+                                              if 52 < container_note.pitch
+                                              else (12 * octave_multiplier + container_note.pitch - 52))
 
                             _unrooted_pitches.append(unrooted_pitch)
 
                         else:
                             _unrooted_pitches.append(None)
 
+                    print("Original pitches: %s" % [notee.pitch for notee in note.notes])
+                    print("Unrooted pitches: %s" % _unrooted_pitches)
+
                     _idxs_in_scale = [(scale.index(abs(unrooted_pitch) % 12)
                                        if unrooted_pitch is not None
                                        else None)
                                       for unrooted_pitch in _unrooted_pitches]
                     transpose = [(scale[idx + transpose_offset] - scale[idx])
-                                 if idx is not None
-                                 else 0
+                                 if idx is not None else 0
                                  for idx in _idxs_in_scale]
 
             except (ValueError, TypeError, IndexError):
                 traceback.print_exc()
-                print("root[%s]: %s, note: %s" % (i, self.context.roots[i], note))
                 transpose = zero_transpose
         else:
             transpose = zero_transpose
@@ -1087,8 +1089,9 @@ class Sequencer(tk.Frame):
         elif isinstance(note, NoteContainer):
             return [0] * len(note.notes)
 
-    def _get_octave_multiplier(self, note, i):
-        return (abs(note.pitch - self.context.roots[i]) // 12) + 1
+    def _get_octave_multiplier(self, note, i, container=False):
+        item = 52 if container else self.context.roots[i]
+        return (abs(note.pitch - item) // 12) + 1
 
     def turn_off_notes(self, off_note_idx, idx_all_off, i):
         if self.context.off_sequences:
@@ -1101,7 +1104,7 @@ class Sequencer(tk.Frame):
                             self.end_all_notes(i)
                             return off_note_idx + 1, 0
                 except:
-                    print("Don't modulo by zero pls :D")
+                    traceback.print_exc()
 
         return off_note_idx, idx_all_off
 
@@ -1116,9 +1119,17 @@ class Sequencer(tk.Frame):
                 if (a() > float(self.strvars_prob_skip_note[i].get()) / 100
                         and self.idx % self.get_tempo_multiplier() == 0):
 
-                    loop_idx = self.step_played_counts[i] % len(self.context.note_sequences[i])
+                    try:
+                        loop_idx = self.step_played_counts[i] % len(self.context.note_sequences[i])
+                    except IndexError:
+                        traceback.print_exc()
+                        return
+
                     note_scheduling_idx = (self.actual_notes_played_counts[i] % len(self.context.scheduling_sequences[i])
                                            if self.context.scheduling_sequences[i] else None)
+
+                    if note_scheduling_idx is not None:
+                        scheduling_object = self.context.scheduling_sequences[i][note_scheduling_idx]
 
                     octave_idx = self.get_octave_idx(i)
                     self.manage_root_sequence(i)
@@ -1159,16 +1170,16 @@ class Sequencer(tk.Frame):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
 
                                 if self.context.kick_notes:
-                                    self.context.kick_notes[-1].end()
+                                    for note in self.context.kick_notes:
+                                        note.end()
                                     self.context.kick_notes = []
 
-                                if orig_note.channel == 13:
+                                if orig_note.channel == MIDIChannels.volca_kick:
                                     self.context.kick_notes.append(orig_note)
 
                                 if note_scheduling_idx is not None:
-                                    scheduling_object = self.context.scheduling_sequences[i][note_scheduling_idx]
-                                    if not isinstance(orig_note, NoteContainer):
-                                        orig_note.supply_scheduling_object(scheduling_object)
+                                    # if not isinstance(orig_note, NoteContainer):
+                                    orig_note.supply_scheduling_object(scheduling_object)
                                 orig_note.play()
 
                             if self.delay_is_on():
@@ -1181,16 +1192,21 @@ class Sequencer(tk.Frame):
 
                             for j, channel in enumerate(valid_channels):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
+
+                                if note_scheduling_idx is not None:
+                                    orig_note.supply_scheduling_object(scheduling_object)
+
                                 self.play_poly_notes(orig_note, i)
 
                             for j, channel in enumerate(valid_channels):
-                                print("aaaaaaa %s" % self.context.str_sequences[i])
-                                print("Loop_idx: %s" % loop_idx)
-
                                 try:
                                     if self.context.str_sequences[i][loop_idx].isdigit():
                                         param = int(self.context.str_sequences[i][loop_idx])
                                         orig_note = self.get_orig_note(note, octave_idx, i, j)
+
+                                        if note_scheduling_idx is not None:
+                                            orig_note.supply_scheduling_object(scheduling_object)
+
                                         self.play_relative_poly_notes(orig_note, param, i)
                                 except IndexError:
                                     traceback.print_exc()
@@ -1208,13 +1224,13 @@ class Sequencer(tk.Frame):
 
     def get_octave_idx(self, i):
         try:
-            return self.step_played_counts[i] % len(self.context.octave_sequences[i])
+            return self.actual_notes_played_counts[i] % len(self.context.octave_sequences[i])
         except:
             return 0
 
     def get_transpose_idx(self, i):
         try:
-            return self.step_played_counts[i] % len(self.context.transpose_sequences[i])
+            return self.actual_notes_played_counts[i] % len(self.context.transpose_sequences[i])
         except:
             return 0
 
@@ -1230,7 +1246,7 @@ class Sequencer(tk.Frame):
                     msg="Root for i=%s changed to: %s" % (i, self.context.root_sequences[i][root_idx]))
 
         except:
-            pass
+            traceback.print_exc()
 
     def manage_scale_sequence(self, i):
         scale_idx = self.step_played_counts[i] % len(self.context.scale_sequences[i])
