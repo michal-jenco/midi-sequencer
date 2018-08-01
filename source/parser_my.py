@@ -1,7 +1,8 @@
 import random
 import itertools
+import traceback
+from pyparsing import nestedExpr
 
-from source.scales import Scales
 from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurationTypes,
                                 convert_midi_notes_to_note_objects, gap_count_dict, NoteSchedulingObject)
 from source.constants import note_dict as constants_note_dict, StringConstants
@@ -17,7 +18,7 @@ class Parser:
     def _note_is_container_boundary(note):
         return note in TupletTypes.MAP.keys() and note != TupletTypes.SEPTUPLET
 
-    def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE, offset=0):
+    def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
         msg_list = []
         str_seq = ""
         parsing_container = False
@@ -66,8 +67,7 @@ class Parser:
 
                         container_notes, container_str_seq = self.get_notes(context=context,
                                                                             text=container_note_characters,
-                                                                            iii=iii,
-                                                                            offset=idx)
+                                                                            iii=iii)
                         # print("Container type: %s" % container_type)
                         # print("Container content: %s" % container_content)
                         # print("Container notes: %s" % container_notes)
@@ -82,7 +82,7 @@ class Parser:
 
                         note_container = NoteContainer(context=context, notes=note_objects,
                                                        gaps=[NoteDurationTypes.MAP[length]] * gap_count_dict[note])
-                        note_container.supply_scheduling_object(NoteSchedulingObject(default_length))
+                        note_container.supply_scheduling_object(NoteSchedulingObject(length))
                         msg_list.append(note_container)
                     continue
 
@@ -515,8 +515,46 @@ class Parser:
         else:
             try:
                 result = sequences.split(separator)
+
+                for i, individual in enumerate(result[:]):
+                    a = " ".join(self.unpack_nested_bracketed_expression(individual))
+                    result[i] = a
+
                 return result
 
-            except Exception as e:
-                print("Could not parse_multiple_sequences_separated(self, separator, sequences), because: %s" % e)
+            except Exception:
+                traceback.print_exc()
                 return []
+
+    @staticmethod
+    def _recurse_nested_expr_list(input):
+        output = []
+
+        for i, item in enumerate(input):
+            if isinstance(item, str):
+                output.append(item)
+
+            elif isinstance(item, list):
+                if i < len(input) - 1 and isinstance(input[i + 1], str) and input[i + 1][0] == "x":
+                    times = int(input[i + 1][1:])
+
+                    for _ in range(times):
+                        output.append(item)
+
+                    del input[i + 1]
+
+                else:
+                    for j, _ in enumerate(item):
+                        output.append(item[j])
+
+        return output
+
+    def unpack_nested_bracketed_expression(self, seq):
+        seq = "%s%s%s" % (StringConstants.opening_bracket, seq, StringConstants.closing_bracket)
+        result = nestedExpr(StringConstants.opening_bracket, StringConstants.closing_bracket).parseString(seq).asList()[
+            0]
+
+        while any([isinstance(item, list) for item in result]):
+            result = self._recurse_nested_expr_list(result)
+
+        return result

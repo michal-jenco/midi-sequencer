@@ -89,7 +89,7 @@ class NoteObject(object):
                 self.context.midi.send_message([0xb0 + self.channel, CCFM().velocity, self.velocity])
 
             self.context.midi.send_message(self.get_midi_repr())
-            print("Sending MIDI message: %s" % self.get_midi_repr())
+            # print("Sending MIDI message: %s" % self.get_midi_repr())
 
             if self.duration is not None:
                 sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())

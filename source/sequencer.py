@@ -65,7 +65,6 @@ class Sequencer(tk.Frame):
         self.memories.append(Memory(self.frame_memories, self.context, MemoryType().melody))
 
         self.frame_channel_enable = tk.Frame(self.root)
-        self.frame_channel_enable.grid(row=23, column=4, rowspan=2)
         self.checkboxes_enable_channels = []
         self.intvars_enable_channels = []
 
@@ -149,6 +148,7 @@ class Sequencer(tk.Frame):
 
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,
                                   sliderlength=30, variable=self.context.bpm, length=500)
+        self.label_bpm = tk.Label(self.frame_sliders, text="BPM", font=("Courier 12 bold"))
 
         self.label_a = tk.Label(self.frame_entries, font=label_font,
                                 text="Main Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
@@ -425,15 +425,17 @@ class Sequencer(tk.Frame):
                   command=self.invert_mute).grid(row=18, column=8, padx=0)
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=1, columnspan=4)
-        self.frame_buttons.grid(row=0, column=30, rowspan=20)
-        self.sample_frame.grid(row=22, column=4, sticky="we", rowspan=1, padx=2, pady=2)
-        self.frame_scale_buttons.grid(row=1, column=3, rowspan=1, columnspan=3, padx=5, pady=0)
+        self.frame_buttons.grid(row=0, column=30, rowspan=21, sticky="N")
+        self.frame_scale_buttons.grid(row=10, column=3, rowspan=1, columnspan=3, padx=5, pady=0)
+        self.frame_entries.grid(row=20, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1, rowspan=2)
+        self.sample_frame.grid(row=20, column=4, sticky="we", rowspan=1, padx=2, pady=2)
+        self.frame_memories.grid(row=20, column=5, sticky="we", padx=2, pady=1, rowspan=2)
+        self.frame_status.grid(row=20, column=30, sticky="s", ipadx=2, ipady=2, rowspan=25)
+        self.frame_channel_enable.grid(row=21, column=4, rowspan=2, sticky="n")
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
-        self.frame_roots.grid(row=32, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
-        self.frame_prob_sliders.grid(row=31, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
-        self.frame_entries.grid(row=22, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1)
-        self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
-        self.frame_status.grid(row=21, column=30, sticky="w", ipadx=2, ipady=2, rowspan=20)
+        self.frame_prob_sliders.grid(row=40, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
+        self.frame_roots.grid(row=50, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
+        # self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
 
         for i in range(NumberOf.VELOCITY_SLIDERS):
             self.velocities_scale_min[i].grid(column=i*2, row=0)
@@ -450,7 +452,8 @@ class Sequencer(tk.Frame):
             col = NumberOf.VELOCITY_SLIDERS*2 + NumberOf.PROB_SKIP_NOTE_SLIDERS + NumberOf.POLYPHONY_SLIDERS + i
             self.scales_prob_poly_rel[i].grid(row=0, column=col)
 
-        self.scale_bpm.grid(row=24, column=3, sticky="wens", columnspan=3)
+        self.scale_bpm.grid(row=24, column=4, sticky="wens", columnspan=3)
+        self.label_bpm.grid(row=24, column=3, sticky="w", padx=10)
         self.scale_delay_multiplier.grid(column=10, row=10)
 
         self.entry_names = [self.entry_sequence, self.entry_memory_sequences, self.entry_note_scheduling,
@@ -475,7 +478,6 @@ class Sequencer(tk.Frame):
 
         self.check_delay_is_on.grid(row=11, column=10)
         self.option_tempo_multiplier.grid(row=80, column=8)
-        self.frame_memories.grid(row=22, column=5, sticky="we", padx=2, pady=1, rowspan=2)
 
         for i, mem in enumerate(self.memories):
             mem.show()
@@ -1007,7 +1009,6 @@ class Sequencer(tk.Frame):
         note_copy.set_channel(self.context.midi_channels[i][j])
 
         pitch_offset = self.context.roots[i] - c2 - 4 + octave_offset
-        print("Pitch: %s" % pitch_offset)
 
         if note_copy.type_ is NoteTypes.NORMAL:
             if isinstance(note_copy, NoteContainer):
@@ -1062,9 +1063,6 @@ class Sequencer(tk.Frame):
 
                         else:
                             _unrooted_pitches.append(None)
-
-                    print("Original pitches: %s" % [notee.pitch for notee in note.notes])
-                    print("Unrooted pitches: %s" % _unrooted_pitches)
 
                     _idxs_in_scale = [(scale.index(abs(unrooted_pitch) % 12)
                                        if unrooted_pitch is not None
@@ -1178,8 +1176,8 @@ class Sequencer(tk.Frame):
                                     self.context.kick_notes.append(orig_note)
 
                                 if note_scheduling_idx is not None:
-                                    # if not isinstance(orig_note, NoteContainer):
-                                    orig_note.supply_scheduling_object(scheduling_object)
+                                    if not isinstance(orig_note, NoteContainer):
+                                        orig_note.supply_scheduling_object(scheduling_object)
                                 orig_note.play()
 
                             if self.delay_is_on():
@@ -1193,7 +1191,7 @@ class Sequencer(tk.Frame):
                             for j, channel in enumerate(valid_channels):
                                 orig_note = self.get_orig_note(note, octave_idx, i, j)
 
-                                if note_scheduling_idx is not None:
+                                if note_scheduling_idx is not None and isinstance(orig_note, NoteObject):
                                     orig_note.supply_scheduling_object(scheduling_object)
 
                                 self.play_poly_notes(orig_note, i)
@@ -1204,7 +1202,7 @@ class Sequencer(tk.Frame):
                                         param = int(self.context.str_sequences[i][loop_idx])
                                         orig_note = self.get_orig_note(note, octave_idx, i, j)
 
-                                        if note_scheduling_idx is not None:
+                                        if note_scheduling_idx is not None and isinstance(orig_note, NoteObject):
                                             orig_note.supply_scheduling_object(scheduling_object)
 
                                         self.play_relative_poly_notes(orig_note, param, i)
@@ -1282,12 +1280,13 @@ class Sequencer(tk.Frame):
 
     def play_sequence(self):
         while True:
+            self.frame_status.update()
+
             if not self.context.playback_on:
                 time.sleep(.02)
                 continue
 
             result = self.play_midi_notes()
-            self.frame_status.update()
             self.play_sample_notes()
 
             if result != "dont sleep":
