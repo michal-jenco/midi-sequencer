@@ -41,22 +41,22 @@ class MIDIInputListener(object):
             print("Akai MIDI Mix is not connected.")
             return
 
-        self.callback_dict = self.get_callback_dict()
+        self.callback_dict = {"RecArm 1 Pressed": self.recarm_1_callback,
+                              "RecArm 2 Pressed": self.recarm_2_callback,
+                              "RecArm 3 Pressed": self.recarm_3_callback,
+                              "RecArm 4 Pressed": self.recarm_4_callback,
+                              "RecArm 5 Pressed": self.recarm_5_callback,
+                              "RecArm 6 Pressed": self.recarm_6_callback,
+                              "RecArm 7 Pressed": self.recarm_7_callback,
+                              "RecArm 8 Pressed": self.recarm_8_callback,
+                              "Solo Pressed": self.solo_callback}
 
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
         self.main_loop_thread.start()
 
     def get_callback_dict(self):
-        return {"RecArm 1 Pressed": self.recarm_1_callback,
-                "RecArm 2 Pressed": self.recarm_2_callback,
-                "RecArm 3 Pressed": self.recarm_3_callback,
-                "RecArm 4 Pressed": self.recarm_4_callback,
-                "RecArm 5 Pressed": self.recarm_5_callback,
-                "RecArm 6 Pressed": self.recarm_6_callback,
-                "RecArm 7 Pressed": self.recarm_7_callback,
-                "RecArm 8 Pressed": self.recarm_8_callback,
-                "Solo Pressed": self.solo_callback}
+        return self.callback_dict
 
     def recarm_1_callback(self):
         self.playback_on_callback()
@@ -140,7 +140,8 @@ class MIDIInputListener(object):
                 type_, controller, value = msg
                 str_controller = self.akai_message.get_name_by_msg(msg)
 
-                print("MIDI Input Listener: %s: %s" % (str_controller, value))
+                threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
+
                 self._callback(msg)
 
             time.sleep(self.interval)
@@ -155,7 +156,7 @@ class MIDIInputListener(object):
         elif msg_name == "Knob Row 1 Col 8":
             bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
             self.context.bpm.set(bpm_range_value)
-            print("Set BPM to %s" % bpm_range_value)
+            threading.Thread(target=lambda: print("Set BPM to %s" % bpm_range_value)).start()
 
         elif "Knob Row" in msg_name:
             knob_row = int(msg_name.split()[2])

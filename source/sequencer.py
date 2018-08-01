@@ -6,7 +6,6 @@ import time
 import copy
 import random
 import os
-import re
 import traceback
 
 from source.note_object import (
@@ -22,6 +21,7 @@ from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 from source.frame_status import StatusFrame
+from source.pitch_bend import PitchBend
 
 
 class Sequencer(tk.Frame):
@@ -427,7 +427,7 @@ class Sequencer(tk.Frame):
         self.frame_entries.grid(row=20, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1, rowspan=2)
         self.sample_frame.grid(row=20, column=4, sticky="we", rowspan=1, padx=2, pady=2)
         self.frame_memories.grid(row=20, column=5, sticky="we", padx=2, pady=1, rowspan=2)
-        self.frame_status.grid(row=20, column=30, sticky="s", ipadx=2, ipady=2, rowspan=25)
+        self.frame_status.grid(row=20, column=30, sticky="sw", ipadx=2, ipady=2, rowspan=25)
         self.frame_channel_enable.grid(row=21, column=4, rowspan=2, sticky="n")
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_prob_sliders.grid(row=40, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
@@ -1310,6 +1310,8 @@ class Sequencer(tk.Frame):
             if not self.context.playback_on:
                 time.sleep(.02)
                 continue
+
+            PitchBend("%s%s" % ((self.idx % 3), 2), 15, self.context.midi)()
 
             result = self.play_midi_notes()
             self.play_sample_notes()
