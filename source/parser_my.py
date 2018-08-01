@@ -326,12 +326,14 @@ class Parser:
         for seq in sequences:
             times = self.parse_param("x", str(seq))
 
+            if "x" in seq:
+                seq = seq[:seq.index("x")]
+
             if self.is_pointer(seq):
                 return self.context.transpose_sequences[self.get_pointer_destination(seq)]
 
             for i in range(times):
-                slice_idx = {False: 1, True: 2}[seq[0] in ("+", "-")]
-                result.append(int(seq[:slice_idx]))
+                result.append(int(seq))
 
         return result
 

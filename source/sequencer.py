@@ -125,14 +125,6 @@ class Sequencer(tk.Frame):
         self.strvar_status_bar = tk.StringVar(self.root, "")
         self.label_status_bar = tk.Label(self.root, textvariable=self.strvar_status_bar, font=label_font)
 
-        self.strvar_main_seq_len = tk.StringVar(self.frame_entries)
-        self.label_main_seq_len = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_len,
-                                           font=label_font, width=4)
-
-        self.strvar_main_seq_current_idx = tk.StringVar(self.frame_entries, "")
-        self.label_main_seq_current_idx = tk.Label(self.frame_entries, textvariable=self.strvar_main_seq_current_idx,
-                                                   font=label_font, width=4)
-
         self.velocities_scale_min = []
         self.velocities_scale_max = []
         self.velocities_strvars_min = []
@@ -151,37 +143,39 @@ class Sequencer(tk.Frame):
         self.label_bpm = tk.Label(self.frame_sliders, text="BPM", font=("Courier 12 bold"))
 
         self.label_a = tk.Label(self.frame_entries, font=label_font,
-                                text="Main Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Main".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_a2 = tk.Label(self.frame_entries, font=label_font,
-                                 text="Memory Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                 text="Notes".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_a3 = tk.Label(self.frame_entries, font=label_font,
-                                 text="Scheduling Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                 text="Scheduling".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_b = tk.Label(self.frame_entries, font=label_font,
-                                text="Main Seq Repr".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Seq Repr".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_c = tk.Label(self.frame_entries, font=label_font,
                                 text="Stop Notes".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_d = tk.Label(self.frame_entries, font=label_font,
                                 text="Polyphony".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_e = tk.Label(self.frame_entries, font=label_font,
-                                text="Polyphony Relative".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Poly Rel".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_f = tk.Label(self.frame_entries, font=label_font,
-                                text="Skip Notes Seq".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Skip Seq".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_g = tk.Label(self.frame_entries, font=label_font,
-                                text="Skip Notes Par".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Skip Par".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_h = tk.Label(self.frame_entries, font=label_font,
-                                text="Octave Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Octave".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_i = tk.Label(self.frame_entries, font=label_font,
-                                text="Root Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Root".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_i2 = tk.Label(self.frame_entries, font=label_font,
-                                 text="Transpose Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                 text="Transpose".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_j = tk.Label(self.frame_entries, font=label_font,
-                                text="Scale Sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Scale".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_k = tk.Label(self.frame_entries, font=label_font,
-                                text="MIDI Channels".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Channels".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_l = tk.Label(self.frame_entries, font=label_font,
-                                text="Mode sequence".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Mode".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_m = tk.Label(self.frame_entries, font=label_font,
-                                text="R E  P L  A C  E".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+                                text="Replace".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_n = tk.Label(self.frame_entries, font=label_font,
+                                text="BPM".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.daemon = True
@@ -249,6 +243,9 @@ class Sequencer(tk.Frame):
         self.entry_mode_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_mode_sequence.bind('<Return>', self.set_mode_sequences)
 
+        self.entry_bpm_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_bpm_sequence.bind('<Return>', self.set_bpm_sequence)
+
         self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
 
@@ -258,12 +255,12 @@ class Sequencer(tk.Frame):
         self.entry_boxes = [self.entry_off_arrays, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequences,
                             self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
                             self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
-                            self.entry_octave_sequences,
+                            self.entry_bpm_sequence, self.entry_mode_sequence, self.entry_octave_sequences,
                             self.entry_scale_sequences, self.entry_replace]
 
         self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
-                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "octave_seq", "transpose_seq",
-                                  "scale_seq", "replace"]
+                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "transpose_seq", "bpm_seq",
+                                  "mode_seq", "octave_seq", "scale_seq", "replace"]
 
         insert_into_entry(self.entry_midi_channels, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
         self.init_entries()
@@ -426,7 +423,7 @@ class Sequencer(tk.Frame):
 
         self.frame_wobblers.grid(row=0, column=3, rowspan=1, columnspan=4)
         self.frame_buttons.grid(row=0, column=30, rowspan=21, sticky="N")
-        self.frame_scale_buttons.grid(row=10, column=3, rowspan=1, columnspan=3, padx=5, pady=0)
+        self.frame_scale_buttons.grid(row=10, column=3, rowspan=1, columnspan=3, padx=5, pady=(0, 4))
         self.frame_entries.grid(row=20, column=3, sticky="w", ipadx=2, ipady=2, columnspan=1, rowspan=2)
         self.sample_frame.grid(row=20, column=4, sticky="we", rowspan=1, padx=2, pady=2)
         self.frame_memories.grid(row=20, column=5, sticky="we", padx=2, pady=1, rowspan=2)
@@ -434,7 +431,7 @@ class Sequencer(tk.Frame):
         self.frame_channel_enable.grid(row=21, column=4, rowspan=2, sticky="n")
         self.frame_sliders.grid(row=30, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         self.frame_prob_sliders.grid(row=40, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
-        self.frame_roots.grid(row=50, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
+        # self.frame_roots.grid(row=50, column=3, sticky="wens", padx=10, pady=2, columnspan=3)
         # self.frame_delay.grid(row=22+1, column=3, sticky="w", ipadx=2, ipady=2)
 
         for i in range(NumberOf.VELOCITY_SLIDERS):
@@ -460,18 +457,16 @@ class Sequencer(tk.Frame):
                             self.entry_str_seq, self.entry_off_arrays, self.entry_poly, self.entry_poly_relative,
                             self.entry_skip_note_sequential, self.entry_skip_note_parallel, self.entry_octave_sequences,
                             self.entry_root_sequences, self.entry_transpose_sequences, self.entry_scale_sequences,
-                            self.entry_mode_sequence, self.entry_midi_channels, self.entry_replace]
+                            self.entry_mode_sequence, self.entry_bpm_sequence, self.entry_midi_channels, self.entry_replace]
 
         for i, entry_name in enumerate(self.entry_names):
             entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=1, padx=10)
-        self.label_main_seq_len.grid(row=0, column=6)
-        self.label_main_seq_current_idx.grid(row=1, column=6)
 
         self.labels_entry_names = [self.label_a, self.label_a2, self.label_a3, self.label_b, self.label_c,
                                    self.label_d, self.label_e, self.label_f, self.label_g, self.label_h, self.label_i,
-                                   self.label_i2, self.label_j, self.label_l, self.label_k, self.label_m]
+                                   self.label_i2, self.label_j, self.label_l, self.label_n, self.label_k, self.label_m]
 
         for i, label in enumerate(self.labels_entry_names):
             label.grid(row=i, column=2, sticky="w", padx=(10, 0), pady=1)
@@ -511,31 +506,30 @@ class Sequencer(tk.Frame):
             thread_wobbler.start()
             abc += 1
 
-    def set_current_note_idx(self, idx):
-        self.strvar_main_seq_current_idx.set(str(idx + 1))
-
     def reset_idx(self):
         for i, _ in enumerate(self.step_played_counts):
             self.step_played_counts[i] = 0
             self.actual_notes_played_counts[i] = 0
         self.idx = 0
-        self.set_current_note_idx(0)
         log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
     def init_entries(self):
         for entry in self.entry_boxes:
-            if entry not in (self.entry_midi_channels, self.entry_replace):
+            if entry not in (self.entry_midi_channels, self.entry_replace, self.entry_bpm_sequence):
                 insert_into_entry(entry, StringConstants.initial_empty_sequences)
 
         insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
         insert_into_entry(self.entry_replace, "")
+        insert_into_entry(self.entry_mode_sequence, "")
+        insert_into_entry(self.entry_bpm_sequence, "")
         self.entry_octave_sequences.insert(tk.END, "-2")
         self.entry_off_arrays.insert(tk.END, "1")
         self.press_all_enters()
 
     def press_all_enters(self):
         self.set_memory_sequence(None)
+        self.set_bpm_sequence(None)
         self.set_note_scheduling_sequence(None)
         self.set_off_array(None)
         self.set_poly_absolute(None)
@@ -764,10 +758,18 @@ class Sequencer(tk.Frame):
         parser = self.context.parser
         text = self.entry_mode_sequence.get()
 
-        self.context.mode_sequence = [item // 12 for item in parser.parse_octave_sequence(text)]
+        self.context.mode_sequence = parser.parse_transpose_sequence(text)
 
         self.set_memory_sequence(None)
         log(logfile=self.context.logfile, msg="Mode sequence set to: %s" % self.context.mode_sequence)
+
+    def set_bpm_sequence(self, _):
+        parser = self.context.parser
+        text = self.entry_bpm_sequence.get()
+
+        self.context.bpm_sequence = parser.parse_transpose_sequence(text)
+
+        log(logfile=self.context.logfile, msg="BPM sequence set to: %s" % self.context.bpm_sequence)
 
     def set_poly_absolute(self, _):
         parser = self.context.parser
@@ -1133,6 +1135,7 @@ class Sequencer(tk.Frame):
                     self.manage_root_sequence(i)
                     self.manage_scale_sequence(i)
                     self.manage_mode_sequence(i)
+                    self.manage_bpm_sequence(None)
 
                     try:
                         note = self.context.note_sequences[i][loop_idx]
@@ -1146,7 +1149,6 @@ class Sequencer(tk.Frame):
                             self.actual_notes_played_counts[i] += 1
                         continue
 
-                    self.set_current_note_idx(loop_idx)
                     self.off_note_idx[i], self.idx_all_off[i] = self.turn_off_notes(self.off_note_idx[i], self.idx_all_off[i], i)
 
                     self.skip_sequential_idx[i], self.idx_sequential_skip[i], skip_sequentially = \
@@ -1264,11 +1266,12 @@ class Sequencer(tk.Frame):
             log(logfile=self.context.logfile,
                 msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 
-    def manage_mode_sequence(self, i):
+    def manage_mode_sequence(self, _):
         original_mode = int(self.context.scale_mode)
+        idx = self._get_first_unempty_note_sequence_index()
 
         try:
-            current_mode = int(self.context.get_current_mode_wrap(steps_played=self.step_played_counts[0]))
+            current_mode = int(self.context.get_current_mode_wrap(steps_played=self.actual_notes_played_counts[idx]))
         except ValueError:
             current_mode = 0
 
@@ -1277,6 +1280,28 @@ class Sequencer(tk.Frame):
             # self.end_all_notes(i)
 
             log(logfile=self.context.logfile, msg="Mode changed to: %s" % current_mode)
+
+    def _get_first_unempty_note_sequence_index(self):
+        idx = 0
+        for i, seq in enumerate(self.context.note_sequences):
+            if seq:
+                idx = i
+        return idx
+
+    def manage_bpm_sequence(self, _):
+        original_bpm = int(self.context.get_bpm())
+        idx = self._get_first_unempty_note_sequence_index()
+
+        try:
+            bpm_idx = self.actual_notes_played_counts[idx] % len(self.context.bpm_sequence)
+            current_bpm = int(self.context.bpm_sequence[bpm_idx])
+        except (ValueError, IndexError, ZeroDivisionError):
+            current_bpm = original_bpm
+
+        if current_bpm != original_bpm:
+            self.context.bpm.set(current_bpm)
+
+            log(logfile=self.context.logfile, msg="BPM changed to: %s" % current_bpm)
 
     def play_sequence(self):
         while True:

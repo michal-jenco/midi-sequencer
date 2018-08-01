@@ -57,6 +57,7 @@ class Context:
         self.root_sequence = []
         self.scale_sequence = []
         self.mode_sequence = []
+        self.bpm_sequence = []
         self.sample_seqs = [[], [], [], [], [], [], [], [], [], []]
 
         self.playback_on = False
