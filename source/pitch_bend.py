@@ -1,17 +1,7 @@
-from source.functions import range_to_range
-
 class PitchBendNamesMetaclass(type):
-    @staticmethod
-    def __delitem__(key):
-        pass
-
     @staticmethod
     def __getitem__(key):
         return PitchBendNames.MAP[key] if key in PitchBendNames.MAP.keys() else "Unknown tone division"
-
-    @staticmethod
-    def __setitem__(key, value):
-        pass
 
 
 class PitchBendNames(metaclass=PitchBendNamesMetaclass):
@@ -46,8 +36,8 @@ class PitchBend(object):
             PitchBendNames[self.type] + ("s" if self.times > 1 else ""),
             self.channel)
 
-        self.integer_bend = PitchBendRanges.zero\
-                            + self.direction * int((self.times / (self.type / 2.)) * PitchBendRanges.monologue_semitone)
+        self.integer_bend = (PitchBendRanges.zero
+                             + self.direction * int((self.times / (self.type / 2.)) * PitchBendRanges.monologue_semitone))
 
     def __call__(self):
         print("Sending PitchBend: %s" % self.name)
@@ -59,5 +49,4 @@ class PitchBend(object):
         # print("Reconsutzcted: %s" % ((msb * 2 ** 7) | lsb))
 
         msg = [0b11100000 + self.channel, lsb, msb]
-
         self.midi.send_message(msg)
