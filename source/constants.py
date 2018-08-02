@@ -162,8 +162,7 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
 
 class StringConstants(object):
     multiple_entry_separator = "|"
-    initial_empty_sequences = ("   %s " % multiple_entry_separator) * 6
-    saved_state_separator = "########"
+    initial_empty_sequence = ("   %s " % multiple_entry_separator) * 6
     literal_memory_sequence = "&"
     literal_memory_sequence_separator = ";"
     container_separator = literal_memory_sequence_separator
@@ -172,4 +171,5 @@ class StringConstants(object):
     opening_bracket = "("
     closing_bracket = ")"
     AKAI_MIDIMIX_NAME = "MIDI Mix"
+    AKAI_MPC_NAME = "APC MINI"
     BESPECO_MIDI_NAME = "USB MIDI Interface"

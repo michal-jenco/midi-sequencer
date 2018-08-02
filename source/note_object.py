@@ -393,10 +393,6 @@ class DecayFunctionParameter:
 
 class DecayFunctionDictMetaclass(type):
     @staticmethod
-    def __delitem__(key):
-        delattr(DecayFunctionDict, key.lower())
-
-    @staticmethod
     def __getitem__(key):
         return getattr(DecayFunctionDict, key.lower())
 

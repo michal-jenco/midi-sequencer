@@ -66,7 +66,7 @@ class StatusFrame(tk.Frame):
         self.update()
 
     def midi_input_listener_state_changed(self):
-        state = self.midi_input_listener.state.get()
+        state = self.midi_input_listener.akai_midimix_state.get()
         value = state.center(14)
         self.strvar_midi_input_listener_state.set(value)
         self.label_midi_input_listener_state["bg"] = self.state_colors[state]

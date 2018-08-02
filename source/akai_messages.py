@@ -96,7 +96,55 @@ class AkaiMidimixMessage(object):
         try:
             return self.code_dict[typ][i]
         except:
-            return "No such code (%s) in AKAI MIDI_MIX messages :(" % typ, i
+            return "No such code (%s) in AKAI MIDI_MIX messages." % typ, i
+
+    def message_is_string(self, msg, string):
+        return self.code_dict[msg[0]][msg[1]] == string
+
+    def get_value(self, msg):
+        return msg[2]
+
+
+class AkaiApcMessage(object):
+    def __init__(self):
+        self.code_dict = dict()
+
+        for i in 128, 144, 176:
+            self.code_dict[i] = dict()
+
+        for i in range(8 * 8):
+            self.code_dict[144][i] = "Button %s Pressed" % i
+            self.code_dict[128][i] = "Button %s Released" % i
+
+        for i in range(9):
+            self.code_dict[176][i + 48] = "Fader %s" % i
+
+        _row_button_names = "Up", "Down", "Left", "Right", "Volume", "Pan", "Send", "Device"
+        for i in range(8):
+            self.code_dict[144][i + 64] = "%s Pressed" % _row_button_names[i]
+            self.code_dict[128][i + 64] = "%s Released" % _row_button_names[i]
+
+        _column_button_names = "Clip Stop", "Solo", "Rec Arm", "Mute", "Select", "Free 1", "Free 2", "Stop All Clips"
+        for i in range(8):
+            self.code_dict[144][i + 82] = "%s Pressed" % _column_button_names[i]
+            self.code_dict[128][i + 82] = "%s Released" % _column_button_names[i]
+
+        self.code_dict[144][98] = "Shift Pressed"
+        self.code_dict[128][98] = "Shift Released"
+
+        self.reverse_dict = {}
+
+        for typ in self.code_dict.keys():
+            for code in self.code_dict[typ]:
+                self.reverse_dict[self.code_dict[typ][code]] = typ, code
+
+    def get_name_by_msg(self, msg):
+        typ, i, _ = msg
+
+        try:
+            return self.code_dict[typ][i]
+        except:
+            return "No such code (%s) in AKAI APC messages." % typ, i
 
     def message_is_string(self, msg, string):
         return self.code_dict[msg[0]][msg[1]] == string

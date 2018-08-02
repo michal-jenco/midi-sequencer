@@ -2,74 +2,98 @@ import time
 import threading
 import rtmidi
 from rtmidi.midiutil import open_midiinput, open_midioutput
-from time import sleep
 
-from source.akai_midimix_message import AkaiMidimixMessage
+from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
 from source.akai_midimix_state import AkaiMidimixStates, AkaiMidimixState
 from source.functions import range_to_range
-from source.constants import Ranges, MiscConstants
+from source.constants import Ranges, MiscConstants, StringConstants
 
 
 class MIDIInputListener(object):
-    def __init__(self, sequencer, context, input_name, interval):
+    def __init__(self, sequencer, context, input_names, interval):
         self.sequencer = sequencer
         self.context = context
-        self.input_name = input_name
+        self.input_names = input_names
         self.interval = interval
         self.channel_count = 8
 
+        self.device_input_port_map, self.device_output_port_map = {}, {}
+        self.open_device_map_midi_in, self.open_device_map_port_in = {}, {}
+        self.open_device_map_midi_out, self.open_device_map_port_out = {}, {}
+
         self.midi_in = rtmidi.MidiIn()
-        self.akai_message = AkaiMidimixMessage()
-        self.state = AkaiMidimixState(sequencer=sequencer)
+        self.midi_out = rtmidi.MidiOut()
+        self.akai_midimix_message = AkaiMidimixMessage()
+        self.akai_apc_message = AkaiApcMessage()
+        self.akai_midimix_state = AkaiMidimixState(sequencer=sequencer)
 
-        self.fader_synced = [False] * self.channel_count
-        self.know_row_1_synced = [False] * self.channel_count
-        self.know_row_2_synced = [False] * self.channel_count
-        self.know_row_3_synced = [False] * self.channel_count
+        self.midimix_fader_synced = [False] * self.channel_count
+        self.midimix_know_row_1_synced = [False] * self.channel_count
+        self.midimix_know_row_2_synced = [False] * self.channel_count
+        self.midimix_know_row_3_synced = [False] * self.channel_count
 
-        self.available_ports = self.midi_in.get_ports()
+        self.available_input_ports = self.midi_in.get_ports()
+        self.available_output_ports = self.midi_out.get_ports()
+        print("Available INPUT ports: %s" % self.available_input_ports)
+        print("Available OUTPUT ports: %s" % self.available_output_ports)
 
-        for i, dev in enumerate(self.available_ports):
-            if self.input_name in dev:
-                self.port_in = i
-                print("Found %s on port %s" % (self.input_name, i))
-                break
+        for i, dev in enumerate(self.available_input_ports):
+            for name in self.input_names:
+                if name in dev:
+                    self.device_input_port_map[name] = i
+                    print("Found (INPUT) %s on port %s" % (name, self.device_input_port_map[name]))
 
-        try:
-            print("I am going to open %s on port %s." % (input_name, self.port_in))
-            self.midi_in, self.port_in = open_midiinput(self.port_in)
-            self.midi_out, self.port_out = open_midioutput(3)
-        except:
-            print("Akai MIDI Mix is not connected.")
-            return
+        for i, dev in enumerate(self.available_output_ports):
+            for name in self.input_names:
+                if name in dev:
+                    self.device_output_port_map[name] = i
+                    print("Found (OUTPUT) %s on port %s" % (name, self.device_output_port_map[name]))
+
+        for name in self.input_names:
+            try:
+                print("I am going to open %s (INPUT) on port %s." % (name, self.device_input_port_map[name]))
+                self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(self.device_input_port_map[name])
+            except:
+                print("%s is not connected for INPUT." % name)
+            else:
+                print("Successfully connected to %s (INPUT) on port %s" % (name, self.device_input_port_map[name]))
+
+        for name in self.input_names:
+            try:
+                print("I am going to open %s (OUTPUT) on port %s." % (name, self.device_output_port_map[name]))
+                self.open_device_map_midi_out[name], self.open_device_map_port_out[name] = open_midioutput(self.device_output_port_map[name])
+            except:
+                print("%s is not connected for OUTPUT." % name)
+            else:
+                print("Successfully connected to %s (OUTPUT) on port %s" % (name, self.device_output_port_map[name]))
 
         # for i in range(128):
         #     for j in range(82):
         #         msg = [0x90, 0x0 + j, {0: 0x1, 1: 0x2, 2: 0x3, 3: 0x4, 4: 0x5, 5: 0x6}[(i % 3) * 2]]
         #         print("Sending msg: %s" % msg)
         #         try:
-        #             self.midi_out.send_message(msg)
+        #             self.open_device_map_midi_out[StringConstants.AKAI_MPC_NAME].send_message(msg)
         #         except:
         #             pass
         #         finally:
-        #             sleep(.02)
+        #             time.sleep(.02)
 
-        self.callback_dict = {"RecArm 1 Pressed": self.recarm_1_callback,
-                              "RecArm 2 Pressed": self.recarm_2_callback,
-                              "RecArm 3 Pressed": self.recarm_3_callback,
-                              "RecArm 4 Pressed": self.recarm_4_callback,
-                              "RecArm 5 Pressed": self.recarm_5_callback,
-                              "RecArm 6 Pressed": self.recarm_6_callback,
-                              "RecArm 7 Pressed": self.recarm_7_callback,
-                              "RecArm 8 Pressed": self.recarm_8_callback,
-                              "Solo Pressed": self.solo_callback}
+        self.callback_dict_midimix = {"RecArm 1 Pressed": self.recarm_1_callback,
+                                      "RecArm 2 Pressed": self.recarm_2_callback,
+                                      "RecArm 3 Pressed": self.recarm_3_callback,
+                                      "RecArm 4 Pressed": self.recarm_4_callback,
+                                      "RecArm 5 Pressed": self.recarm_5_callback,
+                                      "RecArm 6 Pressed": self.recarm_6_callback,
+                                      "RecArm 7 Pressed": self.recarm_7_callback,
+                                      "RecArm 8 Pressed": self.recarm_8_callback,
+                                      "Solo Pressed": self.solo_callback}
 
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
         self.main_loop_thread.start()
 
     def get_callback_dict(self):
-        return self.callback_dict
+        return self.callback_dict_midimix
 
     def recarm_1_callback(self):
         self.playback_on_callback()
@@ -97,7 +121,7 @@ class MIDIInputListener(object):
         self.mute_callback("invert")
 
     def get_state_and_device(self):
-        state = self.state.get()
+        state = self.akai_midimix_state.get()
 
         if state is AkaiMidimixStates.MAIN:
             device = self.sequencer
@@ -123,13 +147,13 @@ class MIDIInputListener(object):
             if self.context.scale_mode_changing_on:
                 self.context.change_mode(offset=-1)
             else:
-                self.state.previous()
+                self.akai_midimix_state.previous()
 
         elif direction.lower() == "right":
             if self.context.scale_mode_changing_on:
                 self.context.change_mode(offset=1)
             else:
-                self.state.next()
+                self.akai_midimix_state.next()
 
     def bpm_callback(self, value):
         bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
@@ -145,26 +169,27 @@ class MIDIInputListener(object):
 
     def main_loop(self):
         while True:
-            msg = self.midi_in.get_message()
+            for name in self.open_device_map_midi_in.keys():
+                msg = self.open_device_map_midi_in[name].get_message()
 
-            if msg:
-                # throw away some weird number
-                msg, _ = msg
-                type_, controller, value = msg
-                str_controller = self.akai_message.get_name_by_msg(msg)
+                if msg:
+                    msg, press_duration = msg
+                    type_, controller, value = msg
+                    str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_midimix_message,
+                                      StringConstants.AKAI_MPC_NAME: self.akai_apc_message}[name].get_name_by_msg(msg)
 
-                threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
+                    threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
 
-                self._callback(msg)
+                    self._callback(msg)
 
             time.sleep(self.interval)
 
     def _callback(self, msg):
-        msg_name = self.akai_message.get_name_by_msg(msg)
-        value = self.akai_message.get_value(msg)
+        msg_name = self.akai_midimix_message.get_name_by_msg(msg)
+        value = self.akai_midimix_message.get_value(msg)
 
-        if msg_name in self.callback_dict:
-            self.callback_dict[msg_name]()
+        if msg_name in self.callback_dict_midimix:
+            self.callback_dict_midimix[msg_name]()
 
         elif msg_name == "Knob Row 1 Col 8":
             bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
@@ -178,9 +203,9 @@ class MIDIInputListener(object):
             if i == 7:
                 return
 
-            self.dict_sync_strvars = {1: (self.know_row_1_synced, self.sequencer.strvars_prob_skip_note),
-                                      2: (self.know_row_2_synced, self.sequencer.strvars_prob_poly_abs),
-                                      3: (self.know_row_3_synced, self.sequencer.strvars_prob_poly_rel)}
+            self.dict_sync_strvars = {1: (self.midimix_know_row_1_synced, self.sequencer.strvars_prob_skip_note),
+                                      2: (self.midimix_know_row_2_synced, self.sequencer.strvars_prob_poly_abs),
+                                      3: (self.midimix_know_row_3_synced, self.sequencer.strvars_prob_poly_rel)}
 
             sync, strvars = self.dict_sync_strvars[knob_row]
             value = int(range_to_range(Ranges.MIDI_CC, Ranges.PERCENT, value))
@@ -216,9 +241,9 @@ class MIDIInputListener(object):
                 else:
                     velocities = self.sequencer.velocities_strvars_max
 
-                if not self.fader_synced[i]:
+                if not self.midimix_fader_synced[i]:
                     if abs(int(velocities[i // 2].get()) - value) < MiscConstants.KNOB_SYNC_DISTANCE:
-                        self.fader_synced[i] = True
+                        self.midimix_fader_synced[i] = True
                         velocities[i // 2].set(value)
                 else:
                     velocities[i // 2].set(value)

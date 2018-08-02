@@ -56,10 +56,12 @@ class Sequencer(tk.Frame):
         self.context.scale = None
         self.context.playback_on = False
 
-        self.midi_input_listener = MIDIInputListener(sequencer=self,
-                                                     context=self.context,
-                                                     input_name=StringConstants.AKAI_MIDIMIX_NAME,
-                                                     interval=SleepTimes.MIDI_INPUT_MAINLOOP)
+        self.midi_input_listener = MIDIInputListener(
+            sequencer=self,
+            context=self.context,
+            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_MPC_NAME),
+            interval=SleepTimes.MIDI_INPUT_MAINLOOP)
+
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
         self.memories.append(Memory(self.frame_memories, self.context, MemoryType().melody))
@@ -524,7 +526,7 @@ class Sequencer(tk.Frame):
     def init_entries(self):
         for entry in self.entry_boxes:
             if entry not in (self.entry_midi_channels, self.entry_replace, self.entry_bpm_sequence):
-                insert_into_entry(entry, StringConstants.initial_empty_sequences)
+                insert_into_entry(entry, StringConstants.initial_empty_sequence)
 
         insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 ")

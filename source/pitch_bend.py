@@ -43,8 +43,7 @@ class PitchBend(object):
                                  + self.direction * int((self.times / (self.type / 2.)) * PitchBendRanges.monologue_semitone))
 
     def __call__(self):
-        print("Sending PitchBend: %s" % self.name)
-
+        # print("Sending PitchBend: %s" % self.name)
         msb = (self.integer_bend >> 7) & 0xff
         lsb = self.integer_bend & 0xff
 
