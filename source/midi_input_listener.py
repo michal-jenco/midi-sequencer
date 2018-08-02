@@ -4,7 +4,8 @@ import rtmidi
 from rtmidi.midiutil import open_midiinput, open_midioutput
 
 from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
-from source.akai_midimix_state import AkaiMidimixStates, AkaiMidimixState
+from source.akai_midimix_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
+from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range
 from source.constants import Ranges, MiscConstants, StringConstants
 
@@ -23,9 +24,12 @@ class MIDIInputListener(object):
 
         self.midi_in = rtmidi.MidiIn()
         self.midi_out = rtmidi.MidiOut()
-        self.akai_midimix_message = AkaiMidimixMessage()
-        self.akai_apc_message = AkaiApcMessage()
-        self.akai_midimix_state = AkaiMidimixState(sequencer=sequencer)
+        self.akai_message_midimix = AkaiMidimixMessage()
+        self.akai_message_apc = AkaiApcMessage()
+        self.akai_state_midimix = AkaiMidimixState(sequencer=sequencer)
+        self.akai_state_apc = AkaiApcState(sequencer=sequencer)
+
+        self.button_color_controller_apc, self.button_color_controller_midimix = None, None
 
         self.midimix_fader_synced = [False] * self.channel_count
         self.midimix_know_row_1_synced = [False] * self.channel_count
@@ -66,6 +70,8 @@ class MIDIInputListener(object):
                 print("%s is not connected for OUTPUT." % name)
             else:
                 print("Successfully connected to %s (OUTPUT) on port %s" % (name, self.device_output_port_map[name]))
+                self.button_color_controller_apc = AkaiApcButtons.Controller(
+                    midi=self.open_device_map_midi_out[StringConstants.AKAI_APC_NAME])
 
         # for i in range(128):
         #     for j in range(82):
@@ -142,11 +148,11 @@ class MIDIInputListener(object):
         self.mute_callback_midimix("invert")
 
     def get_state_and_device(self):
-        state = self.akai_midimix_state.get()
+        state = self.akai_state_midimix.get()
 
-        if state is AkaiMidimixStates.MAIN:
+        if state is AkaiMidimixStateNames.MAIN:
             device = self.sequencer
-        elif state is AkaiMidimixStates.SAMPLE_FRAME:
+        elif state is AkaiMidimixStateNames.SAMPLE_FRAME:
             device = self.sequencer.sample_frame
 
         return state, device
@@ -168,13 +174,13 @@ class MIDIInputListener(object):
             if self.context.scale_mode_changing_on:
                 self.context.change_mode(offset=-1)
             else:
-                self.akai_midimix_state.previous()
+                self.akai_state_midimix.previous()
 
         elif direction.lower() == "right":
             if self.context.scale_mode_changing_on:
                 self.context.change_mode(offset=1)
             else:
-                self.akai_midimix_state.next()
+                self.akai_state_midimix.next()
 
     def bpm_callback_midimix(self, value):
         bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
@@ -190,6 +196,8 @@ class MIDIInputListener(object):
 
     def button_callback_apc(self, i):
         row, col = i // 8, i % 8
+
+        self.button_color_controller_apc.set_color(i, AkaiApcButtons.Colors.Grid.green_blink)
 
     def fader_callback_apc(self, i, value):
         print("aaaaaaaa %s %s" % (i, value))
@@ -256,8 +264,8 @@ class MIDIInputListener(object):
                 if msg:
                     msg, press_duration = msg
                     type_, controller, value = msg
-                    str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_midimix_message,
-                                      StringConstants.AKAI_APC_NAME: self.akai_apc_message}[name].get_name_by_msg(msg)
+                    str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_message_midimix,
+                                      StringConstants.AKAI_APC_NAME: self.akai_message_apc}[name].get_name_by_msg(msg)
 
                     threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
 
@@ -267,8 +275,8 @@ class MIDIInputListener(object):
             time.sleep(self.interval)
 
     def _callback_apc(self, msg):
-        msg_name = self.akai_apc_message.get_name_by_msg(msg)
-        value = self.akai_apc_message.get_value(msg)
+        msg_name = self.akai_message_apc.get_name_by_msg(msg)
+        value = self.akai_message_apc.get_value(msg)
 
         if msg_name in self.callback_dict_apc:
             self.callback_dict_apc[msg_name]()
@@ -282,8 +290,8 @@ class MIDIInputListener(object):
             self.callback_dict_apc["Fader"](fader_number, value)
 
     def _callback_midimix(self, msg):
-        msg_name = self.akai_midimix_message.get_name_by_msg(msg)
-        value = self.akai_midimix_message.get_value(msg)
+        msg_name = self.akai_message_midimix.get_name_by_msg(msg)
+        value = self.akai_message_midimix.get_value(msg)
 
         if msg_name in self.callback_dict_midimix:
             self.callback_dict_midimix[msg_name]()
@@ -316,9 +324,9 @@ class MIDIInputListener(object):
         elif "Mute" in msg_name and "Pressed" in msg_name:
             state, device = self.get_state_and_device()
 
-            if state is AkaiMidimixStates.MAIN:
+            if state is AkaiMidimixStateNames.MAIN:
                 intvars = device.intvars_enable_channels
-            elif state is AkaiMidimixStates.SAMPLE_FRAME:
+            elif state is AkaiMidimixStateNames.SAMPLE_FRAME:
                 intvars = device.intvars_mutes
 
             i = int(msg_name.split()[1]) - 1

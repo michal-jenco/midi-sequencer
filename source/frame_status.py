@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from source.akai_midimix_state import AkaiMidimixStates
+from source.akai_midimix_state import AkaiMidimixStateNames
 from source.functions import get_note_name_from_integer
 
 
@@ -17,7 +17,7 @@ class StatusFrame(tk.Frame):
 
         self.limit = 7
 
-        self.state_colors = {AkaiMidimixStates.MAIN: "lightgreen", AkaiMidimixStates.SAMPLE_FRAME: "lightgray"}
+        self.state_colors = {AkaiMidimixStateNames.MAIN: "lightgreen", AkaiMidimixStateNames.SAMPLE_FRAME: "lightgray"}
         self.mode_colors = {True: "lightgreen", False: "orange"}
 
         self.frame_midi_input_listener_state = tk.Frame(self)
@@ -66,7 +66,7 @@ class StatusFrame(tk.Frame):
         self.update()
 
     def midi_input_listener_state_changed(self):
-        state = self.midi_input_listener.akai_midimix_state.get()
+        state = self.midi_input_listener.akai_state_midimix.get()
         value = state.center(14)
         self.strvar_midi_input_listener_state.set(value)
         self.label_midi_input_listener_state["bg"] = self.state_colors[state]
