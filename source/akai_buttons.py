@@ -20,3 +20,8 @@ class AkaiApcButtons(object):
 
         def set_color(self, button_number, color):
             self.midi.send_message([0x90, button_number, color])
+
+        def set_all_grid_to_color(self, color):
+            for i in range(64):
+                self.midi.send_message([0x90, i, color])
+
