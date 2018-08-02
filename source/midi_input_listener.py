@@ -189,16 +189,26 @@ class MIDIInputListener(object):
         self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.red_blink)
 
     def fader_callback_apc(self, i, value):
-        print("aaaaaaaa %s %s" % (i, value))
+        pass
+
+    def _up_down_callback_base(self, direction):
+        focused_entry = self.sequencer.root.focus_get()
+
+        if focused_entry not in self.sequencer.entry_names:
+            self.sequencer.entry_memory_sequences.set_focus()
+
+        self.sequencer.entry_names[
+            (self.sequencer.entry_names.index(focused_entry) + direction) % len(self.sequencer.entry_names)].focus_set()
 
     def up_callback_apc(self):
-        pass
+        self._up_down_callback_base(-1)
 
     def down_callback_apc(self):
-        pass
+        self._up_down_callback_base(1)
 
     def left_callback_apc(self):
-        pass
+        focused_entry = self.sequencer.root.focus_get()
+        focused_entry.icursor(10)
 
     def right_callback_apc(self):
         pass

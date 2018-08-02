@@ -537,6 +537,8 @@ class Sequencer(tk.Frame):
         self.entry_off_arrays.insert(tk.END, "1")
         self.press_all_enters()
 
+        self.entry_memory_sequences.focus_set()
+
     def press_all_enters(self):
         self.set_memory_sequence(None)
         self.set_bpm_sequence(None)
