@@ -1,10 +1,11 @@
 class AkaiMidimixMessage(object):
     def __init__(self):
         self.code_dict = dict()
+        self.reverse_dict = {}
 
         for i in 128, 144, 176:
             self.code_dict[i] = dict()
-        
+
         self.code_dict[176][16] = "Knob Row 1 Col 1"
         self.code_dict[176][20] = "Knob Row 1 Col 2"
         self.code_dict[176][24] = "Knob Row 1 Col 3"
@@ -84,8 +85,6 @@ class AkaiMidimixMessage(object):
         self.code_dict[144][26] = "Bank Right Pressed"
         self.code_dict[128][26] = "Bank Right Released"
 
-        self.reverse_dict = {}
-        
         for typ in self.code_dict.keys():
             for code in self.code_dict[typ]:
                 self.reverse_dict[self.code_dict[typ][code]] = typ, code
@@ -108,6 +107,7 @@ class AkaiMidimixMessage(object):
 class AkaiApcMessage(object):
     def __init__(self):
         self.code_dict = dict()
+        self.reverse_dict = {}
 
         for i in 128, 144, 176:
             self.code_dict[i] = dict()
@@ -131,8 +131,6 @@ class AkaiApcMessage(object):
 
         self.code_dict[144][98] = "Shift Pressed"
         self.code_dict[128][98] = "Shift Released"
-
-        self.reverse_dict = {}
 
         for typ in self.code_dict.keys():
             for code in self.code_dict[typ]:

@@ -171,5 +171,5 @@ class StringConstants(object):
     opening_bracket = "("
     closing_bracket = ")"
     AKAI_MIDIMIX_NAME = "MIDI Mix"
-    AKAI_MPC_NAME = "APC MINI"
+    AKAI_APC_NAME = "APC MINI"
     BESPECO_MIDI_NAME = "USB MIDI Interface"

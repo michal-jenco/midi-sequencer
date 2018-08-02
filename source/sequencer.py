@@ -59,7 +59,7 @@ class Sequencer(tk.Frame):
         self.midi_input_listener = MIDIInputListener(
             sequencer=self,
             context=self.context,
-            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_MPC_NAME),
+            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_APC_NAME),
             interval=SleepTimes.MIDI_INPUT_MAINLOOP)
 
         self.frame_memories = tk.Frame(self.root)

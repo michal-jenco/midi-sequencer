@@ -72,21 +72,42 @@ class MIDIInputListener(object):
         #         msg = [0x90, 0x0 + j, {0: 0x1, 1: 0x2, 2: 0x3, 3: 0x4, 4: 0x5, 5: 0x6}[(i % 3) * 2]]
         #         print("Sending msg: %s" % msg)
         #         try:
-        #             self.open_device_map_midi_out[StringConstants.AKAI_MPC_NAME].send_message(msg)
+        #             self.open_device_map_midi_out[StringConstants.AKAI_APC_NAME].send_message(msg)
         #         except:
         #             pass
         #         finally:
         #             time.sleep(.02)
 
-        self.callback_dict_midimix = {"RecArm 1 Pressed": self.recarm_1_callback,
-                                      "RecArm 2 Pressed": self.recarm_2_callback,
-                                      "RecArm 3 Pressed": self.recarm_3_callback,
-                                      "RecArm 4 Pressed": self.recarm_4_callback,
-                                      "RecArm 5 Pressed": self.recarm_5_callback,
-                                      "RecArm 6 Pressed": self.recarm_6_callback,
-                                      "RecArm 7 Pressed": self.recarm_7_callback,
-                                      "RecArm 8 Pressed": self.recarm_8_callback,
-                                      "Solo Pressed": self.solo_callback}
+        self.callback_dict_midimix = {"RecArm 1 Pressed": self.recarm_1_callback_midimix,
+                                      "RecArm 2 Pressed": self.recarm_2_callback_midimix,
+                                      "RecArm 3 Pressed": self.recarm_3_callback_midimix,
+                                      "RecArm 4 Pressed": self.recarm_4_callback_midimix,
+                                      "RecArm 5 Pressed": self.recarm_5_callback_midimix,
+                                      "RecArm 6 Pressed": self.recarm_6_callback_midimix,
+                                      "RecArm 7 Pressed": self.recarm_7_callback_midimix,
+                                      "RecArm 8 Pressed": self.recarm_8_callback_midimix,
+                                      "Solo Pressed": self.solo_callback_midimix}
+
+        self.callback_dict_apc = {"Up Pressed": self.up_callback_apc,
+                                  "Down Pressed": self.down_callback_apc,
+                                  "Left Pressed": self.left_callback_apc,
+                                  "Right Pressed": self.right_callback_apc,
+                                  "Volume Pressed": self.volume_callback_apc,
+                                  "Pan Pressed": self.pan_callback_apc,
+                                  "Send Pressed": self.send_callback_apc,
+                                  "Device Pressed": self.device_callback_apc,
+                                  "Shift Pressed": self.shift_pressed_callback_apc,
+                                  "Shift Released": self.shift_released_callback_apc,
+                                  "Clip Stop Pressed": self.clip_stop_callback_apc,
+                                  "Solo Pressed": self.solo_callback_apc,
+                                  "Rec Arm Pressed": self.rec_arm_callback_apc,
+                                  "Mute Pressed": self.mute_callback_apc,
+                                  "Select Pressed": self.select_callback_apc,
+                                  "Free 1 Pressed": self.free_1_callback_apc,
+                                  "Free 2 Pressed": self.free_2_callback_apc,
+                                  "Stop All Clips Pressed": self.stop_all_clips_callback_apc,
+                                  "Fader": lambda fader_number, value: self.fader_callback_apc(fader_number, value),
+                                  "Button Pressed": lambda button_number: self.button_callback_apc(button_number)}
 
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
@@ -95,30 +116,30 @@ class MIDIInputListener(object):
     def get_callback_dict(self):
         return self.callback_dict_midimix
 
-    def recarm_1_callback(self):
-        self.playback_on_callback()
+    def recarm_1_callback_midimix(self):
+        self.playback_on_callback_midimix()
 
-    def recarm_2_callback(self):
+    def recarm_2_callback_midimix(self):
         self.sequencer.end_all_notes()
 
-    def recarm_3_callback(self):
+    def recarm_3_callback_midimix(self):
         self.sequencer.reset_idx()
 
-    def recarm_4_callback(self):
+    def recarm_4_callback_midimix(self):
         self.context.scale_mode_changing_on = not self.context.scale_mode_changing_on
         self.sequencer.frame_status.update_scale_mode()
 
-    def recarm_5_callback(self):
+    def recarm_5_callback_midimix(self):
         self.sequencer.press_all_enters()
 
-    def recarm_6_callback(self):
-        self.mute_callback("mute")
+    def recarm_6_callback_midimix(self):
+        self.mute_callback_midimix("mute")
 
-    def recarm_7_callback(self):
-        self.mute_callback("unmute")
+    def recarm_7_callback_midimix(self):
+        self.mute_callback_midimix("unmute")
 
-    def recarm_8_callback(self):
-        self.mute_callback("invert")
+    def recarm_8_callback_midimix(self):
+        self.mute_callback_midimix("invert")
 
     def get_state_and_device(self):
         state = self.akai_midimix_state.get()
@@ -130,7 +151,7 @@ class MIDIInputListener(object):
 
         return state, device
 
-    def mute_callback(self, mode):
+    def mute_callback_midimix(self, mode):
         _, device = self.get_state_and_device()
 
         if mode == "mute":
@@ -142,7 +163,7 @@ class MIDIInputListener(object):
         elif mode == "invert":
             device.invert_mute()
 
-    def bank_callback(self, direction):
+    def bank_callback_midimix(self, direction):
         if direction.lower() == "left":
             if self.context.scale_mode_changing_on:
                 self.context.change_mode(offset=-1)
@@ -155,17 +176,77 @@ class MIDIInputListener(object):
             else:
                 self.akai_midimix_state.next()
 
-    def bpm_callback(self, value):
+    def bpm_callback_midimix(self, value):
         bpm_range_value = range_to_range(Ranges.MIDI_CC, Ranges.BPM, value)
         self.context.bpm.set(bpm_range_value)
         print("Set BPM to %s" % bpm_range_value)
 
-    def playback_on_callback(self):
+    def playback_on_callback_midimix(self):
         self.context.playback_on = not self.context.playback_on
 
-    def solo_callback(self):
+    def solo_callback_midimix(self):
         _, device = self.get_state_and_device()
         device.intvar_solo.set(not device.intvar_solo.get())
+
+    def button_callback_apc(self, i):
+        row, col = i // 8, i % 8
+
+    def fader_callback_apc(self, i, value):
+        print("aaaaaaaa %s %s" % (i, value))
+
+    def up_callback_apc(self):
+        pass
+
+    def down_callback_apc(self):
+        pass
+
+    def left_callback_apc(self):
+        pass
+
+    def right_callback_apc(self):
+        pass
+
+    def volume_callback_apc(self):
+        pass
+
+    def pan_callback_apc(self):
+        pass
+
+    def send_callback_apc(self):
+        pass
+
+    def device_callback_apc(self):
+        pass
+
+    def shift_pressed_callback_apc(self):
+        pass
+
+    def shift_released_callback_apc(self):
+        pass
+
+    def clip_stop_callback_apc(self):
+        pass
+
+    def solo_callback_apc(self):
+        pass
+
+    def rec_arm_callback_apc(self):
+        pass
+
+    def mute_callback_apc(self):
+        pass
+
+    def select_callback_apc(self):
+        pass
+
+    def free_1_callback_apc(self):
+        pass
+
+    def free_2_callback_apc(self):
+        pass
+
+    def stop_all_clips_callback_apc(self):
+        pass
 
     def main_loop(self):
         while True:
@@ -176,15 +257,31 @@ class MIDIInputListener(object):
                     msg, press_duration = msg
                     type_, controller, value = msg
                     str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_midimix_message,
-                                      StringConstants.AKAI_MPC_NAME: self.akai_apc_message}[name].get_name_by_msg(msg)
+                                      StringConstants.AKAI_APC_NAME: self.akai_apc_message}[name].get_name_by_msg(msg)
 
                     threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
 
-                    self._callback(msg)
+                    {StringConstants.AKAI_MIDIMIX_NAME: self._callback_midimix,
+                     StringConstants.AKAI_APC_NAME: self._callback_apc}[name](msg)
 
             time.sleep(self.interval)
 
-    def _callback(self, msg):
+    def _callback_apc(self, msg):
+        msg_name = self.akai_apc_message.get_name_by_msg(msg)
+        value = self.akai_apc_message.get_value(msg)
+
+        if msg_name in self.callback_dict_apc:
+            self.callback_dict_apc[msg_name]()
+
+        elif "Button" in msg_name and "Pressed" in msg_name:
+            button_number = int(msg_name.split()[1])
+            self.callback_dict_apc["Button Pressed"](button_number)
+
+        elif "Fader" in msg_name:
+            fader_number = int(msg_name.split()[-1])
+            self.callback_dict_apc["Fader"](fader_number, value)
+
+    def _callback_midimix(self, msg):
         msg_name = self.akai_midimix_message.get_name_by_msg(msg)
         value = self.akai_midimix_message.get_value(msg)
 
@@ -252,4 +349,4 @@ class MIDIInputListener(object):
                 pass
 
         elif "Bank" in msg_name and "Pressed" in msg_name:
-            self.bank_callback(direction=msg_name.split()[1])
+            self.bank_callback_midimix(direction=msg_name.split()[1])
