@@ -176,6 +176,8 @@ class Sequencer(tk.Frame):
                                 text="Replace".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_n = tk.Label(self.frame_entries, font=label_font,
                                 text="BPM".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_o = tk.Label(self.frame_entries, font=label_font,
+                                text="Pitch Shift".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
 
         self.thread_seq = threading.Thread(target=self.play_sequence, args=())
         self.thread_seq.daemon = True
@@ -241,10 +243,13 @@ class Sequencer(tk.Frame):
         self.entry_scale_sequences.bind('<Return>', self.set_scale_sequences)
 
         self.entry_mode_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_mode_sequence.bind('<Return>', self.set_mode_sequences)
+        self.entry_mode_sequence.bind('<Return>', self.set_mode_sequence)
 
         self.entry_bpm_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_bpm_sequence.bind('<Return>', self.set_bpm_sequence)
+
+        self.entry_pitch_shift = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_pitch_shift.bind('<Return>', self.set_pitch_shift_sequences)
 
         self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
@@ -252,15 +257,16 @@ class Sequencer(tk.Frame):
         self.entry_replace = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_replace.bind('<Return>', self.replace)
 
-        self.entry_boxes = [self.entry_off_arrays, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequences,
-                            self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
-                            self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
-                            self.entry_bpm_sequence, self.entry_mode_sequence, self.entry_octave_sequences,
-                            self.entry_scale_sequences, self.entry_replace]
+        self.entry_boxes = [
+            self.entry_off_arrays, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequences,
+            self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
+            self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
+            self.entry_bpm_sequence, self.entry_pitch_shift, self.entry_mode_sequence, self.entry_octave_sequences,
+            self.entry_scale_sequences, self.entry_replace]
 
         self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
                                   "skip_par", "skip_seq", "midi_channels", "root_seq", "transpose_seq", "bpm_seq",
-                                  "mode_seq", "octave_seq", "scale_seq", "replace"]
+                                  "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace"]
 
         insert_into_entry(self.entry_midi_channels, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
         self.init_entries()
@@ -457,7 +463,8 @@ class Sequencer(tk.Frame):
                             self.entry_str_seq, self.entry_off_arrays, self.entry_poly, self.entry_poly_relative,
                             self.entry_skip_note_sequential, self.entry_skip_note_parallel, self.entry_octave_sequences,
                             self.entry_root_sequences, self.entry_transpose_sequences, self.entry_scale_sequences,
-                            self.entry_mode_sequence, self.entry_bpm_sequence, self.entry_midi_channels, self.entry_replace]
+                            self.entry_mode_sequence, self.entry_bpm_sequence, self.entry_pitch_shift,
+                            self.entry_midi_channels, self.entry_replace]
 
         for i, entry_name in enumerate(self.entry_names):
             entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10)
@@ -466,7 +473,8 @@ class Sequencer(tk.Frame):
 
         self.labels_entry_names = [self.label_a, self.label_a2, self.label_a3, self.label_b, self.label_c,
                                    self.label_d, self.label_e, self.label_f, self.label_g, self.label_h, self.label_i,
-                                   self.label_i2, self.label_j, self.label_l, self.label_n, self.label_k, self.label_m]
+                                   self.label_i2, self.label_j, self.label_l, self.label_n, self.label_o, self.label_k,
+                                   self.label_m]
 
         for i, label in enumerate(self.labels_entry_names):
             label.grid(row=i, column=2, sticky="w", padx=(10, 0), pady=1)
@@ -530,6 +538,7 @@ class Sequencer(tk.Frame):
     def press_all_enters(self):
         self.set_memory_sequence(None)
         self.set_bpm_sequence(None)
+        self.set_pitch_shift_sequences(None)
         self.set_note_scheduling_sequence(None)
         self.set_off_array(None)
         self.set_poly_absolute(None)
@@ -700,9 +709,7 @@ class Sequencer(tk.Frame):
         parser = self.context.parser
         text = self.entry_root_sequences.get()
 
-        individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=StringConstants.multiple_entry_separator,
-            sequences=text)
+        individual_sequences = parser.parse_multiple_sequences_separated(sequences=text)
 
         for i, seq in enumerate(individual_sequences):
             self.context.root_sequences[i] = parser.parse_root_sequence(seq)
@@ -715,9 +722,7 @@ class Sequencer(tk.Frame):
         parser = self.context.parser
         text = self.entry_octave_sequences.get()
 
-        individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=StringConstants.multiple_entry_separator,
-            sequences=text)
+        individual_sequences = parser.parse_multiple_sequences_separated(sequences=text)
 
         for i, seq in enumerate(individual_sequences):
             self.context.octave_sequences[i] = parser.parse_octave_sequence(seq)
@@ -729,9 +734,7 @@ class Sequencer(tk.Frame):
         parser = self.context.parser
         text = self.entry_transpose_sequences.get()
 
-        individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=StringConstants.multiple_entry_separator,
-            sequences=text)
+        individual_sequences = parser.parse_multiple_sequences_separated(sequences=text)
 
         for i, seq in enumerate(individual_sequences):
             self.context.transpose_sequences[i] = parser.parse_transpose_sequence(seq)
@@ -742,9 +745,7 @@ class Sequencer(tk.Frame):
         parser = self.context.parser
         text = self.entry_scale_sequences.get()
 
-        individual_sequences = parser.parse_multiple_sequences_separated(
-            separator=StringConstants.multiple_entry_separator,
-            sequences=text)
+        individual_sequences = parser.parse_multiple_sequences_separated(sequences=text)
 
         for i, seq in enumerate(individual_sequences):
             self.context.scale_sequences[i] = parser.parse_scale_sequence(self.context, seq)
@@ -754,7 +755,7 @@ class Sequencer(tk.Frame):
         self.set_memory_sequence(None)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
-    def set_mode_sequences(self, _):
+    def set_mode_sequence(self, _):
         parser = self.context.parser
         text = self.entry_mode_sequence.get()
 
@@ -770,6 +771,17 @@ class Sequencer(tk.Frame):
         self.context.bpm_sequence = parser.parse_transpose_sequence(text)
 
         log(logfile=self.context.logfile, msg="BPM sequence set to: %s" % self.context.bpm_sequence)
+
+    def set_pitch_shift_sequences(self, _):
+        parser = self.context.parser
+        text = self.entry_pitch_shift.get()
+
+        individual_sequences = parser.parse_multiple_sequences_separated(sequences=text)
+
+        for i, seq in enumerate(individual_sequences):
+            self.context.pitch_shift_sequences[i] = parser.parse_pitch_shift_sequence(seq)
+
+        log(logfile=self.context.logfile, msg="Pitch Shift sequences set to: %s" % self.context.pitch_shift_sequences)
 
     def set_poly_absolute(self, _):
         parser = self.context.parser
@@ -1135,6 +1147,7 @@ class Sequencer(tk.Frame):
                     self.manage_root_sequence(i)
                     self.manage_scale_sequence(i)
                     self.manage_mode_sequence(i)
+                    self.manage_pitch_shift_sequence(i)
                     self.manage_bpm_sequence(None)
 
                     try:
@@ -1281,6 +1294,26 @@ class Sequencer(tk.Frame):
 
             log(logfile=self.context.logfile, msg="Mode changed to: %s" % current_mode)
 
+    def manage_pitch_shift_sequence(self, i):
+        names = []
+
+        if self.context.pitch_shift_sequences[i]:
+            try:
+                idx = self.actual_notes_played_counts[i] % len(self.context.pitch_shift_sequences[i])
+
+                control_seq = self.context.pitch_shift_sequences[i][idx]
+
+                for channel in self.context.midi_channels[i]:
+                    name = PitchBend(control_seq, channel, self.context.midi)()
+                    names.append(name)
+
+            except:
+                traceback.print_exc()
+
+        # else:
+        #     for channel in self.context.midi_channels[i]:
+        #         PitchBend("0", channel, self.context.midi)()
+
     def _get_first_unempty_note_sequence_index(self):
         idx = 0
         for i, seq in enumerate(self.context.note_sequences):
@@ -1311,7 +1344,7 @@ class Sequencer(tk.Frame):
                 time.sleep(.02)
                 continue
 
-            PitchBend("%s%s" % ((self.idx % 3), 2), 15, self.context.midi)()
+            # PitchBend("%s%s" % ((self.idx % 3), 2), 15, self.context.midi)()
 
             result = self.play_midi_notes()
             self.play_sample_notes()

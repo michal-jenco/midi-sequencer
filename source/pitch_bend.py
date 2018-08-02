@@ -36,8 +36,11 @@ class PitchBend(object):
             PitchBendNames[self.type] + ("s" if self.times > 1 else ""),
             self.channel)
 
-        self.integer_bend = (PitchBendRanges.zero
-                             + self.direction * int((self.times / (self.type / 2.)) * PitchBendRanges.monologue_semitone))
+        if self.type == 0:
+            self.integer_bend = PitchBendRanges.zero
+        else:
+            self.integer_bend = (PitchBendRanges.zero
+                                 + self.direction * int((self.times / (self.type / 2.)) * PitchBendRanges.monologue_semitone))
 
     def __call__(self):
         print("Sending PitchBend: %s" % self.name)
@@ -50,3 +53,5 @@ class PitchBend(object):
 
         msg = [0b11100000 + self.channel, lsb, msb]
         self.midi.send_message(msg)
+
+        return self.name

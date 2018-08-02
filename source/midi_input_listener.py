@@ -1,7 +1,8 @@
 import time
 import threading
 import rtmidi
-from rtmidi.midiutil import open_midiinput
+from rtmidi.midiutil import open_midiinput, open_midioutput
+from time import sleep
 
 from source.akai_midimix_message import AkaiMidimixMessage
 from source.akai_midimix_state import AkaiMidimixStates, AkaiMidimixState
@@ -17,7 +18,7 @@ class MIDIInputListener(object):
         self.interval = interval
         self.channel_count = 8
 
-        self.midi = rtmidi.MidiIn()
+        self.midi_in = rtmidi.MidiIn()
         self.akai_message = AkaiMidimixMessage()
         self.state = AkaiMidimixState(sequencer=sequencer)
 
@@ -26,20 +27,32 @@ class MIDIInputListener(object):
         self.know_row_2_synced = [False] * self.channel_count
         self.know_row_3_synced = [False] * self.channel_count
 
-        self.available_ports = self.midi.get_ports()
+        self.available_ports = self.midi_in.get_ports()
 
         for i, dev in enumerate(self.available_ports):
             if self.input_name in dev:
-                self.port = i
+                self.port_in = i
                 print("Found %s on port %s" % (self.input_name, i))
                 break
 
         try:
-            print("I am going to open %s on port %s." % (input_name, self.port))
-            self.midi, self.port = open_midiinput(self.port)
+            print("I am going to open %s on port %s." % (input_name, self.port_in))
+            self.midi_in, self.port_in = open_midiinput(self.port_in)
+            self.midi_out, self.port_out = open_midioutput(3)
         except:
             print("Akai MIDI Mix is not connected.")
             return
+
+        # for i in range(128):
+        #     for j in range(82):
+        #         msg = [0x90, 0x0 + j, {0: 0x1, 1: 0x2, 2: 0x3, 3: 0x4, 4: 0x5, 5: 0x6}[(i % 3) * 2]]
+        #         print("Sending msg: %s" % msg)
+        #         try:
+        #             self.midi_out.send_message(msg)
+        #         except:
+        #             pass
+        #         finally:
+        #             sleep(.02)
 
         self.callback_dict = {"RecArm 1 Pressed": self.recarm_1_callback,
                               "RecArm 2 Pressed": self.recarm_2_callback,
@@ -132,7 +145,7 @@ class MIDIInputListener(object):
 
     def main_loop(self):
         while True:
-            msg = self.midi.get_message()
+            msg = self.midi_in.get_message()
 
             if msg:
                 # throw away some weird number

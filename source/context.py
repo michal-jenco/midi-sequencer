@@ -45,6 +45,7 @@ class Context:
         self.transpose_sequences = [[], [], [], [], [], [], []]
         self.root_sequences = [[e2], [], [], [], [], [], []]
         self.scale_sequences = [["lydian"], [], [], [], [], [], []]
+        self.pitch_shift_sequences = [[], [], [], [], [], [], [], []]
         self.off_sequences = [[], [], [], [], [], [], [1]]
         self.midi_channels = [[], [], [], [], [], [], []]
         self.kick_notes = []

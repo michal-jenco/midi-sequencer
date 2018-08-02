@@ -337,6 +337,28 @@ class Parser:
 
         return result
 
+    def parse_pitch_shift_sequence(self, text):
+        result = []
+
+        if not text:
+            return []
+
+        sequences = list(text.split())
+
+        for seq in sequences:
+            times = self.parse_param("x", str(seq))
+
+            if "x" in seq:
+                seq = seq[:seq.index("x")]
+
+            if self.is_pointer(seq):
+                return self.context.pitch_shift_sequences[self.get_pointer_destination(seq)]
+
+            for i in range(times):
+                result.append(seq)
+
+        return result
+
     def parse_midi_channels(self, text):
         return list(map(int, text.split()))
 
@@ -510,7 +532,7 @@ class Parser:
 
         return offset
 
-    def parse_multiple_sequences_separated(self, separator, sequences):
+    def parse_multiple_sequences_separated(self, sequences, separator=StringConstants.multiple_entry_separator):
         if separator not in sequences:
             return [sequences]
 
