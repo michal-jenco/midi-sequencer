@@ -71,7 +71,7 @@ class MIDIInputListener(object):
             else:
                 print("Successfully connected to %s (OUTPUT) on port %s" % (name, self.device_output_port_map[name]))
                 self.button_color_controller_apc = AkaiApcButtons.Controller(
-                    midi=self.open_device_map_midi_out[StringConstants.AKAI_APC_NAME])
+                    midi=self.open_device_map_midi_out[name])
 
         self._callback_dict_midimix = {"RecArm 1 Pressed": self.recarm_1_callback_midimix,
                                        "RecArm 2 Pressed": self.recarm_2_callback_midimix,
