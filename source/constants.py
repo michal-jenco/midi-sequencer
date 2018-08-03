@@ -9,7 +9,7 @@ ENABLED = 1
 
 class NumberOf:
     VELOCITY_SLIDERS = 4
-    POLYPHONY_SLIDERS = 7
+    POLYPHONY_SLIDERS = 8
     PROB_SKIP_NOTE_SLIDERS = POLYPHONY_SLIDERS
     CHANNEL_CHECKBOXES = 8
 
@@ -162,7 +162,7 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
 
 class StringConstants(object):
     multiple_entry_separator = "|"
-    initial_empty_sequence = ("   %s " % multiple_entry_separator) * 6
+    initial_empty_sequence = ("   %s " % multiple_entry_separator) * 7
     literal_memory_sequence = "&"
     literal_memory_sequence_separator = ";"
     container_separator = literal_memory_sequence_separator

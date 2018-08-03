@@ -13,12 +13,12 @@ class Context:
         self.sequencer = sequencer
 
         self.scale = None
-        self.current_scales = [""] * 7
+        self.current_scales = [""] * 8
         self.bpm = tk.StringVar(root, "60")
         self.sequence = None
         self.str_sequence = None
         self.root = None
-        self.roots = [0] * 7
+        self.roots = [0] * 8
         self.mode = None
         self.scale_mode = 0
 
@@ -35,19 +35,19 @@ class Context:
         self.set_sequence_modes = SetSequenceModes()
 
         self.note_sequences = []
-        self.scheduling_sequences = [[], [], [], [], [], [], []]
-        self.str_sequences = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.scheduling_sequences = [[], [], [], [], [], [], [], []]
+        self.str_sequences = [0, 0, 0, 0, 0, 0, 0, 0]
         self.poly_sequences = []
         self.poly_relative_sequences = []
         self.skip_notes_sequential_sequences = []
         self.skip_note_parallel_sequences = []
-        self.octave_sequences = [[], [], [], [], [], [], [-2]]
-        self.transpose_sequences = [[], [], [], [], [], [], []]
-        self.root_sequences = [[e2], [], [], [], [], [], []]
-        self.scale_sequences = [["lydian"], [], [], [], [], [], []]
+        self.octave_sequences = [[], [], [], [], [], [], [], [-2]]
+        self.transpose_sequences = [[], [], [], [], [], [], [], []]
+        self.root_sequences = [[e2], [], [], [], [], [], [], []]
+        self.scale_sequences = [["lydian"], [], [], [], [], [], [], []]
         self.pitch_shift_sequences = [[], [], [], [], [], [], [], []]
-        self.off_sequences = [[], [], [], [], [], [], [1]]
-        self.midi_channels = [[], [], [], [], [], [], []]
+        self.off_sequences = [[], [], [], [], [], [], [], []]
+        self.midi_channels = [[], [], [], [], [], [], [], []]
         self.kick_notes = []
 
         self.poly = []

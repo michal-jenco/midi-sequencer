@@ -82,16 +82,16 @@ class Sequencer(tk.Frame):
                                             variable=self.intvar_solo)
         self.checkbox_solo.grid(row=0, column=NumberOf.CHANNEL_CHECKBOXES)
 
-        self.idx_all_off = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.off_note_idx = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.idx_all_off = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.off_note_idx = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0, 0]
 
         self.set_sequence_modes = SetSequenceModes()
 
         self.idx = 0
-        self.step_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.step_played_counts = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0]
 
         self.frame_status = StatusFrame(parent=self.root, sequencer=self)
         self.context.midi = midi_
@@ -270,7 +270,7 @@ class Sequencer(tk.Frame):
                                   "skip_par", "skip_seq", "midi_channels", "root_seq", "transpose_seq", "bpm_seq",
                                   "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace"]
 
-        insert_into_entry(self.entry_midi_channels, " 15 | 11 | 10 | 11 | 11 | 11 | 13 ")
+        insert_into_entry(self.entry_midi_channels, " 14 | 14 | 15 | 10 | 10 | 11 | 11 | 13 ")
         self.init_entries()
 
     def _fill_scale_buttons_frame(self):
@@ -528,13 +528,14 @@ class Sequencer(tk.Frame):
             if entry not in (self.entry_midi_channels, self.entry_replace, self.entry_bpm_sequence):
                 insert_into_entry(entry, StringConstants.initial_empty_sequence)
 
-        insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 ")
-        insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 ")
+        insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 | *0")
+        insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 | *0")
+        insert_into_entry(self.entry_memory_sequences, " & | & | & | & | & | & | & | &")
+        insert_into_entry(self.entry_note_scheduling, " 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16")
         insert_into_entry(self.entry_replace, "")
         insert_into_entry(self.entry_mode_sequence, "")
         insert_into_entry(self.entry_bpm_sequence, "")
         self.entry_octave_sequences.insert(tk.END, "-2")
-        self.entry_off_arrays.insert(tk.END, "1")
         self.press_all_enters()
 
         self.entry_memory_sequences.focus_set()
@@ -853,7 +854,9 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_scale_sequences,
                           StringConstants.multiple_entry_separator.join(new_content))
         self.set_scale_sequences(None)
-        self.context.current_scales = [scale_] * 7
+
+        for k in len(self.context.current_scales):
+            self.context.current_scales[k] = scale_
 
     def set_status_bar_content(self, scale_str=None):
         if scale_str is None:
