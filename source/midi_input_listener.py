@@ -2,11 +2,12 @@ import time
 import threading
 import rtmidi
 from rtmidi.midiutil import open_midiinput, open_midioutput
+from tkinter import INSERT
 
 from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
-from source.akai_midimix_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
+from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
 from source.akai_buttons import AkaiApcButtons
-from source.functions import range_to_range
+from source.functions import range_to_range, get_all_indices, get_closest_index_of
 from source.constants import Ranges, MiscConstants, StringConstants
 
 
@@ -192,10 +193,10 @@ class MIDIInputListener(object):
         pass
 
     def _up_down_callback_base(self, direction):
-        focused_entry = self.sequencer.root.focus_get()
+        focused_entry = self.sequencer.get_focused_widget()
 
         if focused_entry not in self.sequencer.entry_names:
-            self.sequencer.entry_memory_sequences.set_focus()
+            self.sequencer.entry_memory_sequences.focus_set()
 
         self.sequencer.entry_names[
             (self.sequencer.entry_names.index(focused_entry) + direction) % len(self.sequencer.entry_names)].focus_set()
@@ -206,12 +207,33 @@ class MIDIInputListener(object):
     def down_callback_apc(self):
         self._up_down_callback_base(1)
 
+    def _left_right_callback_base(self, direction):
+        focused_widget = self.sequencer.get_focused_widget()
+
+        if focused_widget in self.sequencer.akai_apc_entry_names:
+            indices = get_all_indices(focused_widget.get(), StringConstants.multiple_entry_separator)
+            actual_column, col_button = self._get_col_to_display(focused_widget)
+
+            if (col_button == 6 and direction == 1) or (col_button == 0 and direction == -1):
+                focused_widget.icursor(len(focused_widget.get()))
+                return
+            if col_button == 7 and direction == 1:
+                focused_widget.icursor(indices[0] - 1)
+                return
+
+            indices_index = (col_button + direction) % len(indices)
+            print("indices_index: %s" % indices_index)
+
+            focused_widget.icursor(indices[indices_index])
+
+        else:
+            pass
+
     def left_callback_apc(self):
-        focused_entry = self.sequencer.root.focus_get()
-        focused_entry.icursor(10)
+        self._left_right_callback_base(-1)
 
     def right_callback_apc(self):
-        pass
+        self._left_right_callback_base(1)
 
     def volume_callback_apc(self):
         pass
@@ -226,10 +248,41 @@ class MIDIInputListener(object):
         pass
 
     def shift_pressed_callback_apc(self):
-        pass
+        self.akai_state_apc.turn_on_shift()
+        self.button_color_controller_apc.turn_off_grid()
+
+        focused_widget = self.sequencer.get_focused_widget()
+
+        if focused_widget in self.sequencer.akai_apc_entry_names:
+            row = list(reversed(self.sequencer.akai_apc_entry_names)).index(focused_widget)
+
+            _, col_button = self._get_col_to_display(focused_widget)
+            button_number = row * 8 + col_button
+
+            self.button_color_controller_apc.set_color(button_number=button_number,
+                                                       color=AkaiApcButtons.Colors.Grid.green)
+        else:
+            self.button_color_controller_apc.set_all_grid_to_color(AkaiApcButtons.Colors.Grid.yellow_blink)
+
+    @staticmethod
+    def _get_col_to_display(focused_widget):
+        """Returns actual cursor column and column the cursor is in entry box based on multiple entry separator"""
+
+        cursor_column_in_widget = focused_widget.index(INSERT)
+        indices = get_all_indices(focused_widget.get(), StringConstants.multiple_entry_separator)
+
+        for i in reversed(indices):
+            if i < cursor_column_in_widget:
+                return i, indices.index(i) + 1
+
+        try:
+            return indices[0] - 2, 0
+        except:
+            return 0, 0
 
     def shift_released_callback_apc(self):
-        pass
+        self.akai_state_apc.turn_off_shift()
+        self.button_color_controller_apc.turn_off_grid()
 
     def clip_stop_callback_apc(self):
         pass

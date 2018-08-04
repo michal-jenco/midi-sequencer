@@ -25,3 +25,6 @@ class AkaiApcButtons(object):
             for i in range(64):
                 self.midi.send_message([0x90, i, color])
 
+        def turn_off_grid(self):
+            self.set_all_grid_to_color(AkaiApcButtons.Colors.Grid.off)
+

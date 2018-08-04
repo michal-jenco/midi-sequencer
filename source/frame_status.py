@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from source.akai_midimix_state import AkaiMidimixStateNames
+from source.akai_state import AkaiMidimixStateNames
 from source.functions import get_note_name_from_integer
 
 

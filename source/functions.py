@@ -51,3 +51,18 @@ def get_note_name_from_integer(note_int):
 
 def get_inverse_dict(dic):
     return {value: key for key, value in dic.items()}
+
+
+def get_all_indices(in_, of):
+    return [i for i, ltr in enumerate(in_) if ltr == of]
+
+
+def get_closest_index_of(indices, value):
+    distance, distance_idx = 9999999, 0
+
+    for i, index in enumerate(indices):
+        if abs(value - index) < distance:
+            distance = abs(value - index)
+            distance_idx = i
+
+    return distance_idx

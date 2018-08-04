@@ -103,6 +103,7 @@ class Sequencer(tk.Frame):
 
         self.labels_entry_names = []
         self.entry_names = []
+        self.akai_apc_entry_names = []
 
         self.wobbler_count = 6
         self.frame_wobblers = tk.Frame(self.root, bg="black")
@@ -467,6 +468,11 @@ class Sequencer(tk.Frame):
                             self.entry_root_sequences, self.entry_transpose_sequences, self.entry_scale_sequences,
                             self.entry_mode_sequence, self.entry_bpm_sequence, self.entry_pitch_shift,
                             self.entry_midi_channels, self.entry_replace]
+
+        self.akai_apc_entry_names = [self.entry_memory_sequences, self.entry_note_scheduling,
+                                     self.entry_poly_relative, self.entry_skip_note_sequential,
+                                     self.entry_octave_sequences, self.entry_root_sequences,
+                                     self.entry_transpose_sequences, self.entry_scale_sequences]
 
         for i, entry_name in enumerate(self.entry_names):
             entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10)
@@ -1327,6 +1333,9 @@ class Sequencer(tk.Frame):
             if seq:
                 idx = i
         return idx
+
+    def get_focused_widget(self):
+        return self.root.focus_get()
 
     def manage_bpm_sequence(self, _):
         original_bpm = int(self.context.get_bpm())
