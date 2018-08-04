@@ -1,6 +1,8 @@
 import datetime
 import tkinter as tk
 
+from source.constants import StringConstants
+
 
 def log(logfile=None, msg=""):
     result = "[%s]: \"%s\"" % (str(datetime.datetime.now()), msg)
@@ -53,7 +55,7 @@ def get_inverse_dict(dic):
     return {value: key for key, value in dic.items()}
 
 
-def get_all_indices(in_, of):
+def get_all_indices(in_, of=StringConstants.multiple_entry_separator):
     return [i for i, ltr in enumerate(in_) if ltr == of]
 
 

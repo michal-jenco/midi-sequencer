@@ -35,6 +35,7 @@ class AkaiApcState(object):
         self.sequential_states = [AkaiApcStateNames.NORMAL]
         self.current_state = AkaiApcStateNames.NORMAL
         self.sequential_state_index = 0
+        self.previous_column = None
 
     def turn_on_shift(self):
         self.current_state = AkaiApcStateNames.SHIFT

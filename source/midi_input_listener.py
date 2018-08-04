@@ -7,7 +7,7 @@ from tkinter import INSERT
 from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
 from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
 from source.akai_buttons import AkaiApcButtons
-from source.functions import range_to_range, get_all_indices, get_closest_index_of
+from source.functions import range_to_range, get_all_indices, insert_into_entry
 from source.constants import Ranges, MiscConstants, StringConstants
 
 
@@ -185,21 +185,69 @@ class MIDIInputListener(object):
         device.intvar_solo.set(not device.intvar_solo.get())
 
     def button_callback_apc(self, button_number):
-        row, col = button_number // 8, button_number % 8
+        row, col = self._get_row_col_from_button_number(button_number)
+        reversed_entry_list = list(reversed(self.sequencer.akai_apc_entry_names))
+
+        if reversed_entry_list[row] is self.sequencer.entry_root_sequences:
+            root_dict = {0: "e", 1: "f", 2: "g", 3: "a", 4: "b", 5: "c"}
+
+            original_entry_content = self.sequencer.entry_root_sequences.get().split(StringConstants.multiple_entry_separator)
+
+            if col in root_dict.keys():
+                root_str = root_dict[col]
+                original_entry_content[0] = " %s " % root_str
+                insert_into_entry(self.sequencer.entry_root_sequences,
+                                  ("%s" % StringConstants.multiple_entry_separator).join(original_entry_content))
+
+            else:
+                direction_dict = {6: -1, 7: 1}
+                notes_list = ["e", "f", "fs", "g", "gs", "a", "as", "b", "c", "cs", "d", "ds"]
+
+                current_root = original_entry_content[0].strip().lower()
+
+                if current_root in notes_list:
+                    new_root = notes_list[(notes_list.index(current_root) + direction_dict[col]) % len(notes_list)]
+                    original_entry_content[0] = " %s " % new_root
+                    insert_into_entry(self.sequencer.entry_root_sequences,
+                                      ("%s" % StringConstants.multiple_entry_separator).join(original_entry_content))
+
+            self.sequencer.set_root_sequences(None)
 
         self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.red_blink)
+
+    @staticmethod
+    def _get_row_col_from_button_number(button_number):
+        row, col = button_number // 8, button_number % 8
+        return row, col
 
     def fader_callback_apc(self, i, value):
         pass
 
     def _up_down_callback_base(self, direction):
-        focused_entry = self.sequencer.get_focused_widget()
+        focused_widget = self.sequencer.get_focused_widget()
 
-        if focused_entry not in self.sequencer.entry_names:
+        if focused_widget not in self.sequencer.entry_names:
             self.sequencer.entry_memory_sequences.focus_set()
 
-        self.sequencer.entry_names[
-            (self.sequencer.entry_names.index(focused_entry) + direction) % len(self.sequencer.entry_names)].focus_set()
+        _, track_column = self._get_col_to_display(focused_widget)
+
+        if StringConstants.multiple_entry_separator not in focused_widget.get():
+            track_column = self.akai_state_apc.previous_column
+
+        next_entry = self.sequencer.entry_names[
+            (self.sequencer.entry_names.index(focused_widget) + direction) % len(self.sequencer.entry_names)]
+
+        next_entry.focus_set()
+
+        if StringConstants.multiple_entry_separator in next_entry.get():
+            next_indices = get_all_indices(next_entry.get())
+
+            if track_column == 7:
+                next_entry.icursor(len(next_entry.get()))
+            else:
+                next_entry.icursor(next_indices[track_column] - 1)
+        else:
+            self.akai_state_apc.previous_column = track_column
 
     def up_callback_apc(self):
         self._up_down_callback_base(-1)
@@ -210,8 +258,8 @@ class MIDIInputListener(object):
     def _left_right_callback_base(self, direction):
         focused_widget = self.sequencer.get_focused_widget()
 
-        if focused_widget in self.sequencer.akai_apc_entry_names:
-            indices = get_all_indices(focused_widget.get(), StringConstants.multiple_entry_separator)
+        if focused_widget in self.sequencer.entry_names:
+            indices = get_all_indices(focused_widget.get())
             actual_column, col_button = self._get_col_to_display(focused_widget)
 
             if (col_button == 6 and direction == 1) or (col_button == 0 and direction == -1):
@@ -222,8 +270,6 @@ class MIDIInputListener(object):
                 return
 
             indices_index = (col_button + direction) % len(indices)
-            print("indices_index: %s" % indices_index)
-
             focused_widget.icursor(indices[indices_index])
 
         else:
