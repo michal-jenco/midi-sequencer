@@ -360,6 +360,7 @@ class Sequencer(tk.Frame):
 
     def on_closing(self):
         log(msg="Window will be destroyed.")
+        self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.end_all_notes()
         self.root.quit()
         self.root.destroy()

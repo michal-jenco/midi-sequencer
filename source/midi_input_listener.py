@@ -357,6 +357,9 @@ class MIDIInputListener(object):
         else:
             self.button_color_controller_apc.set_all_grid_to_color(AkaiApcButtons.Colors.Grid.yellow_blink)
 
+    def shift_released_callback_apc(self):
+        self.akai_state_apc.turn_off_shift()
+
     @staticmethod
     def _get_col_to_display(focused_widget):
         """Returns actual cursor column and column the cursor is in entry box based on multiple entry separator"""
@@ -372,10 +375,6 @@ class MIDIInputListener(object):
             return indices[0] - 2, 0
         except:
             return 0, 0
-
-    def shift_released_callback_apc(self):
-        self.akai_state_apc.turn_off_shift()
-        self.button_color_controller_apc.turn_off_grid()
 
     def clip_stop_callback_apc(self):
         pass
