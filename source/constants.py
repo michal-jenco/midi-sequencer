@@ -168,6 +168,7 @@ class StringConstants(object):
     container_separator = literal_memory_sequence_separator
     replacement_separator = "-"
     pointer = "*"
+    times = "x"
     opening_bracket = "("
     closing_bracket = ")"
     AKAI_MIDIMIX_NAME = "MIDI Mix"

@@ -56,11 +56,72 @@ class Sequencer(tk.Frame):
         self.context.scale = None
         self.context.playback_on = False
 
+        self.frame_entries = tk.Frame(self.root)
+        self.frame_entries["bg"] = "purple"
+
+        self.entry_memory_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_memory_sequences.bind('<Return>', self.set_memory_sequence)
+
+        self.entry_note_scheduling = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_note_scheduling.bind('<Return>', self.set_note_scheduling_sequence)
+
+        self.entry_off_arrays = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_off_arrays.bind('<Return>', self.set_off_array)
+
+        self.entry_poly = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_poly.bind('<Return>', self.set_poly_absolute)
+
+        self.entry_poly_relative = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
+
+        self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
+
+        self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
+
+        self.entry_root_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_root_sequences.bind('<Return>', self.set_root_sequences)
+
+        self.entry_octave_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_octave_sequences.bind('<Return>', self.set_octave_sequences)
+
+        self.entry_transpose_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_transpose_sequences.bind('<Return>', self.set_transpose_sequences)
+
+        self.entry_scale_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_scale_sequences.bind('<Return>', self.set_scale_sequences)
+
+        self.entry_mode_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_mode_sequence.bind('<Return>', self.set_mode_sequence)
+
+        self.entry_bpm_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_bpm_sequence.bind('<Return>', self.set_bpm_sequence)
+
+        self.entry_pitch_shift = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_pitch_shift.bind('<Return>', self.set_pitch_shift_sequences)
+
+        self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
+
+        self.entry_replace = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_replace.bind('<Return>', self.replace)
+
+        self.entry_boxes = [
+            self.entry_off_arrays, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequences,
+            self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
+            self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
+            self.entry_bpm_sequence, self.entry_pitch_shift, self.entry_mode_sequence, self.entry_octave_sequences,
+            self.entry_scale_sequences, self.entry_replace]
+
+        self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
+                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "transpose_seq", "bpm_seq",
+                                  "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace"]
+
         self.midi_input_listener = MIDIInputListener(
             sequencer=self,
             context=self.context,
-            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_APC_NAME),
-            interval=SleepTimes.MIDI_INPUT_MAINLOOP)
+            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_APC_NAME))
 
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
@@ -113,8 +174,6 @@ class Sequencer(tk.Frame):
         self.sample_frame = SampleFrame(self.root, self.context)
 
         self.frame_buttons = tk.Frame(self.root)
-        self.frame_entries = tk.Frame(self.root)
-        self.frame_entries["bg"] = "purple"
         self.frame_scale_buttons = tk.Frame(self.root)
         self.frame_sliders = tk.Frame(self.root)
         self.frame_roots = tk.Frame(self.root)
@@ -211,65 +270,6 @@ class Sequencer(tk.Frame):
         self.entry_sequence.bind('<Return>', _func)
         self.entry_sequence.bind('<Control-Return>', _func)
         del _func
-
-        self.entry_memory_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_memory_sequences.bind('<Return>', self.set_memory_sequence)
-
-        self.entry_note_scheduling = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_note_scheduling.bind('<Return>', self.set_note_scheduling_sequence)
-
-        self.entry_off_arrays = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_off_arrays.bind('<Return>', self.set_off_array)
-
-        self.entry_poly = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_poly.bind('<Return>', self.set_poly_absolute)
-
-        self.entry_poly_relative = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_poly_relative.bind('<Return>', self.set_poly_relative)
-
-        self.entry_skip_note_parallel = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_skip_note_parallel.bind('<Return>', self.set_skip_note_parallel)
-
-        self.entry_skip_note_sequential = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_skip_note_sequential.bind('<Return>', self.set_skip_note_sequential)
-
-        self.entry_root_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_root_sequences.bind('<Return>', self.set_root_sequences)
-
-        self.entry_octave_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_octave_sequences.bind('<Return>', self.set_octave_sequences)
-
-        self.entry_transpose_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_transpose_sequences.bind('<Return>', self.set_transpose_sequences)
-
-        self.entry_scale_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_scale_sequences.bind('<Return>', self.set_scale_sequences)
-
-        self.entry_mode_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_mode_sequence.bind('<Return>', self.set_mode_sequence)
-
-        self.entry_bpm_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_bpm_sequence.bind('<Return>', self.set_bpm_sequence)
-
-        self.entry_pitch_shift = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_pitch_shift.bind('<Return>', self.set_pitch_shift_sequences)
-
-        self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
-
-        self.entry_replace = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
-        self.entry_replace.bind('<Return>', self.replace)
-
-        self.entry_boxes = [
-            self.entry_off_arrays, self.entry_poly, self.entry_poly_relative, self.entry_memory_sequences,
-            self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
-            self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
-            self.entry_bpm_sequence, self.entry_pitch_shift, self.entry_mode_sequence, self.entry_octave_sequences,
-            self.entry_scale_sequences, self.entry_replace]
-
-        self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
-                                  "skip_par", "skip_seq", "midi_channels", "root_seq", "transpose_seq", "bpm_seq",
-                                  "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace"]
 
         insert_into_entry(self.entry_midi_channels, " 14 | 14 | 15 | 10 | 10 | 11 | 11 | 13 ")
         self.init_entries()

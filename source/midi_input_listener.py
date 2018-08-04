@@ -8,11 +8,11 @@ from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
 from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
 from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
-from source.constants import Ranges, MiscConstants, StringConstants
+from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes
 
 
 class MIDIInputListener(object):
-    def __init__(self, sequencer, context, input_names, interval):
+    def __init__(self, sequencer, context, input_names, interval=SleepTimes.MIDI_INPUT_MAINLOOP):
         self.sequencer = sequencer
         self.context = context
         self.input_names = input_names
@@ -104,6 +104,16 @@ class MIDIInputListener(object):
                                    "Stop All Clips Pressed": self.stop_all_clips_callback_apc,
                                    "Fader": lambda fader_number, value: self.fader_callback_apc(fader_number, value),
                                    "Button Pressed": lambda button_number: self.button_callback_apc(button_number)}
+
+        self._callback_dict_entries_free = {
+            self.sequencer.entry_off_arrays: self.sequencer.set_off_array,
+            self.sequencer.entry_poly: self.sequencer.set_poly_absolute,
+            self.sequencer.entry_poly_relative: self.sequencer.set_poly_relative,
+            self.sequencer.entry_skip_note_sequential: self.sequencer.set_skip_note_sequential,
+            self.sequencer.entry_skip_note_parallel: self.sequencer.set_skip_note_parallel,
+            self.sequencer.entry_octave_sequences: self.sequencer.set_octave_sequences,
+            self.sequencer.entry_transpose_sequences: self.sequencer.set_transpose_sequences,
+            self.sequencer.entry_midi_channels: self.sequencer.set_midi_channels}
 
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
@@ -240,12 +250,7 @@ class MIDIInputListener(object):
         next_entry.focus_set()
 
         if StringConstants.multiple_entry_separator in next_entry.get():
-            next_indices = get_all_indices(next_entry.get())
-
-            if track_column == 7:
-                next_entry.icursor(len(next_entry.get()))
-            else:
-                next_entry.icursor(next_indices[track_column] - 1)
+            self._set_correct_column(next_entry, track_column)
         else:
             self.akai_state_apc.previous_column = track_column
 
@@ -315,7 +320,7 @@ class MIDIInputListener(object):
         """Returns actual cursor column and column the cursor is in entry box based on multiple entry separator"""
 
         cursor_column_in_widget = focused_widget.index(INSERT)
-        indices = get_all_indices(focused_widget.get(), StringConstants.multiple_entry_separator)
+        indices = get_all_indices(focused_widget.get())
 
         for i in reversed(indices):
             if i < cursor_column_in_widget:
@@ -345,11 +350,62 @@ class MIDIInputListener(object):
     def select_callback_apc(self):
         pass
 
+    def free_callback_base(self, direction):
+        focused_widget = self.sequencer.get_focused_widget()
+
+        if focused_widget is self.sequencer.entry_note_scheduling:
+            return
+
+        if focused_widget in self._callback_dict_entries_free.keys():
+            content_list = focused_widget.get().split(StringConstants.multiple_entry_separator)
+            _, track_column = self._get_col_to_display(focused_widget)
+
+            current_cell_list = content_list[track_column].split()
+
+            if not current_cell_list:
+                return
+
+            times_sequences = []
+            for i, item in enumerate(current_cell_list):
+                if StringConstants.times in item:
+                    times_idx = item.index(StringConstants.times)
+                    times_sequences.append(item[times_idx:])
+                    item = item[:times_idx]
+                else:
+                    times_sequences.append(None)
+
+                item = int(item)
+                current_cell_list[i] = item + direction
+
+            # if len(current_cell_list) == 1:
+            #     result = "%s%s" % (current_cell_list[0], times_sequences[0] if times_sequences[0] is not None else "")
+            # else:
+            result = " ".join((str(value) + (times_sequences[i] if times_sequences[i] is not None else "")) for i, value in enumerate(current_cell_list))
+            current_cell_list = " %s " % result
+
+            content_list[track_column] = current_cell_list
+            insert_into_entry(focused_widget, "|".join(content_list))
+            self._set_correct_column(focused_widget, track_column)
+
+            self._callback_dict_entries_free[focused_widget](None)
+
+    @staticmethod
+    def _set_correct_column(focused_widget, track_column):
+        indices = get_all_indices(focused_widget.get())
+        if track_column == 7:
+            focused_widget.icursor(len(focused_widget.get()))
+        else:
+            focused_widget.icursor(indices[track_column] - 1)
+
     def free_1_callback_apc(self):
-        pass
+        """Plus"""
+
+        self.free_callback_base(1)
 
     def free_2_callback_apc(self):
-        pass
+        """Minus"""
+
+        self.free_callback_base(-1)
 
     def stop_all_clips_callback_apc(self):
         pass
