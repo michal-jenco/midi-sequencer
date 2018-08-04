@@ -8,7 +8,7 @@ from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
 from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
 from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
-from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes
+from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes, NumberOf
 
 
 class MIDIInputListener(object):
@@ -249,8 +249,7 @@ class MIDIInputListener(object):
         else:
             start = indices[col - 1] + 1
 
-        if col == 7:
-            print("I am her")
+        if col == (NumberOf.SEQUENCES - 1):
             start = indices[-1] + 1
             end = len(entry_to_focus.get())
         else:
@@ -306,11 +305,12 @@ class MIDIInputListener(object):
 
             actual_column, col_button = self._get_col_to_display(focused_widget)
 
-            if (col_button == 6 and direction == 1) or (col_button == 0 and direction == -1):
+            if (col_button == (NumberOf.SEQUENCES - 2) and direction == 1) or (col_button == 0 and direction == -1):
                 focused_widget.icursor(len(focused_widget.get()))
-                self._set_selection_range(7, focused_widget)
+                self._set_selection_range(NumberOf.SEQUENCES - 1, focused_widget)
                 return
-            if col_button == 7 and direction == 1:
+
+            if col_button == (NumberOf.SEQUENCES - 1) and direction == 1:
                 focused_widget.icursor(indices[0] - 1)
                 self._set_selection_range(0, focused_widget)
                 return
@@ -454,7 +454,7 @@ class MIDIInputListener(object):
     @staticmethod
     def _set_correct_column(focused_widget, track_column):
         indices = get_all_indices(focused_widget.get())
-        if track_column == 7:
+        if track_column == (NumberOf.SEQUENCES - 1):
             focused_widget.icursor(len(focused_widget.get()))
         else:
             focused_widget.icursor(indices[track_column] - 1)
