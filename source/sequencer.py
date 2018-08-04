@@ -16,7 +16,7 @@ from source.constants import *
 from source.frame_sample import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
-from source.functions import log, get_date_string, insert_into_entry
+from source.functions import log, get_date_string, insert_into_entry, get_all_indices
 from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
@@ -538,10 +538,11 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 | *0")
         insert_into_entry(self.entry_memory_sequences, " & | & | & | & | & | & | & | &")
         insert_into_entry(self.entry_note_scheduling, " 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16")
+        insert_into_entry(self.entry_octave_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | -2")
+        insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
         insert_into_entry(self.entry_replace, "")
-        insert_into_entry(self.entry_mode_sequence, "")
-        insert_into_entry(self.entry_bpm_sequence, "")
-        self.entry_octave_sequences.insert(tk.END, "-2")
+        insert_into_entry(self.entry_mode_sequence, "0")
+        insert_into_entry(self.entry_bpm_sequence, "60")
         self.press_all_enters()
 
         self.entry_memory_sequences.focus_set()
@@ -618,6 +619,18 @@ class Sequencer(tk.Frame):
                             typ, content = line.split("\t")
                             content = content.replace("\n", "").replace("\t", "")
 
+                            # This block is here because I changed the number of sequences from 7 to 8 and therefore
+                            # all previously saved states need to be expanded
+                            if StringConstants.multiple_entry_separator in content:
+                                content_list = content.split(StringConstants.multiple_entry_separator)
+
+                                if len(content_list) < NumberOf.SEQUENCES:
+                                    addition = ["   "] if "*0" not in content_list[1] else [" *0 "]
+                                    new_content_list = content_list[:NumberOf.SEQUENCES - 2] + addition + [content_list[-1]]
+                                    # print("content_list: %s" % content_list)
+                                    # print("new_content_list: %s" % new_content_list)
+                                    content = "|".join(new_content_list)
+
                             if typ in self.entry_boxes_names:
                                 idx = self.entry_boxes_names.index(typ)
                                 insert_into_entry(entry=self.entry_boxes[idx], seq=content)
@@ -634,8 +647,8 @@ class Sequencer(tk.Frame):
                                 self.context.bpm.set(content)
                             else:
                                 print("Something weird in state file: %s" % typ)
-                except Exception as e:
-                    print("Couldn't L O A D state, because: %s" % e)
+                except Exception:
+                    traceback.print_exc()
                 else:
                     self.press_all_enters()
                     self.reset_idx()
@@ -861,7 +874,7 @@ class Sequencer(tk.Frame):
                           StringConstants.multiple_entry_separator.join(new_content))
         self.set_scale_sequences(None)
 
-        for k in len(self.context.current_scales):
+        for k in range(len(self.context.current_scales)):
             self.context.current_scales[k] = scale_
 
     def set_status_bar_content(self, scale_str=None):

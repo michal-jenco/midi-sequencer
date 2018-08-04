@@ -113,7 +113,8 @@ class MIDIInputListener(object):
             self.sequencer.entry_skip_note_parallel: self.sequencer.set_skip_note_parallel,
             self.sequencer.entry_octave_sequences: self.sequencer.set_octave_sequences,
             self.sequencer.entry_transpose_sequences: self.sequencer.set_transpose_sequences,
-            self.sequencer.entry_midi_channels: self.sequencer.set_midi_channels}
+            self.sequencer.entry_midi_channels: self.sequencer.set_midi_channels,
+            self.sequencer.entry_note_scheduling: self.sequencer.set_note_scheduling_sequence}
 
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
@@ -198,32 +199,65 @@ class MIDIInputListener(object):
         row, col = self._get_row_col_from_button_number(button_number)
         reversed_entry_list = list(reversed(self.sequencer.akai_apc_entry_names))
 
-        if reversed_entry_list[row] is self.sequencer.entry_root_sequences:
-            root_dict = {0: "e", 1: "f", 2: "g", 3: "a", 4: "b", 5: "c"}
+        entry_to_focus = reversed_entry_list[row]
 
-            original_entry_content = self.sequencer.entry_root_sequences.get().split(StringConstants.multiple_entry_separator)
+        if (entry_to_focus is not self.sequencer.entry_root_sequences
+                or self.akai_state_apc.current_state is AkaiApcStateNames.SHIFT):
 
-            if col in root_dict.keys():
-                root_str = root_dict[col]
-                original_entry_content[0] = " %s " % root_str
-                insert_into_entry(self.sequencer.entry_root_sequences,
-                                  ("%s" % StringConstants.multiple_entry_separator).join(original_entry_content))
+            entry_to_focus.focus_set()
+            self._set_correct_column(entry_to_focus, col)
+            self._set_selection_range(col, entry_to_focus)
 
-            else:
-                direction_dict = {6: -1, 7: 1}
-                notes_list = ["e", "f", "fs", "g", "gs", "a", "as", "b", "c", "cs", "d", "ds"]
+            self.button_color_controller_apc.turn_off_grid()
+            self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.green)
 
-                current_root = original_entry_content[0].strip().lower()
+        else:
+            if reversed_entry_list[row] is self.sequencer.entry_root_sequences:
+                root_dict = {0: "e", 1: "f", 2: "g", 3: "a", 4: "b", 5: "c"}
 
-                if current_root in notes_list:
-                    new_root = notes_list[(notes_list.index(current_root) + direction_dict[col]) % len(notes_list)]
-                    original_entry_content[0] = " %s " % new_root
+                original_entry_content = self.sequencer.entry_root_sequences.get().split(StringConstants.multiple_entry_separator)
+
+                if col in root_dict.keys():
+                    root_str = root_dict[col]
+                    original_entry_content[0] = " %s " % root_str
                     insert_into_entry(self.sequencer.entry_root_sequences,
                                       ("%s" % StringConstants.multiple_entry_separator).join(original_entry_content))
 
-            self.sequencer.set_root_sequences(None)
+                else:
+                    direction_dict = {6: -1, 7: 1}
+                    notes_list = ["e", "f", "fs", "g", "gs", "a", "as", "b", "c", "cs", "d", "ds"]
 
-        self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.red_blink)
+                    current_root = original_entry_content[0].strip().lower()
+
+                    if current_root in notes_list:
+                        new_root = notes_list[(notes_list.index(current_root) + direction_dict[col]) % len(notes_list)]
+                        original_entry_content[0] = " %s " % new_root
+                        insert_into_entry(self.sequencer.entry_root_sequences,
+                                          ("%s" % StringConstants.multiple_entry_separator).join(original_entry_content))
+
+                self.sequencer.set_root_sequences(None)
+
+    @staticmethod
+    def _set_selection_range(col, entry_to_focus):
+        indices = get_all_indices(entry_to_focus.get())
+
+        if not indices:
+            return
+
+        if col == 0:
+            start = 0
+        else:
+            start = indices[col - 1] + 1
+
+        if col == 7:
+            print("I am her")
+            start = indices[-1] + 1
+            end = len(entry_to_focus.get())
+        else:
+            end = indices[col]
+
+        print("Start: %s, End: %s" % (start, end))
+        entry_to_focus.selection_range(start, end)
 
     @staticmethod
     def _get_row_col_from_button_number(button_number):
@@ -248,6 +282,7 @@ class MIDIInputListener(object):
             (self.sequencer.entry_names.index(focused_widget) + direction) % len(self.sequencer.entry_names)]
 
         next_entry.focus_set()
+        self._set_selection_range(track_column, next_entry)
 
         if StringConstants.multiple_entry_separator in next_entry.get():
             self._set_correct_column(next_entry, track_column)
@@ -265,17 +300,24 @@ class MIDIInputListener(object):
 
         if focused_widget in self.sequencer.entry_names:
             indices = get_all_indices(focused_widget.get())
+
+            if not indices:
+                return
+
             actual_column, col_button = self._get_col_to_display(focused_widget)
 
             if (col_button == 6 and direction == 1) or (col_button == 0 and direction == -1):
                 focused_widget.icursor(len(focused_widget.get()))
+                self._set_selection_range(7, focused_widget)
                 return
             if col_button == 7 and direction == 1:
                 focused_widget.icursor(indices[0] - 1)
+                self._set_selection_range(0, focused_widget)
                 return
 
             indices_index = (col_button + direction) % len(indices)
             focused_widget.icursor(indices[indices_index])
+            self._set_selection_range(col_button + direction, focused_widget)
 
         else:
             pass
@@ -353,9 +395,6 @@ class MIDIInputListener(object):
     def free_callback_base(self, direction):
         focused_widget = self.sequencer.get_focused_widget()
 
-        if focused_widget is self.sequencer.entry_note_scheduling:
-            return
-
         if focused_widget in self._callback_dict_entries_free.keys():
             content_list = focused_widget.get().split(StringConstants.multiple_entry_separator)
             _, track_column = self._get_col_to_display(focused_widget)
@@ -374,12 +413,35 @@ class MIDIInputListener(object):
                 else:
                     times_sequences.append(None)
 
-                item = int(item)
-                current_cell_list[i] = item + direction
+                integer_item_repr, idx_of_end = "", None
 
-            # if len(current_cell_list) == 1:
-            #     result = "%s%s" % (current_cell_list[0], times_sequences[0] if times_sequences[0] is not None else "")
-            # else:
+                for idx, char in enumerate(item):
+                    if char in ("+", "-"):
+                        continue
+                    try:
+                        int(char)
+                    except:
+                        idx_of_end = idx
+                        break
+                    else:
+                        integer_item_repr += char
+
+                if focused_widget is self.sequencer.entry_note_scheduling:
+                    rest = None if idx_of_end is None else item[idx_of_end:]
+                    item = int(integer_item_repr)
+
+                    value = item // 2 if direction == 1 else item * 2
+
+                    if value > 64:
+                        value = 64
+                    elif value < 1:
+                        value = 1
+
+                    current_cell_list[i] = str(value) + (rest if rest is not None else "")
+                else:
+                    item = int(item)
+                    current_cell_list[i] = item + direction
+
             result = " ".join((str(value) + (times_sequences[i] if times_sequences[i] is not None else "")) for i, value in enumerate(current_cell_list))
             current_cell_list = " %s " % result
 
@@ -408,7 +470,7 @@ class MIDIInputListener(object):
         self.free_callback_base(-1)
 
     def stop_all_clips_callback_apc(self):
-        pass
+        self.sequencer.press_all_enters()
 
     def main_loop(self):
         while True:
