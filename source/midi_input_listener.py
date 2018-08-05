@@ -215,7 +215,6 @@ class MIDIInputListener(object):
             self._set_correct_column(entry_to_focus, col)
             self._set_selection_range(col, entry_to_focus)
 
-            # self.button_color_controller_apc.turn_off_grid()
             self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.green)
 
         else:
@@ -349,8 +348,6 @@ class MIDIInputListener(object):
 
     def shift_pressed_callback_apc(self):
         self.akai_state_apc.turn_on_shift()
-        # self.button_color_controller_apc.turn_off_grid()
-
         focused_widget = self.sequencer.get_focused_widget()
 
         if focused_widget in self.sequencer.akai_apc_entry_names:
@@ -359,8 +356,7 @@ class MIDIInputListener(object):
             _, col_button = self._get_col_to_display(focused_widget)
             button_number = row * 8 + col_button
 
-            self.button_color_controller_apc.set_color(button_number=button_number,
-                                                       color=AkaiApcButtons.Colors.Grid.green)
+            self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.green)
         else:
             self.button_color_controller_apc.set_all_grid_to_color(AkaiApcButtons.Colors.Grid.yellow_blink)
 

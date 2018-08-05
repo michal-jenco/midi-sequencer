@@ -1332,7 +1332,6 @@ class Sequencer(tk.Frame):
         if self.context.pitch_shift_sequences[i]:
             try:
                 idx = self.actual_notes_played_counts[i] % len(self.context.pitch_shift_sequences[i])
-
                 control_seq = self.context.pitch_shift_sequences[i][idx]
 
                 for channel in self.context.midi_channels[i]:
@@ -1341,10 +1340,6 @@ class Sequencer(tk.Frame):
 
             except:
                 traceback.print_exc()
-
-        # else:
-        #     for channel in self.context.midi_channels[i]:
-        #         PitchBend("0", channel, self.context.midi)()
 
     def _get_first_unempty_note_sequence_index(self):
         idx = 0
