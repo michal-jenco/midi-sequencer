@@ -108,7 +108,7 @@ class MIDIInputListener(object):
         self._callback_dict_entries_free = {
             self.sequencer.entry_off_arrays: self.sequencer.set_off_array,
             self.sequencer.entry_poly: self.sequencer.set_poly_absolute,
-            self.sequencer.entry_poly_relative: self.sequencer.set_poly_relative,
+            self.sequencer.entry_mode_sequence: self.sequencer.set_mode_sequence,
             self.sequencer.entry_skip_note_sequential: self.sequencer.set_skip_note_sequential,
             self.sequencer.entry_skip_note_parallel: self.sequencer.set_skip_note_parallel,
             self.sequencer.entry_octave_sequences: self.sequencer.set_octave_sequences,
@@ -197,9 +197,16 @@ class MIDIInputListener(object):
 
     def button_callback_apc(self, button_number):
         row, col = self._get_row_col_from_button_number(button_number)
+        self.button_color_controller_apc.turn_off_row(row)
+        self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.green)
         reversed_entry_list = list(reversed(self.sequencer.akai_apc_entry_names))
 
         entry_to_focus = reversed_entry_list[row]
+
+        if row == 5:
+            insert_into_entry(self.sequencer.entry_mode_sequence, str(col))
+            self.sequencer.set_mode_sequence(None)
+            return
 
         if (entry_to_focus is not self.sequencer.entry_root_sequences
                 or self.akai_state_apc.current_state is AkaiApcStateNames.SHIFT):
@@ -208,7 +215,7 @@ class MIDIInputListener(object):
             self._set_correct_column(entry_to_focus, col)
             self._set_selection_range(col, entry_to_focus)
 
-            self.button_color_controller_apc.turn_off_grid()
+            # self.button_color_controller_apc.turn_off_grid()
             self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.green)
 
         else:
@@ -342,7 +349,7 @@ class MIDIInputListener(object):
 
     def shift_pressed_callback_apc(self):
         self.akai_state_apc.turn_on_shift()
-        self.button_color_controller_apc.turn_off_grid()
+        # self.button_color_controller_apc.turn_off_grid()
 
         focused_widget = self.sequencer.get_focused_widget()
 
@@ -395,10 +402,14 @@ class MIDIInputListener(object):
         focused_widget = self.sequencer.get_focused_widget()
 
         if focused_widget in self._callback_dict_entries_free.keys():
-            content_list = focused_widget.get().split(StringConstants.multiple_entry_separator)
+            widget_content = focused_widget.get()
+            content_list = widget_content.split(StringConstants.multiple_entry_separator)
             _, track_column = self._get_col_to_display(focused_widget)
 
-            current_cell_list = content_list[track_column].split()
+            if StringConstants.multiple_entry_separator not in widget_content:
+                current_cell_list = [str(widget_content).strip()]
+            else:
+                current_cell_list = content_list[track_column].split()
 
             if not current_cell_list:
                 return
@@ -437,6 +448,10 @@ class MIDIInputListener(object):
                         value = 1
 
                     current_cell_list[i] = str(value) + (rest if rest is not None else "")
+
+                # elif focused_widget is self._callback_dict_entries_free.keys():
+
+
                 else:
                     item = int(item)
                     current_cell_list[i] = item + direction
@@ -453,6 +468,10 @@ class MIDIInputListener(object):
     @staticmethod
     def _set_correct_column(focused_widget, track_column):
         indices = get_all_indices(focused_widget.get())
+
+        if not indices:
+            return
+
         if track_column == (NumberOf.SEQUENCES - 1):
             focused_widget.icursor(len(focused_widget.get()))
         else:

@@ -544,6 +544,7 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_replace, "")
         insert_into_entry(self.entry_mode_sequence, "0")
         insert_into_entry(self.entry_bpm_sequence, "60")
+        self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.press_all_enters()
 
         self.entry_memory_sequences.focus_set()
@@ -988,9 +989,12 @@ class Sequencer(tk.Frame):
             if self.context.skip_notes_sequential_sequences[i]:
                 loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential_sequences[i])
 
-                if idx_sequential_skip % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
-                    if idx_sequential_skip > 0:
-                        return skip_sequential_idx + 1, 0, True
+                try:
+                    if idx_sequential_skip % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
+                        if idx_sequential_skip > 0:
+                            return skip_sequential_idx + 1, 0, True
+                except ZeroDivisionError:
+                    traceback.print_exc()
 
         return skip_sequential_idx, idx_sequential_skip, False
 
@@ -1312,7 +1316,8 @@ class Sequencer(tk.Frame):
 
         try:
             current_mode = int(self.context.get_current_mode_wrap(steps_played=self.actual_notes_played_counts[idx]))
-        except ValueError:
+        except (ValueError, IndexError):
+            traceback.print_exc()
             current_mode = 0
 
         if current_mode != original_mode:

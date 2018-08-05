@@ -36,7 +36,7 @@ class Context:
 
         self.note_sequences = []
         self.scheduling_sequences = [[], [], [], [], [], [], [], []]
-        self.str_sequences = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.str_sequences = [[], [], [], [], [], [], [], []]
         self.poly_sequences = []
         self.poly_relative_sequences = []
         self.skip_notes_sequential_sequences = []
