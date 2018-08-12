@@ -380,8 +380,8 @@ class Parser:
             if seq.startswith(self.string_constants.literal_memory_sequence):
                 if not len(seq) - 1:
                     pass
-                elif seq[1] == "(":
-                    seq = seq[seq.index("("):seq.index(")")].replace(
+                elif seq[1] == "[":
+                    seq = seq[seq.index("["):seq.index("]")].replace(
                         self.string_constants.literal_memory_sequence_separator, " ")
 
                 result.append((seq, times))
@@ -390,8 +390,8 @@ class Parser:
                 try:
                     for i in range(times):
                         result.append(int(seq))
-                except Exception as e:
-                    print("Exception in parse_memory_sequence: %s" % e)
+                except Exception:
+                    traceback.print_exc()
         return result
 
     def parse_root_sequence(self, text):

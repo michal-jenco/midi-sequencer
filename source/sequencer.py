@@ -543,7 +543,6 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
         insert_into_entry(self.entry_replace, "")
         insert_into_entry(self.entry_mode_sequence, "0")
-        insert_into_entry(self.entry_bpm_sequence, "60")
         self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.press_all_enters()
 
@@ -857,6 +856,10 @@ class Sequencer(tk.Frame):
             sequences=text)
 
         self.context.skip_notes_sequential_sequences = [list(map(int, skips.split())) for skips in individual_sequences]
+
+        # if len(individual_sequences) != NumberOf.SEQUENCES:
+        #     self.context.skip_notes_sequential_sequences = [[] * NumberOf.SEQUENCES]
+
         self.context.skip_notes_sequential = self.context.skip_notes_sequential_sequences[0]
 
         log(logfile=self.context.logfile, msg="Skip notes sequential: %s" % self.context.skip_notes_sequential_sequences)
@@ -986,15 +989,18 @@ class Sequencer(tk.Frame):
 
     def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip, i):
         if self.context.skip_notes_sequential_sequences:
-            if self.context.skip_notes_sequential_sequences[i]:
-                loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential_sequences[i])
+            try:
+                if self.context.skip_notes_sequential_sequences[i]:
+                    loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential_sequences[i])
 
-                try:
-                    if idx_sequential_skip % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
-                        if idx_sequential_skip > 0:
-                            return skip_sequential_idx + 1, 0, True
-                except ZeroDivisionError:
-                    traceback.print_exc()
+                    try:
+                        if idx_sequential_skip % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
+                            if idx_sequential_skip > 0:
+                                return skip_sequential_idx + 1, 0, True
+                    except ZeroDivisionError:
+                        traceback.print_exc()
+            except IndexError:
+                pass
 
         return skip_sequential_idx, idx_sequential_skip, False
 
@@ -1155,6 +1161,8 @@ class Sequencer(tk.Frame):
         if not self.context.note_sequences:
             return
 
+        note_was_played = False
+
         valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
 
         for i, valid_channels in enumerate(valid_midi_channels):
@@ -1191,12 +1199,16 @@ class Sequencer(tk.Frame):
                         if note != NoteTypes.NOTE_PAUSE:
                             self.step_played_counts[i] += 1
                             self.actual_notes_played_counts[i] += 1
+                            note_was_played = True
                         continue
 
                     self.off_note_idx[i], self.idx_all_off[i] = self.turn_off_notes(self.off_note_idx[i], self.idx_all_off[i], i)
 
-                    self.skip_sequential_idx[i], self.idx_sequential_skip[i], skip_sequentially = \
-                        self.skip_note_sequentially(self.skip_sequential_idx[i], self.idx_sequential_skip[i], i)
+                    if note_was_played:
+                        self.skip_sequential_idx[i], self.idx_sequential_skip[i], skip_sequentially = \
+                            self.skip_note_sequentially(self.skip_sequential_idx[i], self.idx_sequential_skip[i], i)
+                    else:
+                        skip_sequentially = False
 
                     if note.type_ is NoteTypes.NOTE_PAUSE:
                         self.step_played_counts[i] += 1
@@ -1231,6 +1243,7 @@ class Sequencer(tk.Frame):
 
                             self.step_played_counts[i] += 1
                             self.actual_notes_played_counts[i] += 1
+                            note_was_played = True
                             self.idx_sequential_skip[i] += 1
                             self.idx_all_off[i] += 1
 
@@ -1356,7 +1369,7 @@ class Sequencer(tk.Frame):
         idx = self._get_first_unempty_note_sequence_index()
 
         try:
-            bpm_idx = self.actual_notes_played_counts[idx] % len(self.context.bpm_sequence)
+            bpm_idx = self.step_played_counts[idx] % len(self.context.bpm_sequence)
             current_bpm = int(self.context.bpm_sequence[bpm_idx])
         except (ValueError, IndexError, ZeroDivisionError):
             current_bpm = original_bpm
