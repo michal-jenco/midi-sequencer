@@ -1068,8 +1068,11 @@ class Sequencer(tk.Frame):
 
         transpose = self._get_transpose(i, note_copy)
 
-        for i, trans in enumerate(transpose):
-            transpose[i] += octave_offset
+        if isinstance(transpose, (list, tuple)):
+            for i, trans in enumerate(transpose):
+                transpose[i] += octave_offset
+        else:
+            transpose += octave_offset
 
         note_copy.set_velocity(random.randint(vel_min, vel_max))
         note_copy.set_transpose(transpose)
@@ -1237,8 +1240,8 @@ class Sequencer(tk.Frame):
                                     self.context.kick_notes.append(orig_note)
 
                                 if note_scheduling_idx is not None:
-                                    if not isinstance(orig_note, NoteContainer):
-                                        orig_note.supply_scheduling_object(scheduling_object)
+                                    # if not isinstance(orig_note, NoteContainer):
+                                    orig_note.supply_scheduling_object(scheduling_object)
                                 orig_note.play()
 
                             if self.delay_is_on():

@@ -34,6 +34,7 @@ class NoteObject(object):
         self.repetitions = play_count
         self.decay_function = decay_function
         self.type_ = type_
+        self.last_played_midi_repr = None
 
         self._channel_prefix = 0x90
 
@@ -92,7 +93,9 @@ class NoteObject(object):
             if self.channel == MIDIChannels.volca_fm:
                 self.context.midi.send_message([0xb0 + self.channel, CCFM().velocity, self.velocity])
 
-            self.context.midi.send_message(self.get_midi_repr())
+            note_midi_repr = self.get_midi_repr()
+            self.last_played_midi_repr = note_midi_repr
+            self.context.midi.send_message(note_midi_repr)
             # print("Sending MIDI message: %s" % self.get_midi_repr())
 
             if self.duration is not None:
@@ -112,7 +115,11 @@ class NoteObject(object):
         if end_midi_repr is None:
             return
 
-        self.context.midi.send_message(end_midi_repr)
+        if self.last_played_midi_repr is not None:
+            end = self.last_played_midi_repr[:2] + [0]
+            self.context.midi.send_message(end)
+        else:
+            self.context.midi.send_message(end_midi_repr)
 
     def transpose(self, semitones):
         self.pitch += semitones
