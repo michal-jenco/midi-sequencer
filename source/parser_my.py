@@ -68,18 +68,19 @@ class Parser:
                         container_notes, container_str_seq = self.get_notes(context=context,
                                                                             text=container_note_characters,
                                                                             iii=iii)
-                        # print("Container type: %s" % container_type)
-                        # print("Container content: %s" % container_content)
-                        # print("Container notes: %s" % container_notes)
-                        # print("Gap duration: %s" % gap_duration)
+                        print("Container type: %s" % container_type)
+                        print("Container content: %s" % container_content)
+                        print("Container notes: %s" % container_notes)
+                        print("Gap duration: %s" % gap_duration)
 
                         default_length = "%s%s" % (16, note)
-                        length = (default_length if 
+                        length = (default_length if
                                   (gap_duration is None or gap_duration not in NoteDurationTypes.MAP.keys())
                                   else gap_duration)
                         note_objects = convert_midi_notes_to_note_objects(context, container_notes)
                         str_seq += " %s " % (container_str_seq[0] if container_str_seq[0].isdigit() else 0)
 
+                        print("Note_objects: %s" % note_objects)
                         note_container = NoteContainer(context=context, notes=note_objects,
                                                        gaps=[NoteDurationTypes.MAP[length]] * gap_count_dict[note])
                         note_container.supply_scheduling_object(NoteSchedulingObject(length))

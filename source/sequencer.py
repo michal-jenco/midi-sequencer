@@ -16,7 +16,7 @@ from source.constants import *
 from source.frame_sample import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
-from source.functions import log, get_date_string, insert_into_entry, get_all_indices
+from source.functions import log, get_date_string, insert_into_entry
 from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
@@ -542,7 +542,7 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_octave_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | -2")
         insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
         insert_into_entry(self.entry_replace, "")
-        insert_into_entry(self.entry_mode_sequence, "0")
+        # insert_into_entry(self.entry_mode_sequence, "0")
         self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.press_all_enters()
 
@@ -1059,7 +1059,7 @@ class Sequencer(tk.Frame):
         note_copy = copy.copy(note)
         note_copy.set_channel(self.context.midi_channels[i][j])
 
-        pitch_offset = self.context.roots[i] - c2 - 4 + octave_offset
+        pitch_offset = self.context.roots[i] - c2 - 4
 
         if note_copy.type_ is NoteTypes.NORMAL:
             if isinstance(note_copy, NoteContainer):
@@ -1067,6 +1067,9 @@ class Sequencer(tk.Frame):
             note_copy.pitch += pitch_offset
 
         transpose = self._get_transpose(i, note_copy)
+
+        for i, trans in enumerate(transpose):
+            transpose[i] += octave_offset
 
         note_copy.set_velocity(random.randint(vel_min, vel_max))
         note_copy.set_transpose(transpose)
@@ -1267,6 +1270,9 @@ class Sequencer(tk.Frame):
                                         self.play_relative_poly_notes(orig_note, param, i)
                                 except IndexError:
                                     traceback.print_exc()
+
+                else:
+                    self.step_played_counts[i] += 1
 
     def play_delay(self, i, note, octave_idx, valid_channels):
         for j, channel in enumerate(valid_channels):

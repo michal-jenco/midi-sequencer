@@ -65,9 +65,13 @@ class NoteObject(object):
         self.transpose = transpose
 
     def get_midi_repr(self):
+        if self.pitch is None:
+            return None
         return [self._channel_prefix + self.channel, self.pitch + self.transpose, self.velocity]
 
     def get_end_note_midi_repr(self):
+        if self.get_midi_repr() is None:
+            return None
         return self.get_midi_repr()[:2] + [0]
 
     def play(self):
@@ -103,7 +107,12 @@ class NoteObject(object):
             self.context.midi.send_message(self.get_transposed_midi_repr(semitones))
 
     def end(self):
-        self.context.midi.send_message(self.get_end_note_midi_repr())
+        end_midi_repr = self.get_end_note_midi_repr()
+
+        if end_midi_repr is None:
+            return
+
+        self.context.midi.send_message(end_midi_repr)
 
     def transpose(self, semitones):
         self.pitch += semitones
@@ -120,6 +129,7 @@ class NoteContainer(object):
         self.type_ = NoteTypes.NORMAL
         self.channel = None
         self.pitch = 0
+        self.octave = 0
 
     def __repr__(self):
         return "NoteContainer - %s notes (pitches: %s)%s%s"\
@@ -286,7 +296,7 @@ class NoteSchedulingObject:
 
         try:
             return int(seq[comma_idx + 1])
-        except IndexError:
+        except (IndexError, ValueError):
             return 1
 
     def _remove_times_subseq(self, seq):
