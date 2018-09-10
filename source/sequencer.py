@@ -542,7 +542,7 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_octave_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | -2")
         insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
         insert_into_entry(self.entry_replace, "")
-        # insert_into_entry(self.entry_mode_sequence, "0")
+        insert_into_entry(self.entry_mode_sequence, "")
         self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.press_all_enters()
 
@@ -894,7 +894,10 @@ class Sequencer(tk.Frame):
         mode_name = self.context.scales.get_corresponding_mode_name(scale_str)
         msg += " (%s)" % mode_name
 
-        self.strvar_status_bar.set(msg.center(70))
+        msg2 = "\n%s --- %s" % (" " * scale_str.__len__(), [i for i in range(len(scale[:slice_idx]))])
+        msg2 += " " * (len(msg) - len(msg2) + 2)
+
+        self.strvar_status_bar.set(msg.center(70) + msg2)
 
     def set_off_array(self, _):
         parser = self.context.parser

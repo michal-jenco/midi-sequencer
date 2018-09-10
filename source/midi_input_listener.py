@@ -204,8 +204,9 @@ class MIDIInputListener(object):
         entry_to_focus = reversed_entry_list[row]
 
         if row == 5:
-            insert_into_entry(self.sequencer.entry_mode_sequence, str(col))
-            self.sequencer.set_mode_sequence(None)
+            self.context.change_mode(set_to=col)
+            # insert_into_entry(self.sequencer.entry_mode_sequence, str(col))
+            # self.sequencer.set_mode_sequence(None)
             return
 
         if (entry_to_focus is not self.sequencer.entry_root_sequences
