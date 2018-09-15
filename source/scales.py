@@ -20,9 +20,9 @@ class Scales:
         return result
 
     def get_corresponding_mode_name(self, scale_name):
-        print("Scale name: %s" % scale_name)
+        # print("Scale name: %s" % scale_name)
+        # print("Scale name after conversion: %s" % scale_name)
         scale_name = ModeNames.convert_scale_name_from_scales__dict___to_dict_scale_name(scale_name)
-        print("Scale name after conversion: %s" % scale_name)
 
         if scale_name not in ModeNames:
             return None

@@ -162,6 +162,7 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
 
 
 class StringConstants(object):
+    max_tanh = 100
     multiple_entry_separator = "|"
     initial_empty_sequence = ("   %s " % multiple_entry_separator) * 7
     literal_memory_sequence = "&"

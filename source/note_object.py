@@ -105,9 +105,18 @@ class NoteObject(object):
 
         self.velocity = original_velocity
 
-    def play_transposed(self, semitones):
+    def _play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
             self.context.midi.send_message(self.get_transposed_midi_repr(semitones))
+
+        if self.duration is not None:
+            sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
+            sleep(sleep_time)
+            self.context.midi.send_message(self.get_transposed_midi_repr(semitones)[:2] + [0])
+
+    def play_transposed(self, semitones):
+        if self.type_ is NoteTypes.NORMAL:
+            Thread(target=self._play_transposed, args=(semitones,)).start()
 
     def end(self):
         end_midi_repr = self.get_end_note_midi_repr()
@@ -579,7 +588,6 @@ def convert_midi_notes_to_note_objects(context, midi_notes):
 
     for note in midi_notes:
         if isinstance(note, list):
-            print("note: %s" % note)
             ch, pitch, vel = note
 
             result.append(

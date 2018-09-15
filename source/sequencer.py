@@ -537,7 +537,6 @@ class Sequencer(tk.Frame):
 
         insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 | *0")
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 | *0")
-        insert_into_entry(self.entry_memory_sequences, " & | & | & | & | & | & | & | &")
         insert_into_entry(self.entry_note_scheduling, " 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16")
         insert_into_entry(self.entry_octave_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | -2")
         insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
@@ -545,6 +544,7 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_mode_sequence, "")
         self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.press_all_enters()
+        insert_into_entry(self.entry_memory_sequences, " &Gsin;len=16;notes=023579G | & | & | & | & | & | & | &")
 
         self.entry_memory_sequences.focus_set()
 
@@ -576,8 +576,8 @@ class Sequencer(tk.Frame):
             for i, sample_seq in enumerate(sample_seqs):
                 state["sample %s" % i] = sample_seq
 
-            print("State: %s" % state)
-            print("Memory: %s" % memory)
+            # print("State: %s" % state)
+            # print("Memory: %s" % memory)
             return InternalState(memory, state)
 
     def save_internal_state(self, typ=None):
@@ -597,7 +597,8 @@ class Sequencer(tk.Frame):
                     f.flush()
 
             except Exception as e:
-                print("Couldn't S A V E state, because: %s" % e)
+                pass
+                # print("Couldn't S A V E state, because: %s" % e)
 
     def load_internal_state(self, typ=None):
         if typ is None:
@@ -612,7 +613,7 @@ class Sequencer(tk.Frame):
                     with open(filename, "r") as f:
                         lines = f.readlines()
 
-                    print(lines)
+                    # print(lines)
                     self.memories[0].clear_all()
 
                     for line in lines:
@@ -628,8 +629,8 @@ class Sequencer(tk.Frame):
                                 if len(content_list) < NumberOf.SEQUENCES:
                                     addition = ["   "] if "*0" not in content_list[1] else [" *0 "]
                                     new_content_list = content_list[:NumberOf.SEQUENCES - 2] + addition + [content_list[-1]]
-                                    # print("content_list: %s" % content_list)
-                                    # print("new_content_list: %s" % new_content_list)
+                                    # # print("content_list: %s" % content_list)
+                                    # # print("new_content_list: %s" % new_content_list)
                                     content = "|".join(new_content_list)
 
                             if typ in self.entry_boxes_names:
@@ -647,7 +648,8 @@ class Sequencer(tk.Frame):
                             elif typ == "bpm":
                                 self.context.bpm.set(content)
                             else:
-                                print("Something weird in state file: %s" % typ)
+                                pass
+                                # print("Something weird in state file: %s" % typ)
                 except Exception:
                     traceback.print_exc()
                 else:
@@ -702,10 +704,9 @@ class Sequencer(tk.Frame):
 
             self.context.str_sequences[i] = aaaaaaaaa.split()
 
-            print("Str sequence for idx %s set to: %s" % (i, self.context.str_sequences[i]))
+            # print("Str sequence for idx %s set to: %s" % (i, self.context.str_sequences[i]))
 
-            self.entry_str_seq.delete(0, tk.END)
-            self.entry_str_seq.insert(0, self.context.str_sequence)
+            insert_into_entry(self.entry_str_seq, self.context.str_sequence)
             self.context.note_sequences.append(running_seq)
 
             log(logfile=self.context.logfile, msg="Sequence %s set to: %s" % (i, running_seq))
@@ -1020,11 +1021,13 @@ class Sequencer(tk.Frame):
 
         try:
             if self.context.scale_sequences[i]:
-                scale = self.context.scale_sequences[i][0]
+                scale = self.context.scale_sequences[i][
+                    self.step_played_counts[i] % len(self.context.scale_sequences[i])]
             else:
                 scale = self.context.scale
         except Exception as e:
-            print("Exception: %s" % e)
+            pass
+            # print("Exception: %s" % e)
 
         scales = self.context.scales
         scale = scales.get_scale_by_name(scale)
