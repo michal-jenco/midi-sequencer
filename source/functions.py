@@ -46,6 +46,10 @@ def range_to_range(r1, r2, value):
     return NewValue
 
 
+def rotate(list_, n):
+    return list_[-n:] + list_[:-n]
+
+
 def get_note_name_from_integer(note_int):
     note_letters = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
     return "%s%s" % (note_letters[note_int % 12], note_int // 12 - 2)
