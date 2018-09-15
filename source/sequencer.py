@@ -545,6 +545,7 @@ class Sequencer(tk.Frame):
         self.midi_input_listener.button_color_controller_apc.turn_off_grid()
         self.press_all_enters()
         insert_into_entry(self.entry_memory_sequences, " &Gsin;len=16;notes=023579G | & | & | & | & | & | & | &")
+        self.press_all_enters()
 
         self.entry_memory_sequences.focus_set()
 
