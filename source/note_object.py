@@ -579,6 +579,7 @@ def convert_midi_notes_to_note_objects(context, midi_notes):
 
     for note in midi_notes:
         if isinstance(note, list):
+            print("note: %s" % note)
             ch, pitch, vel = note
 
             result.append(

@@ -7,6 +7,7 @@ from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurat
                                 convert_midi_notes_to_note_objects, gap_count_dict, NoteSchedulingObject)
 from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE
+from source._____G_e__n_e__r_a__t_o__r_________ import _____G_e__n_e__r_a__t_o__r_________
 
 
 class Parser:
@@ -18,10 +19,15 @@ class Parser:
     def _note_is_container_boundary(note):
         return note in TupletTypes.MAP.keys() and note != TupletTypes.SEPTUPLET
 
+    @staticmethod
+    def _note_is_generator_boundary(note):
+        return note is StringConstants.generator_delimiter
+
     def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
         msg_list = []
         str_seq = ""
         parsing_container = False
+        parsing_generator = False
         container_type = None
 
         if mode == MODE_SIMPLE:
@@ -45,6 +51,32 @@ class Parser:
                     continue
 
                 msg = [0x90]
+
+                if parsing_generator:
+                    if self._note_is_generator_boundary(note):
+                        parsing_generator = False
+                    continue
+
+                if self._note_is_generator_boundary(note):
+                    if not parsing_generator:
+                        parsing_generator = True
+
+                    generator_content = "".join(notes[idx + 1:notes[idx + 1:].index(note) + idx + 1])
+                    gen = _____G_e__n_e__r_a__t_o__r_________(generator_content)
+                    entry_box_repr = gen.get_entrybox_repr()
+
+                    print("generator_content: %s" % generator_content)
+                    print("generator: %s" % gen)
+                    print("entry_box_repr: %s" % entry_box_repr)
+
+                    str_seq += " ".join([char for char in entry_box_repr])
+                    to_append = self.get_notes(context=context,
+                                               text=entry_box_repr,
+                                               iii=iii)[0]
+                    print("to_append: %s" % to_append)
+
+                    for midi_note in to_append:
+                        msg_list.append(midi_note)
 
                 if parsing_container:
                     if self._note_is_container_boundary(note):

@@ -1,6 +1,4 @@
 from source.constants import StringConstants as Constants
-from source.context import Context
-from source.scales import Scales
 from source.functions import range_to_range, rotate
 import math
 
@@ -80,6 +78,9 @@ class GeneratorParser(object):
         defaults = DefaultParams.get(func_name)
         dict_["func"] = func_name
 
+        if "spacer" not in dict_:
+            dict_["spacer"] = ""
+
         for param in defaults:
             if param not in dict_ or not dict_[param]:
                 dict_[param] = defaults[param]
@@ -141,41 +142,30 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
         self.func = G_e__n_e__r_a__t_o__r_________Func(self.params["func"])
         self.length = int(self.params["len"])
         self.notes = self.params["notes"]
-
-        print("notes: %s" % self.notes)
+        self.spacer = self.params["spacer"]
 
     def __repr__(self):
         return (("%s:\n" % self.__class__.__name__)
                 + "\n".join([("\t%s: %s" % (key, str(value))) for key, value in self.__dict__.items()]))
 
     def get_entrybox_repr(self):
-        return self.func(**self.params)
-
-    def get_array_repr(self):
-        """This returns the array of NoteObject/NoteContainer objects in the kind the Sequencer works with."""
-
-    def _map_raw_values_to_notes(self, raw_values):
         result = []
 
         range_from = G_e__n_e__r_a__t_o__r_________Range.get(self.params["func"], **self.params)
         range_to = (0, len(self.notes))
 
-        print(self.notes)
-
-        print("range_from: %s" % (range_from,))
-        print("range_to: %s" % (range_to,))
-
-        for val in raw_values:
+        for val in self.func(**self.params):
             if self.notes:
                 result.append(self.notes[int(range_to_range(range_from, range_to, val))])
+                result.append(self.spacer)
 
-        return rotate(result, int(self.params["offset"]))
+        return "".join(rotate(result, int(self.params["offset"])))
 
 
-test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=0;notes=0123456789;oct=+1-1"
+test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=-1;notes=0,2,,3;oct=+1-1"
 
 gen = _____G_e__n_e__r_a__t_o__r_________(func_entry_box_string=test_string)
 
 print(gen.get_entrybox_repr())
-print(gen._map_raw_values_to_notes(gen.get_entrybox_repr()))
 print(GeneratorParser.parse(test_string))
+
