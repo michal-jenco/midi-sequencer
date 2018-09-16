@@ -22,6 +22,7 @@ from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 from source.frame_status import StatusFrame
 from source.pitch_bend import PitchBend
+from source.reset_object import ResetObject
 
 
 class Sequencer(tk.Frame):
@@ -91,6 +92,9 @@ class Sequencer(tk.Frame):
 
         self.entry_scale_sequences = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_scale_sequences.bind('<Return>', self.set_scale_sequences)
+
+        self.entry_reset_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_reset_sequence.bind('<Return>', self.set_reset_sequence)
 
         self.entry_mode_sequence = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_mode_sequence.bind('<Return>', self.set_mode_sequence)
@@ -230,6 +234,8 @@ class Sequencer(tk.Frame):
                                  text="Transpose".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_j = tk.Label(self.frame_entries, font=label_font,
                                 text="Scale".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
+        self.label_j2 = tk.Label(self.frame_entries, font=label_font,
+                                 text="Reset".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_k = tk.Label(self.frame_entries, font=label_font,
                                 text="Channels".ljust(InitialValues.MAIN_LABEL_JUST), height=1)
         self.label_l = tk.Label(self.frame_entries, font=label_font,
@@ -467,8 +473,8 @@ class Sequencer(tk.Frame):
                             self.entry_str_seq, self.entry_off_arrays, self.entry_poly, self.entry_poly_relative,
                             self.entry_skip_note_sequential, self.entry_skip_note_parallel, self.entry_octave_sequences,
                             self.entry_root_sequences, self.entry_transpose_sequences, self.entry_scale_sequences,
-                            self.entry_mode_sequence, self.entry_bpm_sequence, self.entry_pitch_shift,
-                            self.entry_midi_channels, self.entry_replace]
+                            self.entry_reset_sequence, self.entry_mode_sequence, self.entry_bpm_sequence,
+                            self.entry_pitch_shift, self.entry_midi_channels, self.entry_replace]
 
         self.akai_apc_entry_names = [self.entry_memory_sequences, self.entry_note_scheduling,
                                      self.entry_poly_relative, self.entry_skip_note_sequential,
@@ -482,7 +488,7 @@ class Sequencer(tk.Frame):
 
         self.labels_entry_names = [self.label_a, self.label_a2, self.label_a3, self.label_b, self.label_c,
                                    self.label_d, self.label_e, self.label_f, self.label_g, self.label_h, self.label_i,
-                                   self.label_i2, self.label_j, self.label_l, self.label_n, self.label_o, self.label_k,
+                                   self.label_i2, self.label_j, self.label_j2, self.label_l, self.label_n, self.label_o, self.label_k,
                                    self.label_m]
 
         for i, label in enumerate(self.labels_entry_names):
@@ -523,12 +529,17 @@ class Sequencer(tk.Frame):
             thread_wobbler.start()
             abc += 1
 
-    def reset_idx(self):
+    def reset_idx(self, to=None):
+        if to is None:
+            to = 0
+        else:
+            self.context.reset_index = 0
+
         for i, _ in enumerate(self.step_played_counts):
-            self.step_played_counts[i] = 0
-            self.actual_notes_played_counts[i] = 0
-        self.idx = 0
-        log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
+            self.step_played_counts[i] = to
+            self.actual_notes_played_counts[i] = to
+        self.idx = to
+        # log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
     def init_entries(self):
         for entry in self.entry_boxes:
@@ -781,6 +792,12 @@ class Sequencer(tk.Frame):
 
         self.set_memory_sequence(None)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
+
+    def set_reset_sequence(self, _):
+        reset_strings = self.entry_reset_sequence.get().split()
+        self.context.reset_sequence = [ResetObject(reset_string) for reset_string in reset_strings]
+        self.reset_idx()
+        log(logfile=self.context.logfile, msg="Reset sequence set to: %s" % self.context.reset_sequence)
 
     def set_mode_sequence(self, _):
         parser = self.context.parser
@@ -1321,7 +1338,6 @@ class Sequencer(tk.Frame):
         except:
             traceback.print_exc()
 
-    
     def manage_scale_sequence(self, i):
         scale_idx = self.step_played_counts[i] % len(self.context.scale_sequences[i])
 
@@ -1401,11 +1417,11 @@ class Sequencer(tk.Frame):
 
     def play_sequence(self):
         while True:
-            threading.Thread(target=self.frame_status.update).start()
-
             if not self.context.playback_on:
                 time.sleep(.02)
                 continue
+
+            threading.Thread(target=self.frame_status.update).start()
 
             result = self.play_midi_notes()
             self.play_sample_notes()
@@ -1413,5 +1429,15 @@ class Sequencer(tk.Frame):
             if result != "dont sleep":
                 sleep_time = NoteLengthsOld(self.context.get_bpm()).eigtht
                 time.sleep(sleep_time)
+
+            if self.context.reset_sequence:
+                current_reset_object = self.context.get_current_reset_object()
+                new_index = current_reset_object.get_new_index(self.idx)
+
+                if new_index is not None:
+                    temp = self.context.reset_index
+                    self.reset_idx(to=new_index)
+                    self.context.reset_index += 1 + temp
+                    continue
 
             self.idx += 1

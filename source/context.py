@@ -58,6 +58,8 @@ class Context:
         self.root_sequence = []
         self.scale_sequence = []
         self.mode_sequence = []
+        self.reset_sequence = []
+        self.reset_index = 0
         self.bpm_sequence = []
         self.sample_seqs = [[], [], [], [], [], [], [], [], [], []]
 
@@ -82,8 +84,11 @@ class Context:
     def get_bpm(self):
         return float(self.bpm.get())
 
+    def get_current_reset_object(self):
+        return self.reset_sequence[self.reset_index % len(self.reset_sequence)]
+
     def get_current_mode_wrap(self, steps_played):
-        return self.mode_sequence[(steps_played % self.mode_sequence.__len__())]  if self.mode_sequence \
+        return self.mode_sequence[(steps_played % self.mode_sequence.__len__())] if self.mode_sequence \
             else self.sequencer.entry_mode.get()
 
     def change_mode(self, offset=None, set_to=None):
