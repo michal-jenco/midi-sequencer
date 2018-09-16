@@ -15,6 +15,24 @@ class NumberOf:
     PROB_SKIP_NOTE_SLIDERS = POLYPHONY_SLIDERS
 
 
+class StringConstants(object):
+    multiple_entry_separator = "|"
+    initial_empty_sequence = ("   %s " % multiple_entry_separator) * (NumberOf.SEQUENCES - 1)
+    literal_memory_sequence = "&"
+    literal_memory_sequence_separator = ";"
+    container_separator = literal_memory_sequence_separator
+    replacement_separator = "-"
+    pointer = "*"
+    times = "x"
+    opening_bracket = "("
+    closing_bracket = ")"
+    AKAI_MIDIMIX_NAME = "MIDI Mix"
+    AKAI_APC_NAME = "APC MINI"
+    BESPECO_MIDI_NAME = "USB MIDI Interface"
+    generator_delimiter = "G"
+    generator_param_delimiter = "="
+
+
 class SleepTimes:
     MIDI_INPUT_MAINLOOP = .001
 
@@ -74,8 +92,8 @@ class Ranges:
     BPM_MAX = 480
     BPM = BPM_MIN, BPM_MAX
 
-    PERC_MIN = 0
-    PERC_MAX = 100
+    PERC_MIN = 0.
+    PERC_MAX = 100.
     PERCENT = PERC_MIN, PERC_MAX
 
     LOGICAL_MIN = 0.
@@ -87,6 +105,7 @@ class MIDIChannels:
     volca_keys = 10
     volca_fm = 11
     volca_kick = 13
+    roland_d05 = 14
     monologue = 15
 
 
@@ -159,21 +178,3 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
           'purple1', 'purple2', 'purple3', 'purple4', 'MediumPurple1', 'MediumPurple2',
           'MediumPurple3', 'MediumPurple4', 'thistle1', 'thistle2', 'thistle3', 'thistle4',
           'gray1']
-
-
-class StringConstants(object):
-    multiple_entry_separator = "|"
-    initial_empty_sequence = ("   %s " % multiple_entry_separator) * 7
-    literal_memory_sequence = "&"
-    literal_memory_sequence_separator = ";"
-    container_separator = literal_memory_sequence_separator
-    replacement_separator = "-"
-    pointer = "*"
-    times = "x"
-    opening_bracket = "("
-    closing_bracket = ")"
-    AKAI_MIDIMIX_NAME = "MIDI Mix"
-    AKAI_APC_NAME = "APC MINI"
-    BESPECO_MIDI_NAME = "USB MIDI Interface"
-    generator_delimiter = "G"
-    generator_param_delimiter = "="
