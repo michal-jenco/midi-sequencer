@@ -10,8 +10,6 @@ class ParamNames(object):
         phase = "phase"
         offset = "offset"
 
-    tanh = sin
-
     @staticmethod
     def get(func_name):
         return getattr(ParamNames, func_name)
@@ -22,10 +20,8 @@ class ParamNames(object):
 
 
 class GeneratorParser(object):
-    _needed_call_kwargs_dict = {"sin": ParamNames.get_all("sin"),
-                                "tanh": ParamNames.get_all("tanh")}
-    _needed_range_kwargs_dict = {"sin": ["amp", "offset"],
-                                 "tanh": ["amp"]}
+    _needed_call_kwargs_dict = {"sin": ParamNames.get_all("sin")}
+    _needed_range_kwargs_dict = {"sin": ["amp", "offset"]}
 
     @staticmethod
     def parse(string):
@@ -98,16 +94,13 @@ class DefaultParams(object):
            ParamNames.sin.phase: 0.,
            ParamNames.sin.offset: 0.}
 
-    tanh = sin
-
     @staticmethod
     def get(func_name):
         return getattr(DefaultParams, func_name)
 
 
 class G_e__n_e__r_a__t_o__r_________Range(object):
-    _dict = {"sin": lambda amp=1, offset=0: (-1 * amp + offset, amp + offset),
-             "tanh": lambda amp=1: (-Constants.max_tanh * amp, Constants.max_tanh * amp)}
+    _dict = {"sin": lambda amp=1, offset=0: (-1 * amp + offset, amp + offset)}
 
     @staticmethod
     def get(func_name_string, **kwargs):
@@ -119,7 +112,6 @@ class G_e__n_e__r_a__t_o__r_________Range(object):
 
 class G_e__n_e__r_a__t_o__r_________Funcs(object):
     sin = lambda x, speed, amp, phase, offset: math.sin((x + phase) / speed) * amp + offset
-    tanh = lambda x, speed, amp, phase, offset: abs(math.tanh((x + phase) / speed) * amp + offset) % Constants.max_tanh
 
     @staticmethod
     def get(string):
@@ -153,24 +145,15 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
                 + "\n".join([("\t%s: %s" % (key, str(value))) for key, value in self.__dict__.items()]))
 
     def get_entrybox_repr(self):
-        result = []
-
         range_from = G_e__n_e__r_a__t_o__r_________Range.get(self.params["func"], **self.params)
-        range_to = (0, len(self.notes) - 1)
+        range_to = 0, len(self.notes)
 
-        print("notes: %s" % self.notes)
-        print("range_from: %s" % (range_from,))
-        print("range_to: %s" % (range_to,))
-
-        for val in self.func(**self.params):
-            print("int(range_to_range(range_from, range_to, val)): %s" % int(range_to_range(range_from, range_to, val)))
-            if self.notes:
-                result.append(self.notes[int(range_to_range(range_from, range_to, val))])
-                result.append(self.spacer)
+        result = [self.notes[int(range_to_range(range_from, range_to, val))] + self.spacer
+                  for val in self.func(**self.params)]
 
         return "".join(rotate(result, int(self.params["offset"])))
 
-#
+
 # test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=-1;notes=0,2,,3;oct=+1-1"
 #
 # gen = _____G_e__n_e__r_a__t_o__r_________(func_entry_box_string=test_string)
