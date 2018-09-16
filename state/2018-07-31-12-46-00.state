@@ -1,0 +1,24 @@
+off array	   |    |    |    |    |    | 1
+poly	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+memory_seq	  &0,3,2,0,5,4, |    &0.,1.,4.,6.,a+.,===..|  &023  | &00-23-5-   |    |    | &0,,,
+note_scheduling	 4.. 2.. 4. 8 1.. 16qx3 |  1.  |  4..r0r  |   8 8r2r 8 8 |    |    | 
+skip_par	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+midi_channels	 11 | 11 | 11 | 15 | 11 | 11 | 13 
+root_seq	e| *0 | *0 | *0 | *0 | *0 | *0 
+octave_seq	 0|  0 | 0   | 0 2 0 5 0 1 6 4|    |    | 0 0 2 0 5 4 5 7 
+transpose_seq	   |   -1 |  1 0 1 0 1 0 0 1 0 2  |   0 |    |    | -2
+scale_seq	 lydian | *0 | *0 | *0 | *0 | *0 | *0 
+replace	
+sample 0	
+sample 1	
+sample 2	
+sample 3	
+sample 4	
+sample 5	
+sample 6	
+sample 7	
+sample 8	
+sample 9	
+bpm	60.0

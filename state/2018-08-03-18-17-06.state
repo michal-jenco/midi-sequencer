@@ -1,0 +1,27 @@
+off array	   |    |    |    |    |    | 1
+poly	   |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    | 
+memory_seq	 &023  |   &9+=8=7+=4=5+=1+=2= |  &0.3,1.5,2.7,4.9,8..,=  | &0.   |    |    | 
+note_scheduling	  16x5 2 1 | 1.. 2 1 2.  |  16 8 16 4 8 2 |  32  |    |    | 
+skip_par	   |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    | 
+midi_channels	 15 | 15 | 15 | 15 | 11 | 11 | 13 
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 
+transpose_seq	 0  |    | 2   |    |    |    | 
+bpm_seq	
+pitch_shift_seq	   |    |    |    |    |    | 
+mode_seq	
+octave_seq	3   | 1   | 1   |   -1 |    |    | -2
+scale_seq	 lydian | *0 | *0 | *0 | *0 | *0 | *0 
+replace	
+sample 0	
+sample 1	
+sample 2	
+sample 3	
+sample 4	
+sample 5	
+sample 6	
+sample 7	
+sample 8	
+sample 9	
+bpm	60.0

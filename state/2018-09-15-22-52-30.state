@@ -1,0 +1,30 @@
+off array	   |    |    |    |    |    |    | 
+poly	   |    |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    |    | 
+memory_seq	& | & | & | &Gsin;len=24;speed=.1;offset=1;notes=005689G | & | & | 0x3 1 0x3 2 | &0,,,
+note_scheduling	 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16
+skip_par	   |    |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    |    | 
+midi_channels	 14 | 14 | 15 | 10 | 10 | 11 | 11 | 13 
+root_seq	 e | *0 | *0 | *0 | *0 | *0 | *0 | *0
+transpose_seq	 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 
+bpm_seq	
+pitch_shift_seq	   |    |    |    |    |    |    | 
+mode_seq	
+octave_seq	 0 | 0 | 0 | -1 | 0 | 0 | 0 | -2
+scale_seq	 phrygian | *0 | *0 | *0 | *0 | *0 | *0 | *0
+replace	
+sample 0	
+sample 1	
+sample 2	
+sample 3	
+sample 4	
+sample 5	
+sample 6	
+sample 7	
+sample 8	
+sample 9	
+memory	s0235798;4Qs,,,=
+memory	n978465312;4Qn,,,=
+memory	n978465312;4Sn,,,=
+bpm	60.0
