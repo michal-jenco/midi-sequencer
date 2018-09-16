@@ -16,7 +16,7 @@ from source.constants import *
 from source.frame_sample import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
-from source.functions import log, get_date_string, insert_into_entry
+from source.functions import log, get_date_string, insert_into_entry, timeit
 from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
@@ -33,7 +33,7 @@ class Sequencer(tk.Frame):
 
         self.root.title("MIDI Sequencer")
         self.root["bg"] = "black"
-        self.root.geometry('+0+0')
+        self.root.geometry('1850x1000+0+0')
 
         self.threads = []
 
@@ -1321,6 +1321,7 @@ class Sequencer(tk.Frame):
         except:
             traceback.print_exc()
 
+    
     def manage_scale_sequence(self, i):
         scale_idx = self.step_played_counts[i] % len(self.context.scale_sequences[i])
 
@@ -1335,7 +1336,10 @@ class Sequencer(tk.Frame):
             except:
                 pass
 
-            self.set_status_bar_content(scale_str=self.context.current_scales[i])
+            threading.Thread(target=self.set_status_bar_content,
+                             args=(self.context.current_scales[i],)).start()
+            # self.set_status_bar_content(scale_str=self.context.current_scales[i])
+
             log(logfile=self.context.logfile,
                 msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 
@@ -1397,13 +1401,11 @@ class Sequencer(tk.Frame):
 
     def play_sequence(self):
         while True:
-            self.frame_status.update()
+            threading.Thread(target=self.frame_status.update).start()
 
             if not self.context.playback_on:
                 time.sleep(.02)
                 continue
-
-            # PitchBend("%s%s" % ((self.idx % 3), 2), 15, self.context.midi)()
 
             result = self.play_midi_notes()
             self.play_sample_notes()

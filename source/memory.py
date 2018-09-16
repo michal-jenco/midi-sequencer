@@ -3,7 +3,7 @@ from tkinter import filedialog
 import os
 
 from source.constants import MemoryType
-from source.functions import get_date_string, log
+from source.functions import get_date_string, log, timeit
 
 
 class Memory(tk.Frame):

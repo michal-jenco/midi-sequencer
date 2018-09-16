@@ -5,7 +5,7 @@ from threading import Thread
 from copy import copy
 
 from source.constants import StringConstants, Ranges, MIDIChannels
-from source.functions import range_to_range
+from source.functions import range_to_range, timeit
 from source.cc import CCFM
 
 gap_count_dict = {"t": 2, "q": 4, "s": 6, "n": 8}
@@ -581,7 +581,6 @@ class NoteLengthsOld:
 
     def get_by_name(self, name_):
         return self.__getattribute__(name_)
-
 
 def convert_midi_notes_to_note_objects(context, midi_notes):
     result = []

@@ -7,6 +7,7 @@ from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurat
                                 convert_midi_notes_to_note_objects, gap_count_dict, NoteSchedulingObject)
 from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE
+from source.functions import timeit
 from source._____G_e__n_e__r_a__t_o__r_________ import _____G_e__n_e__r_a__t_o__r_________
 
 
@@ -23,6 +24,7 @@ class Parser:
     def _note_is_generator_boundary(note):
         return note is StringConstants.generator_delimiter
 
+    
     def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
         msg_list = []
         str_seq = ""
@@ -564,6 +566,7 @@ class Parser:
 
         return offset
 
+    
     def parse_multiple_sequences_separated(self, sequences, separator=StringConstants.multiple_entry_separator):
         if separator not in sequences:
             return [sequences]
@@ -573,8 +576,11 @@ class Parser:
                 result = sequences.split(separator)
 
                 for i, individual in enumerate(result[:]):
-                    a = " ".join(self.unpack_nested_bracketed_expression(individual))
-                    result[i] = a
+                    if StringConstants.opening_bracket in individual and StringConstants.closing_bracket in individual:
+                        a = " ".join(self.unpack_nested_bracketed_expression(individual))
+                        result[i] = a
+                    else:
+                        result[i] = individual
 
                 return result
 
@@ -583,28 +589,28 @@ class Parser:
                 return []
 
     @staticmethod
-    def _recurse_nested_expr_list(input):
+    def _recurse_nested_expr_list(input_):
         output = []
 
-        for i, item in enumerate(input):
+        for i, item in enumerate(input_):
             if isinstance(item, str):
                 output.append(item)
 
             elif isinstance(item, list):
-                if i < len(input) - 1 and isinstance(input[i + 1], str) and input[i + 1][0] == "x":
-                    times = int(input[i + 1][1:])
+                if i < len(input_) - 1 and isinstance(input_[i + 1], str) and input_[i + 1][0] == "x":
+                    times = int(input_[i + 1][1:])
 
                     for _ in range(times):
                         output.append(item)
 
-                    del input[i + 1]
+                    del input_[i + 1]
 
                 else:
                     for j, _ in enumerate(item):
                         output.append(item[j])
 
         return output
-
+    
     def unpack_nested_bracketed_expression(self, seq):
         seq = "%s%s%s" % (StringConstants.opening_bracket, seq, StringConstants.closing_bracket)
         result = nestedExpr(StringConstants.opening_bracket, StringConstants.closing_bracket).parseString(seq).asList()[
