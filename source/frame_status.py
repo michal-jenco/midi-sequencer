@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from source.akai_state import AkaiMidimixStateNames
-from source.functions import get_note_name_from_integer
+from source.functions import get_note_name_from_integer, timeit
 
 
 class StatusFrame(tk.Frame):
@@ -96,7 +96,7 @@ class StatusFrame(tk.Frame):
         self.label_scale_mode["bg"] = self.mode_colors[self.context.scale_mode_changing_on]
 
     def update_sequence_lengths(self):
-        self.strvar_sequence_lengths.set((" | ".join([str(len(seq)) for seq in self.context.note_sequences])).center(30))
+        self.strvar_sequence_lengths.set((" | ".join([str(len(seq)) for seq in self.context.note_sequences])).center(35))
 
     def update(self):
         self.midi_input_listener_state_changed()

@@ -1416,6 +1416,9 @@ class Sequencer(tk.Frame):
             log(logfile=self.context.logfile, msg="BPM changed to: %s" % current_bpm)
 
     def play_sequence(self):
+        threading.Thread(target=self._play_sequence).start()
+
+    def _play_sequence(self):
         while True:
             if not self.context.playback_on:
                 time.sleep(.02)
@@ -1428,6 +1431,11 @@ class Sequencer(tk.Frame):
 
             if result != "dont sleep":
                 sleep_time = NoteLengthsOld(self.context.get_bpm()).eigtht
+
+                scale_idx = self.step_played_counts[0] % len(self.context.scale_sequences[0])
+                if self.context.scale_sequences[0][scale_idx] != self.context.current_scales[0]:
+                    sleep_time -= .02
+
                 time.sleep(sleep_time)
 
             if self.context.reset_sequence:

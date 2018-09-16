@@ -130,7 +130,8 @@ class Scales:
     def get_display_scale_name(scale):
         return scale.replace("_", " ").capitalize()
 
-    def get_note_by_index_wrap(self, idx, scale):
+    @staticmethod
+    def get_note_by_index_wrap(idx, scale):
         return scale[idx % len(scale)]
 
 
