@@ -588,8 +588,8 @@ class Sequencer(tk.Frame):
             for i, sample_seq in enumerate(sample_seqs):
                 state["sample %s" % i] = sample_seq
 
-            # print("State: %s" % state)
-            # print("Memory: %s" % memory)
+            print("State: %s" % state)
+            print("Memory: %s" % memory)
             return InternalState(memory, state)
 
     def save_internal_state(self, typ=None):
@@ -610,7 +610,7 @@ class Sequencer(tk.Frame):
 
             except Exception as e:
                 pass
-                # print("Couldn't S A V E state, because: %s" % e)
+                print("Couldn't S A V E state, because: %s" % e)
 
     def load_internal_state(self, typ=None):
         if typ is None:
@@ -625,7 +625,7 @@ class Sequencer(tk.Frame):
                     with open(filename, "r") as f:
                         lines = f.readlines()
 
-                    # print(lines)
+                    print(lines)
                     self.memories[0].clear_all()
 
                     for line in lines:
@@ -641,8 +641,8 @@ class Sequencer(tk.Frame):
                                 if len(content_list) < NumberOf.SEQUENCES:
                                     addition = ["   "] if "*0" not in content_list[1] else [" *0 "]
                                     new_content_list = content_list[:NumberOf.SEQUENCES - 2] + addition + [content_list[-1]]
-                                    # # print("content_list: %s" % content_list)
-                                    # # print("new_content_list: %s" % new_content_list)
+                                    print("content_list: %s" % content_list)
+                                    print("new_content_list: %s" % new_content_list)
                                     content = "|".join(new_content_list)
 
                             if typ in self.entry_boxes_names:
@@ -661,7 +661,7 @@ class Sequencer(tk.Frame):
                                 self.context.bpm.set(content)
                             else:
                                 pass
-                                # print("Something weird in state file: %s" % typ)
+                                print("Something weird in state file: %s" % typ)
                 except Exception:
                     traceback.print_exc()
                 else:
@@ -716,7 +716,7 @@ class Sequencer(tk.Frame):
 
             self.context.str_sequences[i] = aaaaaaaaa.split()
 
-            # print("Str sequence for idx %s set to: %s" % (i, self.context.str_sequences[i]))
+            print("Str sequence for idx %s set to: %s" % (i, self.context.str_sequences[i]))
 
             insert_into_entry(self.entry_str_seq, self.context.str_sequence)
             self.context.note_sequences.append(running_seq)
@@ -1045,7 +1045,7 @@ class Sequencer(tk.Frame):
                 scale = self.context.scale
         except Exception as e:
             pass
-            # print("Exception: %s" % e)
+            print("Exception: %s" % e)
 
         scales = self.context.scales
         scale = scales.get_scale_by_name(scale)

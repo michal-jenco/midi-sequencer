@@ -67,15 +67,15 @@ class Parser:
                     gen = _____G_e__n_e__r_a__t_o__r_________(generator_content)
                     entry_box_repr = gen.get_entrybox_repr()
 
-                    # print("generator_content: %s" % generator_content)
-                    # print("generator: %s" % gen)
-                    # print("entry_box_repr: %s" % entry_box_repr)
+                    print("generator_content: %s" % generator_content)
+                    print("generator: %s" % gen)
+                    print("entry_box_repr: %s" % entry_box_repr)
 
                     str_seq += " ".join([char for char in entry_box_repr])
                     to_append = self.get_notes(context=context,
                                                text=entry_box_repr,
                                                iii=iii)[0]
-                    # print("to_append: %s" % to_append)
+                    print("to_append: %s" % to_append)
 
                     for midi_note in to_append:
                         msg_list.append(midi_note)

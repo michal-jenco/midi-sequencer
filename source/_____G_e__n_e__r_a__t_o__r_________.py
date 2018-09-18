@@ -31,6 +31,9 @@ class GeneratorParser(object):
         params = {item.split(Constants.generator_param_delimiter)[0]:
                   item.split(Constants.generator_param_delimiter)[1] for item in attributes[1:]}
 
+        if "oct" in params:
+            params["octaves"] = params["oct"]
+
         params = GeneratorParser.fill_missing_params(func, params)
         params = GeneratorParser._make_kwargs_float(params)
         return params
@@ -92,7 +95,8 @@ class DefaultParams(object):
     sin = {ParamNames.sin.speed: 1.,
            ParamNames.sin.amplitude: 1.,
            ParamNames.sin.phase: 0.,
-           ParamNames.sin.offset: 0.}
+           ParamNames.sin.offset: 0.,
+           "octaves": ""}
 
     @staticmethod
     def get(func_name):
@@ -137,8 +141,15 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
         self.params = GeneratorParser.parse(func_entry_box_string)
         self.func = G_e__n_e__r_a__t_o__r_________Func(self.params["func"])
         self.length = int(self.params["len"])
-        self.notes = self.params["notes"]
+        self.notes = list(self.params["notes"])
         self.spacer = self.params["spacer"]
+        self.octaves = self.params["octaves"]
+
+        if self.octaves:
+            if "-" in self.octaves:
+                self.notes = ["%s-" % note for note in self.notes] + self.notes
+            if "+" in self.octaves:
+                self.notes += ["%s+" % note for note in self.notes]
 
     def __repr__(self):
         return (("%s:\n" % self.__class__.__name__)
@@ -160,4 +171,3 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
 #
 # print(gen.get_entrybox_repr())
 # print(GeneratorParser.parse(test_string))
-#
