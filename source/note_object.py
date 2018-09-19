@@ -95,6 +95,7 @@ class NoteObject(object):
 
             note_midi_repr = self.get_midi_repr()
             self.last_played_midi_repr = note_midi_repr
+            self.context.midi.send_message(note_midi_repr[:2] + [0])
             self.context.midi.send_message(note_midi_repr)
             # print("Sending MIDI message: %s" % self.get_midi_repr())
 
@@ -107,7 +108,9 @@ class NoteObject(object):
 
     def _play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
-            self.context.midi.send_message(self.get_transposed_midi_repr(semitones))
+            note_midi_repr = self.get_transposed_midi_repr(semitones)
+            self.context.midi.send_message(note_midi_repr[:2] + [0])
+            self.context.midi.send_message(note_midi_repr)
 
         if self.duration is not None:
             sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())

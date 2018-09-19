@@ -145,6 +145,9 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
         self.spacer = self.params["spacer"]
         self.octaves = self.params["octaves"]
 
+        self._manage_octaves()
+
+    def _manage_octaves(self):
         if self.octaves:
             if "-" in self.octaves:
                 self.notes = ["%s-" % note for note in self.notes] + self.notes

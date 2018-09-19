@@ -258,7 +258,8 @@ class Parser:
 
     @staticmethod
     def get_plus_or_minus_add(oct_):
-        return {-12: "-", 0: "", 12: "+"}[oct_]
+        # TODO generate this :(
+        return {-36: "---", -24: "--", -12: "-", 0: "", 12: "+", 24: "++", 36: "+++"}[oct_]
 
     @staticmethod
     def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None, perm_len=None):
@@ -535,12 +536,26 @@ class Parser:
         return octave
 
     @staticmethod
-    def parse_plus_minus(notes, idx):
+    def get_number_of_consecutive_chars_from_beginning_of_list(lst, char):
+        if lst[0] != char:
+            return False
+
+        count = 0
+
+        for c in lst:
+            if c == char:
+                count += 1
+            else:
+                break
+
+        return count
+
+    def parse_plus_minus(self, notes, idx):
         try:
             if notes[idx + 1] == "+":
-                oct_ = 12
+                oct_ = 12 * self.get_number_of_consecutive_chars_from_beginning_of_list(notes[idx + 1:], "+")
             elif notes[idx + 1] == "-":
-                oct_ = -12
+                oct_ = -12 * self.get_number_of_consecutive_chars_from_beginning_of_list(notes[idx + 1:], "-")
             else:
                 oct_ = 0
 
