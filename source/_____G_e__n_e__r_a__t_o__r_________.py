@@ -31,8 +31,14 @@ class GeneratorParser(object):
         params = {item.split(Constants.generator_param_delimiter)[0]:
                   item.split(Constants.generator_param_delimiter)[1] for item in attributes[1:]}
 
+        print(params)
+
         if "oct" in params:
             params["octaves"] = params["oct"]
+        if "o" in params:
+            params["octaves"] = params["o"]
+        if "n" in params:
+            params["notes"] = params["n"]
 
         params = GeneratorParser.fill_missing_params(func, params)
         params = GeneratorParser._make_kwargs_float(params)
@@ -43,7 +49,6 @@ class GeneratorParser(object):
         for key, value in dict_.items():
             if key in ("notes", "spacer"):
                 continue
-
             try:
                 float(value)
             except:
@@ -165,10 +170,27 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
         result = [self.notes[int(range_to_range(range_from, range_to, val))] + self.spacer
                   for val in self.func(**self.params)]
 
+        if "uniq" in self.params:
+            result = self._squash_sequences(result)
+
         return "".join(rotate(result, int(self.params["offset"])))
 
+    @staticmethod
+    def _squash_sequences(lst):
+        result = []
+        last = ""
 
-# test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=-1;notes=0,2,,3;oct=+1-1"
+        for item in lst:
+            if item == last:
+                result.append(",")
+            else:
+                result.append(item)
+            last = item
+
+        return result
+
+
+# test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=-1;notes=0,2,,3;oct=+1-1;uniq="
 #
 # gen = _____G_e__n_e__r_a__t_o__r_________(func_entry_box_string=test_string)
 #

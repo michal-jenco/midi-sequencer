@@ -60,7 +60,7 @@ class NoteObject(object):
     def get_end_note_midi_repr(self):
         if self.get_midi_repr() is None:
             return None
-        return self.get_midi_repr()[:2] + [0]
+        return self.get_velocity_0_note(self.get_midi_repr())
 
     def play(self):
         if self.type_ is NoteTypes.NORMAL:
@@ -82,9 +82,8 @@ class NoteObject(object):
 
             note_midi_repr = self.get_midi_repr()
             self.last_played_midi_repr = note_midi_repr
-            self.context.midi.send_message(note_midi_repr[:2] + [0])
+            self.context.midi.send_message(self.get_velocity_0_note(note_midi_repr))
             self.context.midi.send_message(note_midi_repr)
-            # print("Sending MIDI message: %s" % self.get_midi_repr())
 
             if self.duration is not None:
                 sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
@@ -96,13 +95,13 @@ class NoteObject(object):
     def _play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
             note_midi_repr = self.get_transposed_midi_repr(semitones)
-            self.context.midi.send_message(note_midi_repr[:2] + [0])
+            self.context.midi.send_message(self.get_velocity_0_note(note_midi_repr))
             self.context.midi.send_message(note_midi_repr)
 
         if self.duration is not None:
             sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
             sleep(sleep_time)
-            self.context.midi.send_message(self.get_transposed_midi_repr(semitones)[:2] + [0])
+            self.context.midi.send_message(self.get_velocity_0_note(self.get_transposed_midi_repr(semitones)))
 
     def play_transposed(self, semitones):
         if self.type_ is NoteTypes.NORMAL:
@@ -115,8 +114,7 @@ class NoteObject(object):
             return
 
         if self.last_played_midi_repr is not None:
-            end = self.last_played_midi_repr[:2] + [0]
-            self.context.midi.send_message(end)
+            self.context.midi.send_message(self.get_velocity_0_note(self.last_played_midi_repr))
         else:
             self.context.midi.send_message(end_midi_repr)
 
@@ -125,6 +123,10 @@ class NoteObject(object):
 
     def get_transposed_midi_repr(self, semitones):
         return [self._channel_prefix + self.channel, self.pitch + semitones, self.velocity]
+
+    @staticmethod
+    def get_velocity_0_note(note):
+        return note[:2] + [0]
 
 
 class TupletTypes:

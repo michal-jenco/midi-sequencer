@@ -1,10 +1,10 @@
-import time, datetime
+import time
+import datetime
 import tkinter as tk
 
-
-from source.constants import StringConstants
-from source.note_container import NoteContainer
 from source.note_object import NoteObject
+from source.note_container import NoteContainer
+from source.constants import StringConstants
 from source.note_types import NoteTypes
 
 
