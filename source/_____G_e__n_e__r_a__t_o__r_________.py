@@ -42,6 +42,12 @@ class GeneratorParser(object):
 
         params = GeneratorParser.fill_missing_params(func, params)
         params = GeneratorParser._make_kwargs_float(params)
+
+        if Constants.generator_spacer_delimiter in params["spacer"]:
+            params["spacer"] = params["spacer"].split(Constants.generator_spacer_delimiter)
+        else:
+            params["spacer"] = [params["spacer"]]
+
         return params
 
     @staticmethod
@@ -167,8 +173,8 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
         range_from = G_e__n_e__r_a__t_o__r_________Range.get(self.params["func"], **self.params)
         range_to = 0, len(self.notes)
 
-        result = [self.notes[int(range_to_range(range_from, range_to, val))] + self.spacer
-                  for val in self.func(**self.params)]
+        result = [self.notes[int(range_to_range(range_from, range_to, val))] + self.spacer[i % len(self.spacer)]
+                  for i, val in enumerate(self.func(**self.params))]
 
         if "uniq" in self.params:
             result = self._squash_sequences(result)

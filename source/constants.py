@@ -31,6 +31,7 @@ class StringConstants(object):
     BESPECO_MIDI_NAME = "USB MIDI Interface"
     generator_delimiter = "G"
     generator_param_delimiter = "="
+    generator_spacer_delimiter = "*"
     reset_delimiter = "-"
     container_boundary = "g"
 
