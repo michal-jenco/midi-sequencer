@@ -20,7 +20,7 @@ class StringConstants(object):
     initial_empty_sequence = ("   %s " % multiple_entry_separator) * (NumberOf.SEQUENCES - 1)
     literal_memory_sequence = "&"
     literal_memory_sequence_separator = ";"
-    container_separator = literal_memory_sequence_separator
+    container_separator = "§"
     replacement_separator = "-"
     pointer = "*"
     times = "x"
@@ -32,6 +32,7 @@ class StringConstants(object):
     generator_delimiter = "G"
     generator_param_delimiter = "="
     reset_delimiter = "-"
+    container_boundary = "g"
 
 
 class SleepTimes:

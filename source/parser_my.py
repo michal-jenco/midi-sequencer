@@ -3,11 +3,13 @@ import itertools
 import traceback
 from pyparsing import nestedExpr
 
-from source.note_object import (NoteTypes, TupletTypes, NoteContainer, NoteDurationTypes,
-                                convert_midi_notes_to_note_objects, gap_count_dict, NoteSchedulingObject)
+from source.functions import convert_midi_notes_to_note_objects
+from source.note_types import NoteTypes
+from source.note_container import NoteContainer
+from source.note_scheduling_object import NoteSchedulingObject
+from source.note_duration_types import NoteDurationTypes
 from source.constants import note_dict as constants_note_dict, StringConstants
 from source.constants import MODE_SAMPLE, MODE_SIMPLE
-from source.functions import timeit
 from source._____G_e__n_e__r_a__t_o__r_________ import _____G_e__n_e__r_a__t_o__r_________
 
 
@@ -15,22 +17,21 @@ class Parser:
     def __init__(self, context):
         self.context = context
         self.string_constants = StringConstants
+        self.plus_minus_add_dict = {-36: "---", -24: "--", -12: "-", 0: "", 12: "+", 24: "++", 36: "+++"}
 
     @staticmethod
     def _note_is_container_boundary(note):
-        return note in TupletTypes.MAP.keys() and note != TupletTypes.SEPTUPLET
+        return note == StringConstants.container_boundary
 
     @staticmethod
     def _note_is_generator_boundary(note):
         return note is StringConstants.generator_delimiter
 
-    
     def get_notes(self, context, text, iii=None, mode=MODE_SIMPLE):
         msg_list = []
         str_seq = ""
         parsing_container = False
         parsing_generator = False
-        container_type = None
 
         if mode == MODE_SIMPLE:
             separator = " "
@@ -88,7 +89,7 @@ class Parser:
                 if self._note_is_container_boundary(note):
                     if not parsing_container:
                         parsing_container = True
-                        container_type = TupletTypes.MAP[note]
+                        # container_type = TupletTypes.MAP[note]
                         container_content = "".join(notes[idx + 1:notes[idx + 1:].index(note) + idx + 1])
 
                         if StringConstants.container_separator in container_content:
@@ -102,26 +103,26 @@ class Parser:
                         container_notes, container_str_seq = self.get_notes(context=context,
                                                                             text=container_note_characters,
                                                                             iii=iii)
-                        print("Container type: %s" % container_type)
-                        print("Container content: %s" % container_content)
-                        print("Container notes: %s" % container_notes)
-                        print("Gap duration: %s" % gap_duration)
 
-                        default_length = "%s%s" % (16, note)
+                        default_length = "16t"
                         length = (default_length if
                                   (gap_duration is None or gap_duration not in NoteDurationTypes.MAP.keys())
                                   else gap_duration)
                         note_objects = convert_midi_notes_to_note_objects(context, container_notes)
                         str_seq += " %s " % (container_str_seq[0] if container_str_seq[0].isdigit() else 0)
 
+                        print("Container type: Group of %s notes." % len(note_objects))
+                        print("Container content: %s" % container_content)
+                        print("Container notes: %s" % container_notes)
+                        print("Gap duration: %s" % gap_duration)
                         print("Note_objects: %s" % note_objects)
                         note_container = NoteContainer(context=context, notes=note_objects,
-                                                       gaps=[NoteDurationTypes.MAP[length]] * gap_count_dict[note])
+                                                       gaps=[NoteDurationTypes.MAP[length]] * (len(note_objects) - 1))
                         note_container.supply_scheduling_object(NoteSchedulingObject(length))
                         msg_list.append(note_container)
                     continue
 
-                if note.isdigit() or note in {"a", "b", "c", "d", "e"}:
+                if note.isdigit() or note in ("a", "b", "c", "d", "e"):
                     oct_ = self.parse_plus_minus(notes, idx)
                     flat_sharp = self.parse_flat_sharp(notes, idx)
                     add = self.get_plus_or_minus_add(oct_)
@@ -157,7 +158,7 @@ class Parser:
 
                     if ";" in perm_content:
                         perm_content_notes = perm_content[:perm_content.index(";")]
-                        perm_content_control = "".join(perm_content[perm_content.index(";")+1:])
+                        perm_content_control = "".join(perm_content[perm_content.index(";") + 1:])
                     else:
                         perm_content_notes = perm_content
                         perm_content_control = None
@@ -181,29 +182,23 @@ class Parser:
                             msg = [n[0], n[1] + self.get_octave(control), n[2]]
                         else:
                             msg = [n[0], n[1], n[2]]
-                    msg_list.append(msg)
+                        msg_list.append(msg)
 
                     str_seq += str_repr
                     skipping_permutations = True
 
                 elif note == ",":
-                    for i in range(0, context.comma_pause):
+                    for i in range(context.comma_pause):
                         msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " %s " % note
 
                 elif note == ".":
-                    for i in range(0, context.dot_pause):
+                    for i in range(context.dot_pause):
                         msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " , "
 
                 elif note == "=":
-                    for i in range(0, context.dash_pause):
-                        msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
-                        str_seq += " , "
-
-                elif note == "&":
-                    count = random.randint(context.amper_min, context.amper_max)
-                    for i in range(0, count):
+                    for i in range(context.dash_pause):
                         msg_list.append([0x90, NoteTypes.NOTE_PAUSE, 0])
                         str_seq += " , "
 
@@ -213,7 +208,7 @@ class Parser:
                 elif note == "§":
                     count = random.randint(context.paragraph_min, context.paragraph_max)
 
-                    for i in range(0, count):
+                    for i in range(count):
                         note_value = random.choice(context.current_scales[iii])
                         str_seq += str(context.current_scales[iii].index(note_value)) + " "
                         note_value += context.root + self.get_octave(control)
@@ -228,8 +223,8 @@ class Parser:
 
                 elif "x" in seq:
                     x_index = seq.index("x")
-                    if seq[x_index+1:]:
-                        repetitions = int(seq[x_index+1:])
+                    if seq[x_index + 1:]:
+                        repetitions = int(seq[x_index + 1:])
                 else:
                     repetitions = 1
 
@@ -239,7 +234,7 @@ class Parser:
                 except:
                     notes = list(seq)
 
-                for i in range(0, repetitions):
+                for i in range(repetitions):
                     for idx, note in enumerate(notes):
                         if note == "0":
                             msg_list.append([])
@@ -247,19 +242,15 @@ class Parser:
                         elif note == "1":
                             msg_list.append([0x90, 127, 127])
 
-                        elif note.isdigit() and note not in {"0", "1"}:
-                            for _ in range(0, int(note)):
+                        elif note.isdigit() and note not in ("0", "1"):
+                            for _ in range(int(note)):
                                 msg_list.append([])
-                        else:
-                            # unknown symbol (not yet defined a use)
-                            pass
 
         return msg_list, str_seq.replace("  ", " ")
 
-    @staticmethod
-    def get_plus_or_minus_add(oct_):
-        # TODO generate this :(
-        return {-36: "---", -24: "--", -12: "-", 0: "", 12: "+", 24: "++", 36: "+++"}[oct_]
+    def get_plus_or_minus_add(self, oct_):
+        # TODO generate this
+        return self.plus_minus_add_dict[oct_]
 
     @staticmethod
     def parse_permutations(seq, output_length=None, start=0, random_order=False, count=None, perm_len=None):
@@ -344,9 +335,9 @@ class Parser:
 
             for i in range(times):
                 if seq.startswith(("+", "-")):
-                    result.append(int(seq[0:2])*12)
+                    result.append(int(seq[0:2]) * 12)
                 else:
-                    result.append(int(seq[0])*12)
+                    result.append(int(seq[0]) * 12)
 
         return result
 
@@ -394,7 +385,8 @@ class Parser:
 
         return result
 
-    def parse_midi_channels(self, text):
+    @staticmethod
+    def parse_midi_channels(text):
         return list(map(int, text.split()))
 
     def parse_memory_sequence(self, text):
@@ -491,9 +483,8 @@ class Parser:
                 seq = seq[0:seq.rindex("x")]
 
             if seq in available_scales:
-                for i in range(0, 1 if times is None else times):
+                for i in range(1 if times is None else times):
                     result.append(seq)
-
             else:
                 print("Scale %s does not exist." % seq)
                 return []

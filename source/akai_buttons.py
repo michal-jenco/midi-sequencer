@@ -16,14 +16,14 @@ class AkaiApcButtons(object):
 
     class Controller(object):
         def __init__(self, midi):
-            self.midi = midi
+            self._midi = midi
 
         def set_color(self, button_number, color):
-            self.midi.send_message([0x90, button_number, color])
+            self._midi.send_message([0x90, button_number, color])
 
         def set_all_grid_to_color(self, color):
             for i in range(64):
-                self.midi.send_message([0x90, i, color])
+                self._midi.send_message([0x90, i, color])
 
         def turn_off_row(self, row):
             for i in range(8):
@@ -31,4 +31,3 @@ class AkaiApcButtons(object):
 
         def turn_off_grid(self):
             self.set_all_grid_to_color(AkaiApcButtons.Colors.Grid.off)
-

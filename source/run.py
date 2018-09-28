@@ -23,12 +23,7 @@ try:
 except:
     midi.open_port(0)
 
-time.sleep(0.1)
-
-thread_keys = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
-# thread_sample = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
-# thread_3 = threading.Thread(target=lambda: Sequencer(midi).show(), args=())
-
-thread_keys.start()
-# thread_sample.start()
-# thread_3.start()
+thread_1 = threading.Thread(target=lambda: Sequencer(midi).show())
+thread_1.start()
+# thread_2 = threading.Thread(target=lambda: Sequencer(midi).show())
+# thread_2.start()

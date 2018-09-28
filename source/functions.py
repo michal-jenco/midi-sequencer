@@ -3,6 +3,9 @@ import tkinter as tk
 
 
 from source.constants import StringConstants
+from source.note_container import NoteContainer
+from source.note_object import NoteObject
+from source.note_types import NoteTypes
 
 
 def log(logfile=None, msg=""):
@@ -83,3 +86,22 @@ def get_closest_index_of(indices, value):
             distance_idx = i
 
     return distance_idx
+
+
+def convert_midi_notes_to_note_objects(context, midi_notes):
+    result = []
+
+    for note in midi_notes:
+        if isinstance(note, list):
+            ch, pitch, vel = note
+
+            result.append(
+                NoteObject(context=context,
+                           channel=ch,
+                           pitch=pitch if isinstance(pitch, int) else None,
+                           velocity=vel,
+                           type_=NoteTypes.NORMAL if isinstance(pitch, int) else pitch))
+
+        elif isinstance(note, NoteContainer):
+            result.append(note)
+    return result

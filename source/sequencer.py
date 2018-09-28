@@ -9,14 +9,18 @@ import os
 import traceback
 
 from source.note_object import (
-    NoteLengthsOld, NoteTypes, NoteSchedulingObject, convert_midi_notes_to_note_objects, NoteContainer, NoteObject)
+    NoteObject)
+from source.note_lengths_old import NoteLengthsOld
+from source.note_types import NoteTypes
+from source.note_container import NoteContainer
+from source.note_scheduling_object import NoteSchedulingObject
 from source.context import Context
 from source.wobbler import Wobbler
 from source.constants import *
 from source.frame_sample import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
-from source.functions import log, get_date_string, insert_into_entry, timeit
+from source.functions import log, get_date_string, insert_into_entry, timeit, convert_midi_notes_to_note_objects
 from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
@@ -366,7 +370,12 @@ class Sequencer(tk.Frame):
 
     def on_closing(self):
         log(msg="Window will be destroyed.")
-        self.midi_input_listener.button_color_controller_apc.turn_off_grid()
+
+        try:
+            self.midi_input_listener.button_color_controller_apc.turn_off_grid()
+        except AttributeError:
+            pass
+
         self.end_all_notes()
         self.root.quit()
         self.root.destroy()
@@ -546,16 +555,21 @@ class Sequencer(tk.Frame):
             if entry not in (self.entry_midi_channels, self.entry_replace, self.entry_bpm_sequence):
                 insert_into_entry(entry, StringConstants.initial_empty_sequence)
 
-        insert_into_entry(self.entry_scale_sequences, " lydian | *0 | *0 | *0 | *0 | *0 | *0 | *0")
+        insert_into_entry(self.entry_scale_sequences, " super_locrian | *0 | *0 | *0 | *0 | *0 | *0 | *0")
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 | *0")
         insert_into_entry(self.entry_note_scheduling, " 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16")
         insert_into_entry(self.entry_octave_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | -2")
         insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
         insert_into_entry(self.entry_replace, "")
         insert_into_entry(self.entry_mode_sequence, "")
-        self.midi_input_listener.button_color_controller_apc.turn_off_grid()
+
+        try:
+            self.midi_input_listener.button_color_controller_apc.turn_off_grid()
+        except AttributeError:
+            pass
+
         self.press_all_enters()
-        insert_into_entry(self.entry_memory_sequences, " &Gsin;len=16;notes=023579G | & | & | & | & | & | & | &")
+        insert_into_entry(self.entry_memory_sequences, " &032 | & | & | & | & | & | & | &")
         self.press_all_enters()
 
         self.entry_memory_sequences.focus_set()
@@ -668,7 +682,7 @@ class Sequencer(tk.Frame):
                     self.press_all_enters()
                     self.reset_idx()
 
-    def set_memory_sequence(self, _):
+    def set_memory_sequence(self, _=None):
         parser = self.context.parser
         text = str(self.entry_memory_sequences.get())
         self.context.str_sequence = ""
