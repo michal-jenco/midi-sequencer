@@ -3,6 +3,7 @@ import threading
 import rtmidi
 from rtmidi.midiutil import open_midiinput, open_midioutput
 from tkinter import INSERT
+import traceback
 
 from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
 from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
@@ -59,6 +60,7 @@ class MIDIInputListener(object):
                 print("I am going to open %s (INPUT) on port %s." % (name, self.device_input_port_map[name]))
                 self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(self.device_input_port_map[name])
             except:
+                traceback.print_exc()
                 print("%s is not connected for INPUT." % name)
             else:
                 print("Successfully connected to %s (INPUT) on port %s" % (name, self.device_input_port_map[name]))
@@ -497,7 +499,6 @@ class MIDIInputListener(object):
                     type_, controller, value = msg
                     str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_message_midimix,
                                       StringConstants.AKAI_APC_NAME: self.akai_message_apc}[name].get_name_by_msg(msg)
-
                     threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
 
                     {StringConstants.AKAI_MIDIMIX_NAME: self._callback_midimix,

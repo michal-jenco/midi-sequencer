@@ -78,8 +78,8 @@ class Parser:
                                                iii=iii)[0]
                     print("to_append: %s" % to_append)
 
-                    for midi_note in to_append:
-                        msg_list.append(midi_note)
+                    # for midi_note in to_append:
+                    msg_list += [midi_note for midi_note in to_append]
 
                 if parsing_container:
                     if self._note_is_container_boundary(note):

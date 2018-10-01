@@ -120,11 +120,11 @@ class Sequencer(tk.Frame):
             self.entry_note_scheduling, self.entry_skip_note_parallel, self.entry_skip_note_sequential,
             self.entry_midi_channels, self.entry_root_sequences, self.entry_transpose_sequences,
             self.entry_bpm_sequence, self.entry_pitch_shift, self.entry_mode_sequence, self.entry_octave_sequences,
-            self.entry_scale_sequences, self.entry_replace]
+            self.entry_scale_sequences, self.entry_replace, self.entry_reset_sequence]
 
         self.entry_boxes_names = ["off array", "poly", "poly_relative", "memory_seq", "note_scheduling",
                                   "skip_par", "skip_seq", "midi_channels", "root_seq", "transpose_seq", "bpm_seq",
-                                  "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace"]
+                                  "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace", "reset"]
 
         self.midi_input_listener = MIDIInputListener(
             sequencer=self,
@@ -527,16 +527,14 @@ class Sequencer(tk.Frame):
             item.set(not item.get())
 
     def display_wobblers(self):
-        abc = 0
-        for wob in self.wobblers:
-            wob.grid(row=0, column=abc, padx=3, pady=5)
+        for i, wob in enumerate(self.wobblers):
+            wob.grid(row=0, column=i, padx=3, pady=5)
             wob.display()
 
             thread_wobbler = threading.Thread(target=wob.wobble)
             thread_wobbler.daemon = True
             self.threads.append(thread_wobbler)
             thread_wobbler.start()
-            abc += 1
 
     def reset_idx(self, to=None):
         if to is None:
@@ -548,11 +546,11 @@ class Sequencer(tk.Frame):
             self.step_played_counts[i] = to
             self.actual_notes_played_counts[i] = to
         self.idx = to
-        # log(logfile=self.context.logfile, msg="actual_notes_played_count was RESET.")
 
     def init_entries(self):
         for entry in self.entry_boxes:
-            if entry not in (self.entry_midi_channels, self.entry_replace, self.entry_bpm_sequence):
+            if entry not in (self.entry_midi_channels, self.entry_replace, self.entry_bpm_sequence,
+                             self.entry_reset_sequence, self.entry_mode_sequence):
                 insert_into_entry(entry, StringConstants.initial_empty_sequence)
 
         insert_into_entry(self.entry_scale_sequences, " super_locrian | *0 | *0 | *0 | *0 | *0 | *0 | *0")
@@ -560,7 +558,8 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_note_scheduling, " 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16")
         insert_into_entry(self.entry_octave_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | -2")
         insert_into_entry(self.entry_transpose_sequences, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0")
-        insert_into_entry(self.entry_replace, "")
+        insert_into_entry(self.entry_bpm_sequence, "")
+        insert_into_entry(self.entry_reset_sequence, "")
         insert_into_entry(self.entry_mode_sequence, "")
 
         try:
@@ -569,7 +568,7 @@ class Sequencer(tk.Frame):
             pass
 
         self.press_all_enters()
-        insert_into_entry(self.entry_memory_sequences, " &032 | & | & | & | & | & | & | &")
+        insert_into_entry(self.entry_memory_sequences, " &032 | & | & | & | & | & | & | & ")
         self.press_all_enters()
 
         self.entry_memory_sequences.focus_set()
@@ -590,97 +589,94 @@ class Sequencer(tk.Frame):
         self.set_scale_sequences(None)
         self.set_midi_channels(None)
 
-    def get_internal_state(self, typ=None):
-        if typ is None:
-            state = OrderedDict()
-            memory = self.memories[0].get_all()
-            sample_seqs = self.sample_frame.get_all_sequences()
+    def get_internal_state(self):
+        state = OrderedDict()
+        memory = self.memories[0].get_all()
+        sample_seqs = self.sample_frame.get_all_sequences()
 
-            for i, entry in enumerate(self.entry_boxes):
-                state[self.entry_boxes_names[i]] = str(entry.get())
+        for i, entry in enumerate(self.entry_boxes):
+            state[self.entry_boxes_names[i]] = str(entry.get())
 
-            for i, sample_seq in enumerate(sample_seqs):
-                state["sample %s" % i] = sample_seq
+        for i, sample_seq in enumerate(sample_seqs):
+            state["sample %s" % i] = sample_seq
 
-            print("State: %s" % state)
-            print("Memory: %s" % memory)
-            return InternalState(memory, state)
+        print("State: %s" % state)
+        print("Memory: %s" % memory)
+        return InternalState(memory, state)
 
-    def save_internal_state(self, typ=None):
-        if typ is None:
-            f = os.path.join(self.context.state_dir, get_date_string("filename") + ".state")
-            internal_state = self.get_internal_state()
+    def save_internal_state(self):
+        f = os.path.join(self.context.state_dir, get_date_string("filename") + ".state")
+        internal_state = self.get_internal_state()
 
+        try:
+            with open(f, "w") as f:
+                for name, content in internal_state.entries.items():
+                    f.write("%s\t%s\n" % (name, content))
+
+                for seq in internal_state.memory:
+                    f.write("memory\t%s\n" % seq)
+
+                f.write("bpm\t%s" % self.context.get_bpm())
+                f.flush()
+
+        except Exception as e:
+            traceback.print_exc()
+            print("Couldn't S A V E state, because: %s" % e)
+
+    def load_internal_state(self):
+        try:
+            filename = filedialog.askopenfilename(initialdir=self.context.state_dir, title="Select file",
+                                                  filetypes=(("state files", "*.state"), ("all files", "*.*")))
+        except Exception as e:
+            log(logfile=self.context.logfile, msg="Could not open file dialog, because: %s" % e)
+
+        else:
             try:
-                with open(f, "w") as f:
-                    for name, content in internal_state.entries.items():
-                        f.write("%s\t%s\n" % (name, content))
+                with open(filename, "r") as f:
+                    lines = f.readlines()
 
-                    for seq in internal_state.memory:
-                        f.write("memory\t%s\n" % seq)
+                print(lines)
+                self.memories[0].clear_all()
 
-                    f.write("bpm\t%s" % self.context.get_bpm())
-                    f.flush()
+                for line in lines:
+                    if line != "\n":
+                        typ, content = line.split("\t")
+                        content = content.replace("\n", "").replace("\t", "")
 
-            except Exception as e:
-                pass
-                print("Couldn't S A V E state, because: %s" % e)
+                        # This block is here because I changed the number of sequences from 7 to 8 and therefore
+                        # all previously saved states need to be expanded
+                        if StringConstants.multiple_entry_separator in content:
+                            content_list = content.split(StringConstants.multiple_entry_separator)
 
-    def load_internal_state(self, typ=None):
-        if typ is None:
-            try:
-                filename = filedialog.askopenfilename(initialdir=self.context.state_dir, title="Select file",
-                                                      filetypes=(("state files", "*.state"), ("all files", "*.*")))
-            except Exception as e:
-                log(logfile=self.context.logfile, msg="Could not open file dialog, because: %s" % e)
+                            if len(content_list) < NumberOf.SEQUENCES:
+                                addition = ["   "] if "*0" not in content_list[1] else [" *0 "]
+                                new_content_list = content_list[:NumberOf.SEQUENCES - 2] + addition + [content_list[-1]]
+                                print("content_list: %s" % content_list)
+                                print("new_content_list: %s" % new_content_list)
+                                content = "|".join(new_content_list)
 
+                        if typ in self.entry_boxes_names:
+                            idx = self.entry_boxes_names.index(typ)
+                            insert_into_entry(entry=self.entry_boxes[idx], seq=content)
+
+                        elif "sample" in typ:
+                            if content:
+                                idx = int(typ.split()[-1])
+                                self.sample_frame.insert(content, idx)
+                                self.sample_frame.set_sequence(event=None, channel=idx, seq=content)
+
+                        elif typ == "memory":
+                            self.memories[0].add_seq(content)
+                        elif typ == "bpm":
+                            self.context.bpm.set(content)
+                        else:
+                            pass
+                            print("Something weird in state file: %s" % typ)
+            except Exception:
+                traceback.print_exc()
             else:
-                try:
-                    with open(filename, "r") as f:
-                        lines = f.readlines()
-
-                    print(lines)
-                    self.memories[0].clear_all()
-
-                    for line in lines:
-                        if line != "\n":
-                            typ, content = line.split("\t")
-                            content = content.replace("\n", "").replace("\t", "")
-
-                            # This block is here because I changed the number of sequences from 7 to 8 and therefore
-                            # all previously saved states need to be expanded
-                            if StringConstants.multiple_entry_separator in content:
-                                content_list = content.split(StringConstants.multiple_entry_separator)
-
-                                if len(content_list) < NumberOf.SEQUENCES:
-                                    addition = ["   "] if "*0" not in content_list[1] else [" *0 "]
-                                    new_content_list = content_list[:NumberOf.SEQUENCES - 2] + addition + [content_list[-1]]
-                                    print("content_list: %s" % content_list)
-                                    print("new_content_list: %s" % new_content_list)
-                                    content = "|".join(new_content_list)
-
-                            if typ in self.entry_boxes_names:
-                                idx = self.entry_boxes_names.index(typ)
-                                insert_into_entry(entry=self.entry_boxes[idx], seq=content)
-
-                            elif "sample" in typ:
-                                if content:
-                                    idx = int(typ.split()[-1])
-                                    self.sample_frame.insert(content, idx)
-                                    self.sample_frame.set_sequence(event=None, channel=idx, seq=content)
-
-                            elif typ == "memory":
-                                self.memories[0].add_seq(content)
-                            elif typ == "bpm":
-                                self.context.bpm.set(content)
-                            else:
-                                pass
-                                print("Something weird in state file: %s" % typ)
-                except Exception:
-                    traceback.print_exc()
-                else:
-                    self.press_all_enters()
-                    self.reset_idx()
+                self.press_all_enters()
+                self.reset_idx()
 
     def set_memory_sequence(self, _=None):
         parser = self.context.parser
@@ -753,7 +749,7 @@ class Sequencer(tk.Frame):
 
         log(logfile=self.context.logfile, msg="Scheduling sequences set to: %s" % self.context.scheduling_sequences)
 
-    def add_seq_to_memory(self, typ):
+    def add_seq_to_memory(self, _):
         text_ = str(self.entry_sequence.get())
         self.memories[0].add_seq(text_)
 
@@ -810,7 +806,7 @@ class Sequencer(tk.Frame):
     def set_reset_sequence(self, _):
         reset_strings = self.entry_reset_sequence.get().split()
         self.context.reset_sequence = [ResetObject(reset_string) for reset_string in reset_strings]
-        self.reset_idx()
+        self.reset_idx(to=self.context.reset_sequence[0].reset_at_index)
         log(logfile=self.context.logfile, msg="Reset sequence set to: %s" % self.context.reset_sequence)
 
     def set_mode_sequence(self, _):

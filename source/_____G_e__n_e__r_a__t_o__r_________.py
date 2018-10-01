@@ -31,8 +31,6 @@ class GeneratorParser(object):
         params = {item.split(Constants.generator_param_delimiter)[0]:
                   item.split(Constants.generator_param_delimiter)[1] for item in attributes[1:]}
 
-        print(params)
-
         if "oct" in params:
             params["octaves"] = params["oct"]
         if "o" in params:
@@ -183,6 +181,7 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
 
     @staticmethod
     def _squash_sequences(lst):
+        # replace xxx with x,,
         result = []
         last = ""
 
@@ -196,9 +195,9 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
         return result
 
 
-# test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=-1;notes=0,2,,3;oct=+1-1;uniq="
+# test_string = "sin;len=16;speed=.2;amp=10;phase=;offset=-1;notes=0,2,,3+;spacer=,*,,*,,g302g,;oct=+1-1;uniq="
 #
-# gen = _____G_e__n_e__r_a__t_o__r_________(func_entry_box_string=test_string)
+# gen = _____G_e__n_e__r_a__t_o__r_________(test_string)
 #
 # print(gen.get_entrybox_repr())
 # print(GeneratorParser.parse(test_string))
