@@ -8,8 +8,7 @@ import random
 import os
 import traceback
 
-from source.note_object import (
-    NoteObject)
+from source.note_object import NoteObject
 from source.note_lengths_old import NoteLengthsOld
 from source.note_types import NoteTypes
 from source.note_container import NoteContainer
@@ -20,13 +19,14 @@ from source.constants import *
 from source.frame_sample import SampleFrame
 from source.delay import Delay
 from source.helpful_functions import a
-from source.functions import log, get_date_string, insert_into_entry, timeit, convert_midi_notes_to_note_objects
+from source.functions import log, get_date_string, insert_into_entry, convert_midi_notes_to_note_objects
 from source.memory import Memory
 from source.internal_state import InternalState
 from source.midi_input_listener import MIDIInputListener
 from source.frame_status import StatusFrame
 from source.pitch_bend import PitchBend
 from source.reset_object import ResetObject
+from source.b__i__n__a__r__y import B__i__n__a__r__y
 
 
 class Sequencer(tk.Frame):
@@ -112,7 +112,7 @@ class Sequencer(tk.Frame):
         self.entry_midi_channels = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
         self.entry_midi_channels.bind('<Return>', self.set_midi_channels)
 
-        self.entry_replace = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH)
+        self.entry_replace = tk.Entry(self.frame_entries, width=InitialValues.MAIN_ENTRY_WIDTH // 5)
         self.entry_replace.bind('<Return>', self.replace)
 
         self.entry_boxes = [
@@ -127,8 +127,7 @@ class Sequencer(tk.Frame):
                                   "pitch_shift_seq", "mode_seq", "octave_seq", "scale_seq", "replace", "reset"]
 
         self.midi_input_listener = MIDIInputListener(
-            sequencer=self,
-            context=self.context,
+            sequencer=self, context=self.context,
             input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_APC_NAME))
 
         self.frame_memories = tk.Frame(self.root)

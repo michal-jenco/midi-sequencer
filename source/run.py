@@ -1,6 +1,6 @@
 import threading
 import rtmidi
-import time
+from time import sleep
 
 from source.constants import StringConstants
 from source.sequencer import Sequencer
@@ -11,9 +11,10 @@ available_ports = midi.get_ports()
 print("Available MIDI devices:")
 for dev in available_ports:
     print("\t%s" % dev)
+sleep(.1)
 
 for i, dev in enumerate(available_ports):
-    if StringConstants().BESPECO_MIDI_NAME in dev:
+    if StringConstants.BESPECO_MIDI_NAME in dev:
         bespeco_port = i
         print("Bespeco port: %s" % bespeco_port)
         break

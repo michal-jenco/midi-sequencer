@@ -37,9 +37,9 @@ if __name__ == '__main__':
         B__i__n__a__r__y.get_pitch_class_set_from_binary_string("010101010101"), 2, True)
     print(expanded)
 
-for i in range(4096):
-    string = "%s - %s - %s" % (i,
-                               B__i__n__a__r__y.get_binary_string_from_integer(i),
-                               B__i__n__a__r__y.get_pitch_class_set_from_integer(i))
-    print(string)
+    for i in range(4096):
+        string = "%s - %s - %s" % (i,
+                                   B__i__n__a__r__y.get_binary_string_from_integer(i),
+                                   B__i__n__a__r__y.get_pitch_class_set_from_integer(i))
+        print(string)
 
