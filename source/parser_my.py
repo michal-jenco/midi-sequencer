@@ -471,7 +471,6 @@ class Parser:
     def parse_scale_sequence(self, context, text):
         result = []
         sequences = list(text.split())
-        available_scales = context.scales.get_all_names()
 
         for seq in sequences:
             times = self.parse_param("x", str(seq))
@@ -482,7 +481,7 @@ class Parser:
             if "x" in seq and times is not None:
                 seq = seq[0:seq.rindex("x")]
 
-            if seq in available_scales:
+            if self.context.scales.get_scale_by_name(seq):
                 for i in range(1 if times is None else times):
                     result.append(seq)
             else:

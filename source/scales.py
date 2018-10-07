@@ -2,6 +2,7 @@ import random
 
 from source.functions import log, get_inverse_dict
 from source.constants import MiscConstants
+from source.b__i__n__a__r__y import B__i__n__a__r__y
 
 
 class Scales:
@@ -122,9 +123,16 @@ class Scales:
         if self.context is None:
             return self.__getattribute__(name)
 
-        orig_result = self.__getattribute__(name)[self.context.scale_mode:]
-        result = [item - self.__getattribute__(name)[self.context.scale_mode] for item in orig_result]
-        return result
+        try:
+            int(name)
+        except:
+            orig_result = self.__getattribute__(name)[self.context.scale_mode:]
+            result = [item - self.__getattribute__(name)[self.context.scale_mode] for item in orig_result]
+            return result
+        else:
+            orig = B__i__n__a__r__y.expand_pcs(B__i__n__a__r__y.get_pcs(name), 2, True)
+            orig_truncated = orig[self.context.scale_mode:]
+            return [item - orig[self.context.scale_mode] for item in orig_truncated]
 
     @staticmethod
     def get_display_scale_name(scale):

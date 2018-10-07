@@ -376,6 +376,12 @@ class Sequencer(tk.Frame):
             pass
 
         self.end_all_notes()
+
+        del self.context.midi
+        self.midi_input_listener.midi_in.close_port()
+        del self.midi_input_listener.midi_out
+        print("Deleted MIDI inputs and outputs.")
+
         self.root.quit()
         self.root.destroy()
 
@@ -490,7 +496,7 @@ class Sequencer(tk.Frame):
                                      self.entry_transpose_sequences, self.entry_scale_sequences]
 
         for i, entry_name in enumerate(self.entry_names):
-            entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10)
+            entry_name.grid(row=i, column=5, sticky='wn', pady=1, padx=10, columnspan=2)
 
         self.label_status_bar.grid(row=100, column=3, columnspan=3, pady=1, padx=10)
 
@@ -800,6 +806,7 @@ class Sequencer(tk.Frame):
         self.context.scale_sequence = self.context.scale_sequences[0]
 
         self.set_memory_sequence(None)
+        self.set_status_bar_content(scale_str=individual_sequences[0].strip())
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
     def set_reset_sequence(self, _):
@@ -910,11 +917,13 @@ class Sequencer(tk.Frame):
         for k in range(len(self.context.current_scales)):
             self.context.current_scales[k] = scale_
 
-    def set_status_bar_content(self, scale_str=None):
-        if scale_str is None:
+    def set_status_bar_content(self, scale_str=None, pcs=None):
+        if scale_str is None and pcs is None:
             scale_str = self.context.current_scales[0]
+        elif pcs and scale_str is None:
+            scale_str = str(pcs)
 
-        scale = self.context.scales.get_scale_by_name(scale_str)
+        scale = pcs if pcs is not None else self.context.scales.get_scale_by_name(scale_str)
         slice_idx = MiscConstants.NO_OCTAVE_SCALE_INDEX if 12 not in scale else scale.index(12)
         msg = "%s --- %s" % (scale_str.capitalize(), scale[:slice_idx])
         msg += " --- Mode %s" % self.context.scale_mode

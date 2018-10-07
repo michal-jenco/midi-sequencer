@@ -28,8 +28,8 @@ class MIDIInputListener(object):
         self.midi_out = rtmidi.MidiOut()
         self.akai_message_midimix = AkaiMidimixMessage()
         self.akai_message_apc = AkaiApcMessage()
-        self.akai_state_midimix = AkaiMidimixState(sequencer=sequencer)
-        self.akai_state_apc = AkaiApcState(sequencer=sequencer)
+        self.akai_state_midimix = AkaiMidimixState(sequencer)
+        self.akai_state_apc = AkaiApcState(sequencer)
 
         self.button_color_controller_apc, self.button_color_controller_midimix = None, None
 
