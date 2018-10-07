@@ -28,7 +28,7 @@ def parse_permutations(seq, output_length=None, start=0, random_order=False, cou
 test = "0r+067"
 
 
-for i in range(0, 10):
+for _ in range(0, 10):
     out = parse_permutations(test, random_order=True)
     print(out)
     """

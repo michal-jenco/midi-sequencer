@@ -1132,7 +1132,7 @@ class Sequencer(tk.Frame):
 
         if transpose_offset:
             try:
-                # TODO - What if there is no sequence at self.context.root_sequences[i]?
+                # TODO - What if there is no sequence at self.context.root_sequences[_]?
 
                 if isinstance(note, NoteObject):
                     if note.pitch is None:
@@ -1350,7 +1350,7 @@ class Sequencer(tk.Frame):
                 self.context.roots[i] = self.context.root_sequences[i][root_idx]
 
                 log(logfile=self.context.logfile,
-                    msg="Root for i=%s changed to: %s" % (i, self.context.root_sequences[i][root_idx]))
+                    msg="Root for _=%s changed to: %s" % (i, self.context.root_sequences[i][root_idx]))
 
         except:
             traceback.print_exc()
@@ -1371,10 +1371,10 @@ class Sequencer(tk.Frame):
 
             threading.Thread(target=self.set_status_bar_content,
                              args=(self.context.current_scales[i],)).start()
-            # self.set_status_bar_content(scale_str=self.context.current_scales[i])
+            # self.set_status_bar_content(scale_str=self.context.current_scales[_])
 
             log(logfile=self.context.logfile,
-                msg="Scale for i=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
+                msg="Scale for _=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))
 
     def manage_mode_sequence(self, _):
         original_mode = int(self.context.scale_mode)
@@ -1388,7 +1388,7 @@ class Sequencer(tk.Frame):
 
         if current_mode != original_mode:
             self.context.change_mode(set_to=current_mode)
-            # self.end_all_notes(i)
+            # self.end_all_notes(_)
 
             log(logfile=self.context.logfile, msg="Mode changed to: %s" % current_mode)
 
