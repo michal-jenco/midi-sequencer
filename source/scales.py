@@ -126,6 +126,11 @@ class Scales:
         try:
             int(name)
         except:
+            try:
+                self.__getattribute__(name)
+            except AttributeError:
+                return B__i__n__a__r__y.get_pcs(name)
+
             orig_result = self.__getattribute__(name)[self.context.scale_mode:]
             result = [item - self.__getattribute__(name)[self.context.scale_mode] for item in orig_result]
             return result

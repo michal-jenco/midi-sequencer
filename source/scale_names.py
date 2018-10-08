@@ -234,7 +234,7 @@ scale_names_dict = {273: "Augmented Triad",
                     2509: "Double Harmonic Minor",
                     2873: "Ionian Augmented Sharp 2",
                     3289: "Lydian Sharp 2 Sharp 6",
-                    1395: "Asian (a),",
+                    1395: "Asian (a)",
                     1485: "Minor Romani",
                     2475: "Neapolitan Minor",
                     2745: "Mela Sulini",
@@ -351,3 +351,6 @@ scale_names_dict = {273: "Augmented Triad",
                     3965: "Messiaen mode 7 inverse",
                     4095: "Chromatic",
                     1233: "Chinese"}
+
+
+scale_names_dict_reversed = {name: integer for integer, name in scale_names_dict.items()}

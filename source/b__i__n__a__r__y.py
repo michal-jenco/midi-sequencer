@@ -1,4 +1,4 @@
-from source.scale_names import scale_names_dict
+from source.scale_names import scale_names_dict, scale_names_dict_reversed
 
 
 class B__i__n__a__r__y(object):
@@ -7,17 +7,19 @@ class B__i__n__a__r__y(object):
             twelve = 12
 
     @staticmethod
-    def get_pcs(number):
+    def get_pcs(input):
         """From either binary string, string integer or integer."""
 
-        if isinstance(number, str):
-            if len(number) == B__i__n__a__r__y.Constants.NumberOfNotesInScale.twelve:
-                return B__i__n__a__r__y.get_pcs_from_binary_string(number)
+        if isinstance(input, str):
+            if input in scale_names_dict_reversed:
+                return B__i__n__a__r__y.get_pcs(scale_names_dict_reversed[input])
+            if len(input) == B__i__n__a__r__y.Constants.NumberOfNotesInScale.twelve:
+                return B__i__n__a__r__y.get_pcs_from_binary_string(input)
             else:
-                return B__i__n__a__r__y.get_pcs_from_integer(int(number))
+                return B__i__n__a__r__y.get_pcs_from_integer(int(input))
 
-        elif isinstance(number, int):
-            return B__i__n__a__r__y.get_pcs_from_integer(number)
+        elif isinstance(input, int):
+            return B__i__n__a__r__y.get_pcs_from_integer(input)
 
     @staticmethod
     def get_scale_name(input):
@@ -26,9 +28,15 @@ class B__i__n__a__r__y(object):
 
         if isinstance(input, str):
             if len(input) == B__i__n__a__r__y.Constants.NumberOfNotesInScale.twelve:
-                key = scale_names_dict[int(input, 2)]
+                try:
+                    key = int(input, 2)
+                except ValueError:
+                    return None
             else:
-                key = scale_names_dict[int(input)]
+                try:
+                    key = int(input)
+                except ValueError:
+                    return None
         elif isinstance(input, int):
             key = input
         elif isinstance(input, list):
@@ -66,7 +74,6 @@ class B__i__n__a__r__y(object):
         res += [B__i__n__a__r__y.Constants.NumberOfNotesInScale.twelve * (octaves + 1)] if top_up else []
 
         return res
-        # return [sum([cls + 12 * (_ + 1) for _, cls in range(octaves)])]
 
 
 if __name__ == '__main__':

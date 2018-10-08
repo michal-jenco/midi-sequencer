@@ -26,6 +26,7 @@ from source.midi_input_listener import MIDIInputListener
 from source.frame_status import StatusFrame
 from source.pitch_bend import PitchBend
 from source.reset_object import ResetObject
+from source.b__i__n__a__r__y import B__i__n__a__r__y
 
 
 class Sequencer(tk.Frame):
@@ -560,8 +561,8 @@ class Sequencer(tk.Frame):
         insert_into_entry(self.entry_scale_sequences, " super_locrian | *0 | *0 | *0 | *0 | *0 | *0 | *0")
         insert_into_entry(self.entry_root_sequences, "e | *0 | *0 | *0 | *0 | *0 | *0 | *0")
         insert_into_entry(self.entry_note_scheduling, " 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16")
-        insert_into_entry(self.entry_octave_sequences, " -1 | -1 | -1 | -1 | -1 | -1 | -1 | -2")
-        insert_into_entry(self.entry_transpose_sequences, " 7 | 7 | 7 | 7 | 7 | 7 | 7 | 0")
+        insert_into_entry(self.entry_octave_sequences, " -1 | -1 | -1 | -1 | -1 | -1 | -1 | -3")
+        insert_into_entry(self.entry_transpose_sequences, " 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7")
         insert_into_entry(self.entry_bpm_sequence, "")
         insert_into_entry(self.entry_reset_sequence, "")
         insert_into_entry(self.entry_mode_sequence, "")
@@ -805,7 +806,12 @@ class Sequencer(tk.Frame):
         self.context.scale_sequence = self.context.scale_sequences[0]
 
         self.set_memory_sequence(None)
-        self.set_status_bar_content(scale_str=individual_sequences[0].strip())
+
+        scale_name = B__i__n__a__r__y.get_scale_name(individual_sequences[0].strip())
+        if scale_name is None:
+            scale_name = individual_sequences[0].strip()
+
+        self.set_status_bar_content(scale_str=scale_name)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
     def set_reset_sequence(self, _):
@@ -1369,9 +1375,11 @@ class Sequencer(tk.Frame):
             except:
                 pass
 
-            threading.Thread(target=self.set_status_bar_content,
-                             args=(self.context.current_scales[i],)).start()
-            # self.set_status_bar_content(scale_str=self.context.current_scales[_])
+            scale_name = B__i__n__a__r__y.get_scale_name(self.context.current_scales[i].strip())
+            if scale_name is None:
+                scale_name = self.context.current_scales[i].strip()
+
+            threading.Thread(target=self.set_status_bar_content, args=(scale_name,)).start()
 
             log(logfile=self.context.logfile,
                 msg="Scale for _=%s changed to: %s" % (i, self.context.scale_sequences[i][scale_idx]))

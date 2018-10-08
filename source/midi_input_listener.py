@@ -264,7 +264,6 @@ class MIDIInputListener(object):
         else:
             end = indices[col]
 
-        print("Start: %s, End: %s" % (start, end))
         entry_to_focus.selection_range(start, end)
 
     @staticmethod
