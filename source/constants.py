@@ -42,7 +42,7 @@ class SleepTimes:
 
 class MiscConstants:
     KNOB_SYNC_DISTANCE = 5
-    NO_OCTAVE_SCALE_INDEX = 6
+    NO_OCTAVE_SCALE_INDEX = 7
 
 
 class InitialValues:
