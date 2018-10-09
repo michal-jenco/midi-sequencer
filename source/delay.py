@@ -10,7 +10,7 @@ class Delay:
         self.context = context
 
         self.notes = []
-        self.global_delay_time = 1.0
+        self.global_delay_time = 1.
 
         self.df = DelayFunctions()
         self.dc = DelayConstants()

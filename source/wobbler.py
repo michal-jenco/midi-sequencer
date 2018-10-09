@@ -143,7 +143,7 @@ class Wobbler(tk.Frame):
             # visual output
             # print("#"*int(value/3))
 
-            cc = self.devices[self.strvar_option_volca.get()]().get_cc_by_name(self.strvar_option_cc.get())
+            cc = self.devices[self.strvar_option_volca.get()]().get(self.strvar_option_cc.get())
             msg = [0xb0 + int(self.strvar_option_midi_channel.get()) - 1, cc, value]
 
             self.context.midi.send_message(msg)

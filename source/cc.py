@@ -5,7 +5,7 @@ class CC(object):
     def get_all(self):
         return sorted(list(self.__dict__.keys()))
 
-    def get_cc_by_name(self, name_):
+    def get(self, name_):
         return self.__getattribute__(name_)
 
 
