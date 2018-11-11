@@ -3,7 +3,7 @@ class NoteDurationTypesRecord:
         self.name = name
         self.divider = divider
 
-    def get_duration_in_seconds(self, bpm):
+    def get_seconds(self, bpm):
         if self.divider is not None:
             return 60. / bpm / self.divider
         else:

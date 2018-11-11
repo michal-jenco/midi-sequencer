@@ -50,7 +50,7 @@ class NoteContainer(object):
                 note.play()
 
             if i < len(self.gaps):
-                sleep(self.gaps[i].get_duration_in_seconds(self.context.get_bpm()))
+                sleep(self.gaps[i].get_seconds(self.context.get_bpm()))
 
             if isinstance(note.pitch, int):
                 note.pitch -= self.pitch // 2

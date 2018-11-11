@@ -75,7 +75,7 @@ class NoteObject(object):
                     i, *self.decay_function.parameters if self.decay_function.parameters else ())
 
             if self.attack is not None and not i:
-                sleep(self.attack.get_duration_in_seconds(bpm=self.context.get_bpm()))
+                sleep(self.attack.get_seconds(bpm=self.context.get_bpm()))
 
             if self.channel == MIDIChannels.volca_fm:
                 self.context.midi.send_message([0xb0 + self.channel, CCFM().velocity, self.velocity])
@@ -86,7 +86,7 @@ class NoteObject(object):
             self.context.midi.send_message(note_midi_repr)
 
             if self.duration is not None:
-                sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
+                sleep_time = self.duration.get_seconds(bpm=self.context.get_bpm())
                 sleep(sleep_time)
                 self.end()
 
@@ -97,10 +97,10 @@ class NoteObject(object):
             note_midi_repr = self.get_transposed_midi_repr(semitones)
             self.context.midi.send_message(self.get_velocity_0_note(note_midi_repr))
             self.context.midi.send_message(note_midi_repr)
+            self.last_played_midi_repr = note_midi_repr
 
         if self.duration is not None:
-            sleep_time = self.duration.get_duration_in_seconds(bpm=self.context.get_bpm())
-            sleep(sleep_time)
+            sleep(self.duration.get_seconds(bpm=self.context.get_bpm()))
             self.context.midi.send_message(self.get_velocity_0_note(self.get_transposed_midi_repr(semitones)))
 
     def play_transposed(self, semitones):

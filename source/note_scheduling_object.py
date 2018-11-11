@@ -16,12 +16,10 @@ class NoteSchedulingObject:
         self.decay_function = None
         self.number_of_dots = (lambda: self._get_number_of_dots(self.seq))()
         self.is_dotted = (lambda: self._get_number_of_dots(self.seq) > 0)()
-        self.is_times = (lambda: self.times > 1)
+        self.is_times = lambda: self.times > 1
 
         if self._has_times(self.seq):
             self.times = self._get_times(self.seq)
-        else:
-            self.times = 1
 
         if self._has_attack(self.seq):
             self.attack_object = self._get_attack(self.seq)
@@ -137,12 +135,7 @@ class NoteSchedulingObject:
 
     @staticmethod
     def _get_number_of_dots(seq):
-        indices = []
-
-        for item in NoteSchedulingSequenceConstants.BOUNDED:
-            if item in seq:
-                indices.append(seq.index(item))
-
+        indices = [seq.index(item) for item in NoteSchedulingSequenceConstants.BOUNDED if item in seq]
         return seq[:min(indices) if indices else len(seq)].count(NoteSchedulingSequenceConstants.DOT)
 
     def get_play_count(self):
