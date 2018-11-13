@@ -204,14 +204,11 @@ class Wobbler(tk.Frame):
             self.running = False
             self.button_toggle["text"] = "Start"
             self["bg"] = "darkblue"
-
         else:
             self.running = True
             self.button_toggle["text"] = "Stop"
             self["bg"] = "gold"
 
     @staticmethod
-    def stretch( value, min_, max_):
+    def stretch(value, min_, max_):
         return value * (max_ - min_) + min_
-
-

@@ -24,24 +24,29 @@ class AkaiMidimixState(object):
         return self.states[self.state_index % len(self.states)]
 
 
-class AkaiApcStateNames(object):
+class AkaiApcStates(object):
     NORMAL = "Normal"
     SHIFT = "Shift"
+    WOBBLER = "Wobbler"
 
 
 class AkaiApcState(object):
     def __init__(self, sequencer):
         self.sequencer = sequencer
-        self.sequential_states = [AkaiApcStateNames.NORMAL]
-        self.current_state = AkaiApcStateNames.NORMAL
+        self.sequential_states = [AkaiApcStates.NORMAL]
+        self.current_state = AkaiApcStates.NORMAL
         self.sequential_state_index = 0
         self.previous_column = None
+        self.wobbler_control_active = False
 
     def turn_on_shift(self):
-        self.current_state = AkaiApcStateNames.SHIFT
+        self.current_state = AkaiApcStates.SHIFT
 
     def turn_off_shift(self):
         self.current_state = self.sequential_states[self.sequential_state_index % len(self.sequential_states)]
+
+    def toggle_wobbler(self):
+        self.wobbler_control_active = not self.wobbler_control_active
 
     def next(self):
         self.sequential_state_index += 1

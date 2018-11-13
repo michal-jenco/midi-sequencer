@@ -6,7 +6,7 @@ from tkinter import INSERT
 import traceback
 
 from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
-from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStateNames
+from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStates
 from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
 from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes, NumberOf
@@ -203,6 +203,11 @@ class MIDIInputListener(object):
         self.button_color_controller_apc.set_color(button_number, AkaiApcButtons.Colors.Grid.green)
         reversed_entry_list = list(reversed(self.sequencer.akai_apc_entry_names))
 
+        if self.akai_state_apc.wobbler_control_active:
+            if 56 <= button_number < 56 + len(self.sequencer.wobblers):
+                self.sequencer.wobblers[button_number - 56].toggle()
+            return
+
         entry_to_focus = reversed_entry_list[row]
 
         if row == 5:
@@ -212,7 +217,7 @@ class MIDIInputListener(object):
             return
 
         if (entry_to_focus is not self.sequencer.entry_root_sequences
-                or self.akai_state_apc.current_state is AkaiApcStateNames.SHIFT):
+                or self.akai_state_apc.current_state is AkaiApcStates.SHIFT):
 
             entry_to_focus.focus_set()
             self._set_correct_column(entry_to_focus, col)
@@ -382,7 +387,16 @@ class MIDIInputListener(object):
             return 0, 0
 
     def clip_stop_callback_apc(self):
-        pass
+        self.akai_state_apc.toggle_wobbler()
+        self.button_color_controller_apc.set_color(
+            AkaiApcButtons.Numbers.clip_stop,
+            getattr(AkaiApcButtons.Colors.RowCol, "on" if self.akai_state_apc.wobbler_control_active else "off"))
+
+        if self.akai_state_apc.wobbler_control_active:
+            for i, wobbler in enumerate(self.sequencer.wobblers):
+                self.button_color_controller_apc.set_color(
+                    56 + i,
+                    getattr(AkaiApcButtons.Colors.RowCol, "on" if wobbler.running else "off"))
 
     def solo_callback_apc(self):
         pass

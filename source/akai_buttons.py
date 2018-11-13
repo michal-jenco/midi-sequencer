@@ -31,3 +31,6 @@ class AkaiApcButtons(object):
 
         def turn_off_grid(self):
             self.set_all_grid_to_color(AkaiApcButtons.Colors.Grid.off)
+
+    class Numbers(object):
+        clip_stop = 82
