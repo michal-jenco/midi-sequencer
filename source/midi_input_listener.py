@@ -10,7 +10,8 @@ from source.launchkey_messages import LaunchkeyMessage
 from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStates
 from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
-from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes, NumberOf
+from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes, NumberOf, MIDIChannels
+from source.cc import CCFM
 
 
 class MIDIInputListener(object):
@@ -76,12 +77,14 @@ class MIDIInputListener(object):
             except:
                 # TODO: hack to make Launchkey work - when creating open_device_map_port_in, the port for both
                 # launchkey controllers is somehow the same, so only one of them is saved
-
                 try:
                     self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(
                         self.device_input_port_map[name] - 1)
                 except KeyError:
                     pass
+                else:
+                    print("Successfully connected to %s (INPUT) on port %s"
+                          % (name, self.device_input_port_map[name] - 1))
 
                 traceback.print_exc()
                 print("%s is not connected for INPUT." % name)
@@ -89,6 +92,9 @@ class MIDIInputListener(object):
                 print("Successfully connected to %s (INPUT) on port %s" % (name, self.device_input_port_map[name]))
 
         for name in self.input_names:
+            if "launchkey" in name.lower():
+                continue
+
             try:
                 print("I am going to open %s (OUTPUT) on port %s." % (name, self.device_output_port_map[name]))
                 self.open_device_map_midi_out[name], self.open_device_map_port_out[name] = open_midioutput(self.device_output_port_map[name])
@@ -546,9 +552,14 @@ class MIDIInputListener(object):
     def _callback_launchkey(self, msg):
         # msg_name = self.launchkey_1_message.get_name_by_msg(msg)
         # value = self.launchkey_1_message.get_value(msg)
+        print(msg)
 
-        if msg[0] in (130, 146):
+        if msg[0] in (130, 146, 128, 144):
             note = [0x90 + self.context.novation_launchkey_notes_channel] + msg[1:]
+
+            if self.context.novation_launchkey_notes_channel == MIDIChannels.volca_fm:
+                self.context.midi.send_message([0xb0 + self.context.novation_launchkey_notes_channel,
+                                                CCFM().velocity, msg[-1]])
             self.context.midi.send_message(note)
 
     def _callback_apc(self, msg):
