@@ -100,7 +100,8 @@ class AkaiMidimixMessage(object):
     def message_is_string(self, msg, string):
         return self.code_dict[msg[0]][msg[1]] == string
 
-    def get_value(self, msg):
+    @staticmethod
+    def get_value(msg):
         return msg[2]
 
 
@@ -147,5 +148,6 @@ class AkaiApcMessage(object):
     def message_is_string(self, msg, string):
         return self.code_dict[msg[0]][msg[1]] == string
 
-    def get_value(self, msg):
+    @staticmethod
+    def get_value(msg):
         return msg[2]

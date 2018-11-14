@@ -128,7 +128,8 @@ class Sequencer(tk.Frame):
 
         self.midi_input_listener = MIDIInputListener(
             sequencer=self, context=self.context,
-            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_APC_NAME))
+            input_names=(StringConstants.AKAI_MIDIMIX_NAME, StringConstants.AKAI_APC_NAME,
+                         StringConstants.LAUNCHKEY_IN_1, StringConstants.LAUNCHKEY_IN_2))
 
         self.frame_memories = tk.Frame(self.root)
         self.memories = []
@@ -1139,7 +1140,6 @@ class Sequencer(tk.Frame):
         if transpose_offset:
             try:
                 # TODO - What if there is no sequence at self.context.root_sequences[_]?
-
                 if isinstance(note, NoteObject):
                     if note.pitch is None:
                         return zero_transpose
@@ -1164,7 +1164,6 @@ class Sequencer(tk.Frame):
                                               else (12 * octave_multiplier + container_note.pitch - 52))
 
                             _unrooted_pitches.append(unrooted_pitch)
-
                         else:
                             _unrooted_pitches.append(None)
 
@@ -1181,7 +1180,6 @@ class Sequencer(tk.Frame):
                 transpose = zero_transpose
         else:
             transpose = zero_transpose
-
         return transpose
 
     @staticmethod

@@ -29,6 +29,8 @@ class StringConstants(object):
     AKAI_MIDIMIX_NAME = "MIDI Mix"
     AKAI_APC_NAME = "APC MINI"
     BESPECO_MIDI_NAME = "USB MIDI Interface"
+    LAUNCHKEY_IN_1 = 'Launchkey MIDI'
+    LAUNCHKEY_IN_2 = 'MIDIIN2 (Launchkey MIDI)'
     generator_delimiter = "G"
     generator_param_delimiter = "="
     generator_spacer_delimiter = "*"

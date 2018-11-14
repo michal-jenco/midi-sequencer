@@ -6,6 +6,7 @@ from tkinter import INSERT
 import traceback
 
 from source.akai_messages import AkaiMidimixMessage, AkaiApcMessage
+from source.launchkey_messages import LaunchkeyMessage
 from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcState, AkaiApcStates
 from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
@@ -28,6 +29,8 @@ class MIDIInputListener(object):
         self.midi_out = rtmidi.MidiOut()
         self.akai_message_midimix = AkaiMidimixMessage()
         self.akai_message_apc = AkaiApcMessage()
+        self.launchkey_1_message = LaunchkeyMessage()
+        self.launchkey_2_message = LaunchkeyMessage()
         self.akai_state_midimix = AkaiMidimixState(sequencer)
         self.akai_state_apc = AkaiApcState(sequencer)
 
@@ -37,6 +40,11 @@ class MIDIInputListener(object):
         self.midimix_know_row_1_synced = [False] * self.channel_count
         self.midimix_know_row_2_synced = [False] * self.channel_count
         self.midimix_know_row_3_synced = [False] * self.channel_count
+
+        self.callback_map = {StringConstants.AKAI_MIDIMIX_NAME: self._callback_midimix,
+                             StringConstants.AKAI_APC_NAME: self._callback_apc,
+                             StringConstants.LAUNCHKEY_IN_1: self._callback_launchkey,
+                             StringConstants.LAUNCHKEY_IN_2: self._callback_launchkey}
 
         self.available_input_ports = self.midi_in.get_ports()
         self.available_output_ports = self.midi_out.get_ports()
@@ -58,8 +66,13 @@ class MIDIInputListener(object):
         for name in self.input_names:
             try:
                 print("I am going to open %s (INPUT) on port %s." % (name, self.device_input_port_map[name]))
-                self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(self.device_input_port_map[name])
+                self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(
+                    self.device_input_port_map[name])
             except:
+                # TODO: hack to make Launchkey work - when creating open_device_map_port_in, the port for both
+                # launchkey controllers is somehow the same, so only one of them is saved
+                self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(
+                    self.device_input_port_map[name] - 1)
                 traceback.print_exc()
                 print("%s is not connected for INPUT." % name)
             else:
@@ -491,12 +504,10 @@ class MIDIInputListener(object):
 
     def free_1_callback_apc(self):
         """Plus"""
-
         self.free_callback_base(1)
 
     def free_2_callback_apc(self):
         """Minus"""
-
         self.free_callback_base(-1)
 
     def stop_all_clips_callback_apc(self):
@@ -511,13 +522,21 @@ class MIDIInputListener(object):
                     msg, press_duration = msg
                     type_, controller, value = msg
                     str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_message_midimix,
-                                      StringConstants.AKAI_APC_NAME: self.akai_message_apc}[name].get_name_by_msg(msg)
-                    threading.Thread(target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
-
-                    {StringConstants.AKAI_MIDIMIX_NAME: self._callback_midimix,
-                     StringConstants.AKAI_APC_NAME: self._callback_apc}[name](msg)
-
+                                      StringConstants.AKAI_APC_NAME: self.akai_message_apc,
+                                      StringConstants.LAUNCHKEY_IN_1: self.launchkey_1_message,
+                                      StringConstants.LAUNCHKEY_IN_2: self.launchkey_2_message}[name].get_name_by_msg(msg)
+                    threading.Thread(
+                        target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
+                    self.callback_map[name](msg)
             time.sleep(self.interval)
+
+    def _callback_launchkey(self, msg):
+        msg_name = self.launchkey_1_message.get_name_by_msg(msg)
+        value = self.launchkey_1_message.get_value(msg)
+
+        if msg[0] in (130, 146):
+            sent = [0x90 + 14] + msg[1:]
+            self.context.midi.send_message(sent)
 
     def _callback_apc(self, msg):
         msg_name = self.akai_message_apc.get_name_by_msg(msg)
