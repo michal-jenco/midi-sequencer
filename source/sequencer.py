@@ -206,6 +206,11 @@ class Sequencer(tk.Frame):
         self.scales_prob_poly_abs = []
         self.scales_prob_poly_rel = []
 
+        self.context.novation_launchkey_notes_channel = 14
+        self.label_novation_launchkey_note_channel = tk.Label(
+            self.frame_buttons, text=str(self.context.novation_launchkey_notes_channel), height=1)
+        self.label_novation_launchkey_note_channel.grid(row=999, column=8)
+
         self._create_prob_sliders()
 
         self.scale_bpm = tk.Scale(self.frame_sliders, from_=Ranges.BPM_MIN, to=Ranges.BPM_MAX, orient=tk.HORIZONTAL,

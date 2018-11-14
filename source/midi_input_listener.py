@@ -46,6 +46,11 @@ class MIDIInputListener(object):
                              StringConstants.LAUNCHKEY_IN_1: self._callback_launchkey,
                              StringConstants.LAUNCHKEY_IN_2: self._callback_launchkey}
 
+        self.str_controller_map = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_message_midimix,
+                                   StringConstants.AKAI_APC_NAME: self.akai_message_apc,
+                                   StringConstants.LAUNCHKEY_IN_1: self.launchkey_1_message,
+                                   StringConstants.LAUNCHKEY_IN_2: self.launchkey_2_message}
+
         self.available_input_ports = self.midi_in.get_ports()
         self.available_output_ports = self.midi_out.get_ports()
         print("Available INPUT ports: %s" % self.available_input_ports)
@@ -71,8 +76,13 @@ class MIDIInputListener(object):
             except:
                 # TODO: hack to make Launchkey work - when creating open_device_map_port_in, the port for both
                 # launchkey controllers is somehow the same, so only one of them is saved
-                self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(
-                    self.device_input_port_map[name] - 1)
+
+                try:
+                    self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(
+                        self.device_input_port_map[name] - 1)
+                except KeyError:
+                    pass
+
                 traceback.print_exc()
                 print("%s is not connected for INPUT." % name)
             else:
@@ -361,10 +371,14 @@ class MIDIInputListener(object):
         pass
 
     def send_callback_apc(self):
-        pass
+        self.context.novation_launchkey_notes_channel -= 1
+        self.sequencer.label_novation_launchkey_note_channel.config(
+            text=str(self.context.novation_launchkey_notes_channel))
 
     def device_callback_apc(self):
-        pass
+        self.context.novation_launchkey_notes_channel += 1
+        self.sequencer.label_novation_launchkey_note_channel.config(
+            text=str(self.context.novation_launchkey_notes_channel))
 
     def shift_pressed_callback_apc(self):
         self.akai_state_apc.turn_on_shift()
@@ -521,22 +535,21 @@ class MIDIInputListener(object):
                 if msg:
                     msg, press_duration = msg
                     type_, controller, value = msg
-                    str_controller = {StringConstants.AKAI_MIDIMIX_NAME: self.akai_message_midimix,
-                                      StringConstants.AKAI_APC_NAME: self.akai_message_apc,
-                                      StringConstants.LAUNCHKEY_IN_1: self.launchkey_1_message,
-                                      StringConstants.LAUNCHKEY_IN_2: self.launchkey_2_message}[name].get_name_by_msg(msg)
-                    threading.Thread(
-                        target=lambda: print("MIDI Input Listener: %s: %s" % (str_controller, value))).start()
+                    str_controller = self.str_controller_map[name].get_name_by_msg(msg)
+
+                    if "launchkey" not in name.lower():
+                        print("MIDI Input Listener: %s: %s" % (str_controller, value))
+
                     self.callback_map[name](msg)
             time.sleep(self.interval)
 
     def _callback_launchkey(self, msg):
-        msg_name = self.launchkey_1_message.get_name_by_msg(msg)
-        value = self.launchkey_1_message.get_value(msg)
+        # msg_name = self.launchkey_1_message.get_name_by_msg(msg)
+        # value = self.launchkey_1_message.get_value(msg)
 
         if msg[0] in (130, 146):
-            sent = [0x90 + 14] + msg[1:]
-            self.context.midi.send_message(sent)
+            note = [0x90 + self.context.novation_launchkey_notes_channel] + msg[1:]
+            self.context.midi.send_message(note)
 
     def _callback_apc(self, msg):
         msg_name = self.akai_message_apc.get_name_by_msg(msg)

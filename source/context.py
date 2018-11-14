@@ -68,6 +68,7 @@ class Context:
         self.scale_mode_changing_on = False
         self.off_list = []
         self.prob_skip_note = tk.StringVar(root)
+        self.novation_launchkey_notes_channel = None
 
         self.comma_pause = 1
         self.dot_pause = 2
