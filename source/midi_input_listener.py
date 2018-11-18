@@ -12,6 +12,8 @@ from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
 from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes, NumberOf, MIDIChannels
 from source.cc import CCFM
+from source.button_numbers import ButtonNumbers
+from source.novation_callbacks import NovationCallbacks
 
 
 class MIDIInputListener(object):
@@ -34,6 +36,7 @@ class MIDIInputListener(object):
         self.launchkey_2_message = LaunchkeyMessage()
         self.akai_state_midimix = AkaiMidimixState(sequencer)
         self.akai_state_apc = AkaiApcState(sequencer)
+        self.novation_callbacks = NovationCallbacks(sequencer, context)
 
         self.button_color_controller_apc, self.button_color_controller_midimix = None, None
 
@@ -150,6 +153,11 @@ class MIDIInputListener(object):
         self.main_loop_thread = threading.Thread(target=self.main_loop, args=())
         self.main_loop_thread.setDaemon(True)
         self.main_loop_thread.start()
+
+        print(self.open_device_map_midi_in)
+        print(self.open_device_map_port_in)
+        print(self.open_device_map_midi_out)
+        print(self.open_device_map_port_out)
 
     def get_callback_dict(self):
         return self._callback_dict_midimix
@@ -496,7 +504,6 @@ class MIDIInputListener(object):
 
                 # elif focused_widget is self._callback_dict_entries_free.keys():
 
-
                 else:
                     item = int(item)
                     current_cell_list[i] = item + direction
@@ -507,7 +514,6 @@ class MIDIInputListener(object):
             content_list[track_column] = current_cell_list
             insert_into_entry(focused_widget, "|".join(content_list))
             self._set_correct_column(focused_widget, track_column)
-
             self._callback_dict_entries_free[focused_widget](None)
 
     @staticmethod
@@ -554,13 +560,26 @@ class MIDIInputListener(object):
         # value = self.launchkey_1_message.get_value(msg)
         print(msg)
 
-        if msg[0] in (130, 146, 128, 144):
-            note = [0x90 + self.context.novation_launchkey_notes_channel] + msg[1:]
+        if ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.SLIDER_1):
+            self.novation_callbacks.slider_1(msg[-1])
+
+        elif ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.SLIDER_2):
+            self.novation_callbacks.slider_2(msg[-1])
+
+        elif msg[0] in (130, 146, 128, 144):
+            original_velocity = msg[-1]
+            velocity = int(range_to_range(Ranges.MIDI_CC,
+                                          self.context.get_novation_velocity_range(),
+                                          original_velocity)) if original_velocity != 0 else 0
+            note = [0x90 + self.context.novation_launchkey_notes_channel, msg[1], velocity]
 
             if self.context.novation_launchkey_notes_channel == MIDIChannels.volca_fm:
                 self.context.midi.send_message([0xb0 + self.context.novation_launchkey_notes_channel,
-                                                CCFM().velocity, msg[-1]])
+                                                CCFM().velocity, velocity])
             self.context.midi.send_message(note)
+            # print("original velocity: %s" % original_velocity)
+            # print("new velocity: %s" % velocity)
+            # print("sending note: %s" % note)
 
     def _callback_apc(self, msg):
         msg_name = self.akai_message_apc.get_name_by_msg(msg)
