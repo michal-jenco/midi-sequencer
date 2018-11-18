@@ -84,7 +84,7 @@ class MIDIInputListener(object):
                     self.open_device_map_midi_in[name], self.open_device_map_port_in[name] = open_midiinput(
                         self.device_input_port_map[name] - 1)
                 except KeyError:
-                    pass
+                    ...
                 else:
                     print("Successfully connected to %s (INPUT) on port %s"
                           % (name, self.device_input_port_map[name] - 1))
@@ -314,7 +314,7 @@ class MIDIInputListener(object):
         return row, col
 
     def fader_callback_apc(self, i, value):
-        pass
+        ...
 
     def _up_down_callback_base(self, direction):
         focused_widget = self.sequencer.get_focused_widget()
@@ -370,7 +370,7 @@ class MIDIInputListener(object):
             self._set_selection_range(col_button + direction, focused_widget)
 
         else:
-            pass
+            ...
 
     def left_callback_apc(self):
         self._left_right_callback_base(-1)
@@ -379,10 +379,10 @@ class MIDIInputListener(object):
         self._left_right_callback_base(1)
 
     def volume_callback_apc(self):
-        pass
+        ...
 
     def pan_callback_apc(self):
-        pass
+        ...
 
     def send_callback_apc(self):
         self.context.novation_launchkey_notes_channel -= 1
@@ -440,16 +440,16 @@ class MIDIInputListener(object):
                     getattr(AkaiApcButtons.Colors.RowCol, "on" if wobbler.running else "off"))
 
     def solo_callback_apc(self):
-        pass
+        ...
 
     def rec_arm_callback_apc(self):
-        pass
+        ...
 
     def mute_callback_apc(self):
-        pass
+        ...
 
     def select_callback_apc(self):
-        pass
+        ...
 
     def free_callback_base(self, direction):
         focused_widget = self.sequencer.get_focused_widget()
@@ -659,9 +659,8 @@ class MIDIInputListener(object):
                         velocities[i // 2].set(value)
                 else:
                     velocities[i // 2].set(value)
-
             except:
-                pass
+                ...
 
         elif "Bank" in msg_name and "Pressed" in msg_name:
             self.bank_callback_midimix(direction=msg_name.split()[1])

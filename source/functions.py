@@ -14,7 +14,6 @@ def log(logfile=None, msg=""):
     if logfile is not None:
         logfile.write(result)
         logfile.flush()
-
     print(result)
 
 
@@ -23,7 +22,6 @@ def get_date_string(type):
 
     if type == "filename":
         result = str(datetime.datetime.now()).split(".")[0].replace(":", "-").replace(" ", "-")
-
     return result
 
 
@@ -43,21 +41,17 @@ def insert_into_entry(entry, seq):
 
 
 def range_to_range(r1, r2, value):
-    """Scale value with range1 to range2"""
+    """Scale value with range1 to range2."""
 
-    OldMin, OldMax = r1
-    NewMin, NewMax = r2
+    old_min, old_max = r1
+    new_min, new_max = r2
+    old_range = old_max - old_min
 
-    OldRange = OldMax - OldMin
-
-    if OldRange == 0:
-        NewValue = NewMin
-
+    if old_range == 0:
+        return new_min
     else:
-        NewRange = NewMax - NewMin
-        NewValue = (((value - OldMin) * NewRange) / OldRange) + NewMin
-
-    return NewValue
+        new_range = new_max - new_min
+        return (((value - old_min) * new_range) / old_range) + new_min
 
 
 def rotate(list_, n):
