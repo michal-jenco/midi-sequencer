@@ -5,6 +5,7 @@ from source.parser_my import Parser
 from source.constants import SetSequenceModes
 from source.functions import insert_into_entry, log
 from source.notes import *
+from source.loggger import Loggger
 
 
 class Context:
@@ -69,6 +70,8 @@ class Context:
         self.off_list = []
         self.prob_skip_note = tk.StringVar(root)
         self.novation_launchkey_notes_channel = None
+        self.novation_logger = Loggger("../other")
+        self.novation_dont_end_notes = False
 
         self.novation_velocity_min = 0
         self.novation_velocity_max = 127

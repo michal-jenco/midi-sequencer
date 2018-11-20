@@ -3,6 +3,16 @@ class NovationCallbacks(object):
         self.sequencer = sequencer
         self.context = context
 
+    def midi_channel_left(self):
+        self.context.novation_launchkey_notes_channel -= 1
+        self.sequencer.label_novation_launchkey_note_channel.config(
+            text=str(self.context.novation_launchkey_notes_channel))
+
+    def midi_channel_right(self):
+        self.context.novation_launchkey_notes_channel += 1
+        self.sequencer.label_novation_launchkey_note_channel.config(
+            text=str(self.context.novation_launchkey_notes_channel))
+
     def slider_1(self, value):
         self.context.novation_velocity_min = value
 
@@ -53,3 +63,11 @@ class NovationCallbacks(object):
 
     def knob_8(self, value):
         ...
+
+    def button_1(self):
+        self.context.novation_dont_end_notes = not self.context.novation_dont_end_notes
+
+    def button_2(self):
+        for i in range(128):
+            self.context.midi.send_message(
+                [0x90 + self.context.novation_launchkey_notes_channel, i, 0])
