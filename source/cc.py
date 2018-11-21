@@ -1,6 +1,6 @@
 class CC(object):
     def __init__(self):
-        pass
+        self.modwheel = 1
 
     def get_all(self):
         return sorted(list(self.__dict__.keys()))

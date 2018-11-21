@@ -939,7 +939,8 @@ class Sequencer(tk.Frame):
 
     def _set_transpose_sequences_based_on_scale_length(self, scale):
         if scale == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
-            insert_into_entry(self.entry_transpose_sequences, "12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 ")
+            insert_into_entry(self.entry_transpose_sequences, StringConstants.multiple_entry_separator.join(
+                ["12" for _ in range(NumberOf.SEQUENCES)]))
             self.set_transpose_sequences(None)
             return
 
@@ -949,7 +950,7 @@ class Sequencer(tk.Frame):
             idx = None
         insert_into_entry(self.entry_transpose_sequences,
                           " {} ".format(StringConstants.multiple_entry_separator).join(
-                              [str(len(self.context.scale[:idx])) if idx else "0" for _ in range(NumberOf.SEQUENCES)]))
+                              [str(len(self.context.scale[:idx])) if idx is not None else "0" for _ in range(NumberOf.SEQUENCES)]))
         self.set_transpose_sequences(None)
 
     def set_status_bar_content(self, scale_str=None, pcs=None):
