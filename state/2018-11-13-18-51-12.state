@@ -1,0 +1,28 @@
+off array	   |    |    |    |    |    |    | 
+poly	   |    |    |    |    |    |    | 
+poly_relative	   |    |    |    |    |    |    | 
+memory_seq	 &032 | & | & | & | & | &g0,,,,3,2,,g,,, | & | & 
+note_scheduling	 8 | 8 | 8 | 16 | 16 | 1 | 1 | 16
+skip_par	   |    |    |    |    |    |    | 
+skip_seq	   |    |    |    |    |    |    | 
+midi_channels	 14 | 14 | 15 | 10 | 10 | 11 | 11 | 13 
+root_seq	e | *0 | *0 | *0 | *0 | *0 | *0 | *0
+transpose_seq	 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7
+bpm_seq	
+pitch_shift_seq	   |    |    |    |    |    |    | 
+mode_seq	
+octave_seq	 -1 | -1 | -1 | -1 | -1 | -1 | -1 | -3
+scale_seq	 super_locrian | *0 | *0 | *0 | *0 | *0 | *0 | *0
+replace	
+reset	
+sample 0	
+sample 1	
+sample 2	
+sample 3	
+sample 4	
+sample 5	
+sample 6	
+sample 7	
+sample 8	
+sample 9	
+bpm	60.0
