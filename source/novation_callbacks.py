@@ -2,7 +2,7 @@ from source.cc import CCFM
 from source.functions import range_to_range
 from source.button_numbers import ButtonNumbers
 from source.constants import Ranges, MIDIChannels
-from source.pitch_bend import PitchBend
+from source.pitch_bend import PitchBend, PitchBendRanges
 from source.note_object import NoteObject
 from source.note_types import NoteTypes
 
@@ -11,6 +11,7 @@ class NovationCallbacks(object):
     def __init__(self, sequencer, context):
         self.sequencer = sequencer
         self.context = context
+        self.pitchbend = PitchBend("0", None, self.context.midi)
 
     def __call__(self, msg, *args, **kwargs):
         one, two, three = msg
@@ -84,9 +85,10 @@ class NovationCallbacks(object):
             # print("sending note: %s" % note)
 
     def pitch(self, value):
-        pb = PitchBend("0", self.context.novation_midi_channel, self.context.midi)
-        pb.integer_bend = int(range_to_range(Ranges.MIDI_CC, (0, 16383), value))
-        pb()
+        self.pitchbend.channel = self.context.novation_midi_channel
+        self.pitchbend.integer_bend = range_to_range(
+            Ranges.MIDI_CC, (PitchBendRanges.minimum, PitchBendRanges.maximum), value, int)
+        self.pitchbend()
 
     def modulation(self, value):
         self.context.midi.send_message([0xb0 + self.context.novation_midi_channel, 1, value])

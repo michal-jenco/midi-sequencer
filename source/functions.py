@@ -40,7 +40,7 @@ def insert_into_entry(entry, seq):
     entry.insert(0, seq)
 
 
-def range_to_range(r1, r2, value):
+def range_to_range(r1, r2, value, cast=None):
     """Scale value with range1 to range2."""
 
     old_min, old_max = r1
@@ -48,10 +48,14 @@ def range_to_range(r1, r2, value):
     old_range = old_max - old_min
 
     if old_range == 0:
-        return new_min
+        result = new_min
     else:
         new_range = new_max - new_min
-        return (((value - old_min) * new_range) / old_range) + new_min
+        result = (((value - old_min) * new_range) / old_range) + new_min
+
+    if cast:
+        return cast(result)
+    return result
 
 
 def rotate(list_, n):
