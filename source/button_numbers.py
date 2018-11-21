@@ -1,3 +1,6 @@
+from source.functions import get_inverse_dict
+
+
 class ButtonNumbers(object):
     """"""
 
@@ -77,7 +80,18 @@ class ButtonNumbers(object):
         _CODES_PAD = _CODE_PAD_PRESS, _CODE_PAD_RELEASE
         _CODES_BASIC = 176, 224
 
+        _INVERSE_DICT = None
+
         @staticmethod
         def msg_is_button(msg, button):
             if msg[0] in ButtonNumbers.Novation._CODES_BASIC:
                 return msg[1] == button
+
+        @staticmethod
+        def get_by_number(number):
+            if not ButtonNumbers.Novation._INVERSE_DICT:
+                ButtonNumbers.Novation._INVERSE_DICT = get_inverse_dict(ButtonNumbers.Novation.__dict__)
+
+            return (ButtonNumbers.Novation._INVERSE_DICT[number]
+                    if number in ButtonNumbers.Novation._INVERSE_DICT
+                    else None)

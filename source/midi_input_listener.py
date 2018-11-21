@@ -11,8 +11,6 @@ from source.akai_state import AkaiMidimixStateNames, AkaiMidimixState, AkaiApcSt
 from source.akai_buttons import AkaiApcButtons
 from source.functions import range_to_range, get_all_indices, insert_into_entry
 from source.constants import Ranges, MiscConstants, StringConstants, SleepTimes, NumberOf, MIDIChannels
-from source.cc import CCFM
-from source.button_numbers import ButtonNumbers
 from source.novation_callbacks import NovationCallbacks
 
 
@@ -552,43 +550,9 @@ class MIDIInputListener(object):
             time.sleep(self.interval)
 
     def _callback_launchkey(self, msg):
-        # msg_name = self.launchkey_1_message.get_name_by_msg(msg)
+        msg_name = self.launchkey_1_message.get_name_by_msg(msg)
         value = self.launchkey_1_message.get_value(msg)
-        # print(msg)
-
-        if ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.SLIDER_1):
-            self.novation_callbacks.slider_1(msg[-1])
-        elif ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.SLIDER_2):
-            self.novation_callbacks.slider_2(msg[-1])
-        elif ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.MIDI_CHANNEL_DOWN) and value:
-            self.novation_callbacks.midi_channel_left()
-        elif ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.MIDI_CHANNEL_UP) and value:
-            self.novation_callbacks.midi_channel_right()
-        elif ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.BUTTON_1) and value:
-            self.novation_callbacks.button_1()
-        elif ButtonNumbers.Novation.msg_is_button(msg, ButtonNumbers.Novation.BUTTON_2) and value:
-            self.novation_callbacks.button_2()
-
-        elif msg[0] in (130, 146, 128, 144):
-            original_velocity = msg[-1]
-            velocity = int(range_to_range(Ranges.MIDI_CC,
-                                          self.context.get_novation_velocity_range(),
-                                          original_velocity)) if original_velocity != 0 else 0
-            note = [0x90 + self.context.novation_launchkey_notes_channel, msg[1], velocity]
-
-            if self.context.novation_launchkey_notes_channel == MIDIChannels.volca_fm:
-                self.context.midi.send_message([0xb0 + self.context.novation_launchkey_notes_channel,
-                                                CCFM().velocity, velocity])
-
-            if not velocity and self.context.novation_dont_end_notes:
-                return
-            else:
-                self.context.midi.send_message(note)
-                self.context.novation_logger.log(note)
-
-            # print("original velocity: %s" % original_velocity)
-            # print("new velocity: %s" % velocity)
-            # print("sending note: %s" % note)
+        self.novation_callbacks(msg)
 
     def _callback_apc(self, msg):
         msg_name = self.akai_message_apc.get_name_by_msg(msg)

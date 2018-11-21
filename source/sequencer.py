@@ -206,9 +206,9 @@ class Sequencer(tk.Frame):
         self.scales_prob_poly_abs = []
         self.scales_prob_poly_rel = []
 
-        self.context.novation_launchkey_notes_channel = 14
+        self.context.novation_midi_channel = 14
         self.label_novation_launchkey_note_channel = tk.Label(
-            self.frame_buttons, text=str(self.context.novation_launchkey_notes_channel), height=1)
+            self.frame_buttons, text=str(self.context.novation_midi_channel), height=1)
         self.label_novation_launchkey_note_channel.grid(row=999, column=8)
 
         self._create_prob_sliders()
@@ -817,6 +817,13 @@ class Sequencer(tk.Frame):
         if scale_name is None:
             scale_name = individual_sequences[0].strip()
 
+        try:
+            self._set_transpose_sequences_based_on_scale_length(B__i__n__a__r__y.get_pcs(scale_name))
+        except (TypeError, ValueError):
+            ...
+        else:
+            self._set_transpose_sequences_based_on_scale_length(self.context.scales.get_scale_by_name(scale_name))
+
         self.set_status_bar_content(scale_str=scale_name)
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
@@ -927,6 +934,23 @@ class Sequencer(tk.Frame):
 
         for k in range(len(self.context.current_scales)):
             self.context.current_scales[k] = scale_
+
+        self._set_transpose_sequences_based_on_scale_length(self.context.scale)
+
+    def _set_transpose_sequences_based_on_scale_length(self, scale):
+        if scale == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
+            insert_into_entry(self.entry_transpose_sequences, "12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 ")
+            self.set_transpose_sequences(None)
+            return
+
+        if 12 in scale:
+            idx = scale.index(12)
+        else:
+            idx = None
+        insert_into_entry(self.entry_transpose_sequences,
+                          " {} ".format(StringConstants.multiple_entry_separator).join(
+                              [str(len(self.context.scale[:idx])) if idx else "0" for _ in range(NumberOf.SEQUENCES)]))
+        self.set_transpose_sequences(None)
 
     def set_status_bar_content(self, scale_str=None, pcs=None):
         if scale_str is None and pcs is None:
