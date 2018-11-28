@@ -206,7 +206,7 @@ class Sequencer(tk.Frame):
         self.scales_prob_poly_abs = []
         self.scales_prob_poly_rel = []
 
-        self.context.novation_midi_channel = 14
+        self.context.novation_midi_channel = MIDIChannels.roland_d05
         self.label_novation_launchkey_note_channel = tk.Label(
             self.frame_buttons, text=str(self.context.novation_midi_channel), height=1)
         self.label_novation_launchkey_note_channel.grid(row=999, column=8)
@@ -290,10 +290,10 @@ class Sequencer(tk.Frame):
         self.init_entries()
 
     def _fill_scale_buttons_frame(self):
-        font = ("Courier", "8")
-        font_bold = ("Courier", "10", "bold")
-        row_ = 0
-        col_ = 0
+        font = "Courier", "8"
+        font_bold = "Courier", "10", "bold"
+        row_, col_ = 0, 0
+        
         for scale in self.context.scales.get_all_names():
             scale_name = self.context.scales.get_display_scale_name(scale)
 

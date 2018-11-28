@@ -1,3 +1,4 @@
+import os
 import time
 import datetime
 import tkinter as tk
@@ -103,3 +104,8 @@ def convert_midi_notes_to_note_objects(context, midi_notes):
         elif isinstance(note, NoteContainer):
             result.append(note)
     return result
+
+
+def print_dict(d):
+    for key, value in d.items():
+        print("\"{}\": \"{}\"".format(key, value))
