@@ -30,11 +30,7 @@ class PitchBend(object):
         elif len(control_seq) == 2:
             self.times, self.type = [int(a) for a in control_seq]
 
-        self.name = "%s %s %s. Channel: %s." % (
-            "Plus" if self.direction == 1 else "Minus",
-            self.times,
-            PitchBendNames[self.type] + ("s" if self.times > 1 else ""),
-            self.channel)
+        self._refresh_name()
 
         if self.type == 0:
             self.integer_bend = PitchBendRanges.zero
@@ -42,15 +38,24 @@ class PitchBend(object):
             self.integer_bend = (PitchBendRanges.zero
                                  + self.direction * int((self.times / (self.type / 2.)) * PitchBendRanges.monologue_semitone))
 
+    def _refresh_name(self):
+        self.name = "%s %s %s. Channel: %s." % (
+            "Plus" if self.direction == 1 else "Minus",
+            self.times,
+            PitchBendNames[self.type] + ("s" if self.times > 1 else ""),
+            self.channel)
+
     def __call__(self):
-        # print("Sending PitchBend: %s" % self.name)
+        self._refresh_name()
         msb = (self.integer_bend >> 7) & 0xff
         lsb = self.integer_bend & 0xff
 
-        # print("Integer bend: %s" % self.integer_bend)
-        # print("Reconsutzcted: %s" % ((msb * 2 ** 7) | lsb))
-
         msg = [0b11100000 + self.channel, lsb, msb]
         self.midi.send_message(msg)
+
+        # print("Sending PitchBend: %s" % self.name)
+        # print("Integer bend: %s" % self.integer_bend)
+        # print("Reconsutzcted: %s" % ((msb * 2 ** 7) | lsb))
+        # print("Sending message: {}".format(msg))
 
         return self.name

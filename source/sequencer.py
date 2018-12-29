@@ -42,6 +42,7 @@ class Sequencer(tk.Frame):
 
         self.threads = []
 
+
         self.frame_delay = tk.Frame(self.root)
         self.frame_delay["bg"] = "yellow"
         self.strvar_delay_multiplier = tk.StringVar(self.frame_delay)
@@ -56,6 +57,7 @@ class Sequencer(tk.Frame):
         self.delay_is_on = lambda: True if self.intvar_checkbox_state.get() == 1 else False
 
         self.context = Context(self.root, self)
+        self.context.midi = midi_
         self.context.root = e2
         self.context.mode = MODE_SIMPLE
         self.context.scale = None
@@ -163,7 +165,6 @@ class Sequencer(tk.Frame):
         self.actual_notes_played_counts = [0, 0, 0, 0, 0, 0, 0, 0]
 
         self.frame_status = StatusFrame(parent=self.root, sequencer=self)
-        self.context.midi = midi_
         self.bpm = self.context.get_bpm()
 
         self.delay = Delay(self.context)

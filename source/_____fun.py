@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from source.functions import print_dict
 
-all_files = os.listdir(os.getcwd())
+all_files = os.listdir(".")
 py_file_contents = [open(f, "r").readlines() for f in all_files if f.endswith(".py")]
 combined_lines = [line.strip() for file in py_file_contents for line in file if line != "\n" and line]
 
@@ -19,6 +19,8 @@ for line in sorted_lines:
 sorted_list = sorted(count_dict.items(), key=lambda o: o[1])
 sorted_dict = OrderedDict(sorted_list)
 
-print(os.linesep.join(sorted_lines))
-print_dict(count_dict)
+# print(os.linesep.join(sorted_lines))
+# print_dict(count_dict)
 print_dict(sorted_dict)
+
+print(len(combined_lines))
