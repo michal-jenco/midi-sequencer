@@ -17,7 +17,8 @@ class Parser:
     def __init__(self, context):
         self.context = context
         self.string_constants = StringConstants
-        self.plus_minus_add_dict = {-36: "---", -24: "--", -12: "-", 0: "", 12: "+", 24: "++", 36: "+++"}
+        self.plus_minus_add_dict = {-48: "----", -36: "---", -24: "--", -12: "-", 0: "", 12: "+", 24: "++", 36: "+++",
+                                    48: "++++"}
 
     @staticmethod
     def _note_is_container_boundary(note):
@@ -275,10 +276,13 @@ class Parser:
 
     @staticmethod
     def parse_param(param, seq):
-        repetitions = None
-
         if not seq:
             return None
+
+        if param == "r" and param in seq:
+            return True
+
+        repetitions = None
 
         if param in seq:
             param_index = seq.rindex(param)

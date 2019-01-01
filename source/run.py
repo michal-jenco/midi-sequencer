@@ -25,8 +25,6 @@ except:
     midi.open_port(0)
 
 thread_1 = threading.Thread(target=lambda: Sequencer(midi).show())
-thread_2 = threading.Thread(target=lambda: Sequencer(midi).show())
 thread_1.start()
-thread_2.start()
 # thread_2 = threading.Thread(target=lambda: Sequencer(midi).show())
 # thread_2.start()

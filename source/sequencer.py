@@ -825,7 +825,11 @@ class Sequencer(tk.Frame):
         else:
             self._set_transpose_sequences_based_on_scale_length(self.context.scales.get_scale_by_name(scale_name))
 
-        self.set_status_bar_content(scale_str=scale_name)
+        try:
+            self.set_status_bar_content(scale_str=scale_name)
+        except:
+            pass
+
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
     def set_reset_sequence(self, _):
