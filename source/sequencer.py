@@ -628,6 +628,9 @@ class Sequencer(tk.Frame):
                 for seq in internal_state.memory:
                     f.write("memory\t%s\n" % seq)
 
+                for i, wobbler in enumerate(self.wobblers):
+                    f.write("wobbler\t{} {}\n".format(i, wobbler.get_state()))
+
                 f.write("bpm\t%s" % self.context.get_bpm())
                 f.flush()
 
@@ -681,6 +684,8 @@ class Sequencer(tk.Frame):
                             self.memories[0].add_seq(content)
                         elif typ == "bpm":
                             self.context.bpm.set(content)
+                        elif typ == "wobbler":
+                            self.wobblers[int(content[0])].set_state_from_string(content[1:])
                         else:
                             pass
                             print("Something weird in state file: %s" % typ)

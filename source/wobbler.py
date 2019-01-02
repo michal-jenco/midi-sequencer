@@ -72,6 +72,39 @@ class Wobbler(tk.Frame):
         # self.output_file = open("../other/" + self.name + ".txt", "a")
         print("%s created" % self.name)
 
+    def get_state(self):
+        """Get a string representing the wobbler's state. THis will be saved to file on saving the sequencer state."""
+
+        return "{} {} {} {} {} {} {} {} {} {}".format(
+            self.strvar_option_volca.get(),
+            self.strvar_option_cc.get(),
+            self.strvar_option_func.get(),
+            self.strvar_option_midi_channel.get(),
+            self.strvar_scale_min.get(),
+            self.strvar_scale_max.get(),
+            self.strvar_scale_wait_time.get(),
+            self.strvar_scale_func_factor.get(),
+            self.intvar_check_10x.get(),
+            1 if self.running else 0,
+        )
+
+    def set_state_from_string(self, string):
+        """Set internal state from the passed string."""
+
+        things = string.split()
+        print("aaaa" + str(things))
+
+        self.strvar_option_volca.set(things[0])
+        self.strvar_option_cc.set(things[1])
+        self.strvar_option_func.set(things[2])
+        self.strvar_option_midi_channel.set(things[3])
+        self.strvar_scale_min.set(things[4])
+        self.strvar_scale_max.set(things[5])
+        self.strvar_scale_wait_time.set(things[6])
+        self.strvar_scale_func_factor.set(things[7])
+        self.intvar_check_10x.set(things[8])
+        self.toggle(set_to=True if things[9] == "1" else False)
+
     def update_cc_list(self, _):
         menu = self.option_cc["menu"]
         menu.delete(0, "end")
@@ -199,12 +232,12 @@ class Wobbler(tk.Frame):
     def sin_func(loop_cnt, scale):
         return (m.sin(loop_cnt / scale) + 1) / 2
 
-    def toggle(self):
-        if self.running:
+    def toggle(self, set_to=None):
+        if self.running or set_to is False:
             self.running = False
             self.button_toggle["text"] = "Start"
             self["bg"] = "darkblue"
-        else:
+        elif not self.running or set_to is True:
             self.running = True
             self.button_toggle["text"] = "Stop"
             self["bg"] = "gold"
