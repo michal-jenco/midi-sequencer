@@ -77,7 +77,7 @@ class NoteObject(object):
             if self.attack is not None and not i:
                 sleep(self.attack.get_seconds(bpm=self.context.get_bpm()))
 
-            if self.channel == MIDIChannels.volca_fm:
+            if self.channel == MIDIChannels.volca_fm and self.context.volca_fm_send_velocity:
                 self.context.midi.send_message([0xb0 + self.channel, CCFM().velocity, self.velocity])
 
             note_midi_repr = self.get_midi_repr()

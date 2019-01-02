@@ -434,7 +434,7 @@ class MIDIInputListener(object):
                     getattr(AkaiApcButtons.Colors.RowCol, "on" if wobbler.running else "off"))
 
     def solo_callback_apc(self):
-        ...
+        self.context.volca_fm_send_velocity = not self.context.volca_fm_send_velocity
 
     def rec_arm_callback_apc(self):
         ...
