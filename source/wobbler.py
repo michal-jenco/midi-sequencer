@@ -92,7 +92,6 @@ class Wobbler(tk.Frame):
         """Set internal state from the passed string."""
 
         things = string.split()
-        print("aaaa" + str(things))
 
         self.strvar_option_volca.set(things[0])
         self.strvar_option_cc.set(things[1])

@@ -75,6 +75,10 @@ class Context:
         self.novation_record_on = False
         self.volca_fm_send_velocity = False
 
+        self.comma_pause = 1
+        self.dot_pause = 2
+        self.dash_pause = 4
+
         self.novation_velocity_min = 0
         self.novation_velocity_max = 127
         self.get_novation_velocity_range = lambda: (self.novation_velocity_min, self.novation_velocity_max)
