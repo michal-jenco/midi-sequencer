@@ -159,9 +159,9 @@ class _____G_e__n_e__r_a__t_o__r_________(object):
     def _manage_octaves(self):
         if self.octaves:
             if "-" in self.octaves:
-                self.notes = ["%s-" % note for note in self.notes] + self.notes
+                self.notes = [("%s-" % note) for note in self.notes] + self.notes
             if "+" in self.octaves:
-                self.notes += ["%s+" % note for note in self.notes]
+                self.notes += [("%s+" % note) for note in self.notes]
 
     def __repr__(self):
         return (("%s:\n" % self.__class__.__name__)

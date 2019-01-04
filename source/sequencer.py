@@ -1067,11 +1067,15 @@ class Sequencer(tk.Frame):
         return vel_min, vel_max
 
     def skip_note_parallel(self, idx, j):
-        if self.context.skip_note_parallel_sequences:
-            if self.context.skip_note_parallel_sequences[j]:
-                for i in range(0, self.context.skip_note_parallel_sequences[j].__len__()):
-                    if (idx // self.get_tempo_multiplier()) % (self.context.skip_note_parallel_sequences[j][i] + 1) == 0:
-                        return True
+        try:
+            if self.context.skip_note_parallel_sequences:
+                if self.context.skip_note_parallel_sequences[j]:
+                    for i in range(0, self.context.skip_note_parallel_sequences[j].__len__()):
+                        if (idx // self.get_tempo_multiplier()) % (self.context.skip_note_parallel_sequences[j][i] + 1) == 0:
+                            return True
+        except IndexError:
+            # non-critical, sometimes happens when writing into the entry box while the sequence is playing
+            traceback.print_exc()
 
     def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip, i):
         if self.context.skip_notes_sequential_sequences:
