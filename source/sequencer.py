@@ -557,6 +557,8 @@ class Sequencer(tk.Frame):
         for i, _ in enumerate(self.step_played_counts):
             self.step_played_counts[i] = to
             self.actual_notes_played_counts[i] = to
+        self.skip_sequential_idx = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.idx_sequential_skip = [0, 0, 0, 0, 0, 0, 0, 0]
         self.idx = to
 
     def init_entries(self):
@@ -833,7 +835,7 @@ class Sequencer(tk.Frame):
         try:
             self.set_status_bar_content(scale_str=scale_name)
         except:
-            pass
+            traceback.print_exc()
 
         log(logfile=self.context.logfile, msg="Scale sequences set to: %s" % self.context.scale_sequences)
 
@@ -1077,22 +1079,23 @@ class Sequencer(tk.Frame):
             # non-critical, sometimes happens when writing into the entry box while the sequence is playing
             traceback.print_exc()
 
-    def skip_note_sequentially(self, skip_sequential_idx, idx_sequential_skip, i):
+    def skip_note_sequentially(self, i):
         if self.context.skip_notes_sequential_sequences:
             try:
                 if self.context.skip_notes_sequential_sequences[i]:
-                    loop_skip_sequential_idx = skip_sequential_idx % len(self.context.skip_notes_sequential_sequences[i])
+                    loop_skip_sequential_idx = self.skip_sequential_idx[i] % len(self.context.skip_notes_sequential_sequences[i])
 
                     try:
-                        if idx_sequential_skip % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
-                            if idx_sequential_skip > 0:
-                                return skip_sequential_idx + 1, 0, True
+                        if self.idx_sequential_skip[i] % (self.context.skip_notes_sequential_sequences[i][loop_skip_sequential_idx]) == 0:
+                            if self.idx_sequential_skip[i] > 0:
+                                return True
                     except ZeroDivisionError:
                         traceback.print_exc()
+                        return False
             except IndexError:
-                pass
-
-        return skip_sequential_idx, idx_sequential_skip, False
+                traceback.print_exc()
+                return False
+        return False
 
     def play_poly_notes(self, note, i):
         if self.context.poly_sequences:
@@ -1256,8 +1259,6 @@ class Sequencer(tk.Frame):
         if not self.context.note_sequences:
             return
 
-        note_was_played = False
-
         valid_midi_channels = [channel for channel in self.context.midi_channels if channel]
 
         for i, valid_channels in enumerate(valid_midi_channels):
@@ -1294,16 +1295,14 @@ class Sequencer(tk.Frame):
                         if note != NoteTypes.NOTE_PAUSE:
                             self.step_played_counts[i] += 1
                             self.actual_notes_played_counts[i] += 1
-                            note_was_played = True
                         continue
 
                     self.off_note_idx[i], self.idx_all_off[i] = self.turn_off_notes(self.off_note_idx[i], self.idx_all_off[i], i)
 
-                    if note_was_played:
-                        self.skip_sequential_idx[i], self.idx_sequential_skip[i], skip_sequentially = \
-                            self.skip_note_sequentially(self.skip_sequential_idx[i], self.idx_sequential_skip[i], i)
-                    else:
-                        skip_sequentially = False
+                    skip_sequentially = self.skip_note_sequentially(i)
+                    if skip_sequentially:
+                        self.idx_sequential_skip[i] += 1
+                        self.skip_sequential_idx[i] += 1
 
                     if note.type_ is NoteTypes.NOTE_PAUSE:
                         self.step_played_counts[i] += 1
@@ -1338,7 +1337,6 @@ class Sequencer(tk.Frame):
 
                             self.step_played_counts[i] += 1
                             self.actual_notes_played_counts[i] += 1
-                            note_was_played = True
                             self.idx_sequential_skip[i] += 1
                             self.idx_all_off[i] += 1
 
