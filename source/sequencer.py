@@ -1070,11 +1070,10 @@ class Sequencer(tk.Frame):
 
     def skip_note_parallel(self, idx, j):
         try:
-            if self.context.skip_note_parallel_sequences:
-                if self.context.skip_note_parallel_sequences[j]:
-                    for i in range(0, self.context.skip_note_parallel_sequences[j].__len__()):
-                        if (idx // self.get_tempo_multiplier()) % (self.context.skip_note_parallel_sequences[j][i] + 1) == 0:
-                            return True
+            if self.context.skip_note_parallel_sequences and self.context.skip_note_parallel_sequences[j]:
+                for i in range(0, self.context.skip_note_parallel_sequences[j].__len__()):
+                    if (idx // self.get_tempo_multiplier()) % (self.context.skip_note_parallel_sequences[j][i] + 1) == 0:
+                        return True
         except IndexError:
             # non-critical, sometimes happens when writing into the entry box while the sequence is playing
             traceback.print_exc()
@@ -1098,11 +1097,10 @@ class Sequencer(tk.Frame):
         return False
 
     def play_poly_notes(self, note, i):
-        if self.context.poly_sequences:
-            if self.context.poly_sequences[i]:
-                for poly in self.context.poly_sequences[i]:
-                    if a() < int(self.strvars_prob_poly_abs[i].get()) / 100.:
-                        note.play_transposed(poly)
+        if self.context.poly_sequences and self.context.poly_sequences[i]:
+            for poly in self.context.poly_sequences[i]:
+                if a() < int(self.strvars_prob_poly_abs[i].get()) / 100.:
+                    note.play_transposed(poly)
 
     def play_relative_poly_notes(self, note, note_entry, i):
         if not str(note_entry).isdigit():
@@ -1115,20 +1113,18 @@ class Sequencer(tk.Frame):
             else:
                 scale = self.context.scale
         except Exception as e:
-            pass
             print("Exception: %s" % e)
 
         scales = self.context.scales
         scale = scales.get_scale_by_name(scale)
 
-        if self.context.poly_relative_sequences:
-            if self.context.poly_relative_sequences[i]:
-                for poly in self.context.poly_relative_sequences[i]:
-                    if a() < int(self.strvars_prob_poly_rel[i].get()) / 100.:
-                        # THIS TOOK FUCKING FOREVER TO FIGURE OUT
-                        added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
-                                 - int(scales.get_note_by_index_wrap(note_entry, scale)))
-                        note.play_transposed(added)
+        if self.context.poly_relative_sequences and self.context.poly_relative_sequences[i]:
+            for poly in self.context.poly_relative_sequences[i]:
+                if a() < int(self.strvars_prob_poly_rel[i].get()) / 100.:
+                    # THIS TOOK FUCKING FOREVER TO FIGURE OUT
+                    added = (int(scales.get_note_by_index_wrap(note_entry + poly, scale))
+                             - int(scales.get_note_by_index_wrap(note_entry, scale)))
+                    note.play_transposed(added)
 
     def play_sample_notes(self):
         for channel, sample_seq in enumerate(self.context.sample_seqs):
@@ -1241,17 +1237,15 @@ class Sequencer(tk.Frame):
         return (abs(note.pitch - item) // 12) + 1
 
     def turn_off_notes(self, off_note_idx, idx_all_off, i):
-        if self.context.off_sequences:
-            if self.context.off_sequences[i]:
-                loop_off_note_idx = off_note_idx % len(self.context.off_sequences[i])
+        if self.context.off_sequences and self.context.off_sequences[i]:
+            loop_off_note_idx = off_note_idx % len(self.context.off_sequences[i])
 
-                try:
-                    if idx_all_off % (self.context.off_sequences[i][loop_off_note_idx]) == 0:
-                        if idx_all_off > 0:
-                            self.end_all_notes(i)
-                            return off_note_idx + 1, 0
-                except:
-                    traceback.print_exc()
+            try:
+                if idx_all_off % (self.context.off_sequences[i][loop_off_note_idx]) == 0 and idx_all_off > 0:
+                    self.end_all_notes(i)
+                    return off_note_idx + 1, 0
+            except:
+                traceback.print_exc()
 
         return off_note_idx, idx_all_off
 
@@ -1263,7 +1257,7 @@ class Sequencer(tk.Frame):
 
         for i, valid_channels in enumerate(valid_midi_channels):
             if i < len(self.context.note_sequences) and self.context.note_sequences[i]:
-                if (a() > float(self.strvars_prob_skip_note[i].get()) / 100
+                if (a() > float(self.strvars_prob_skip_note[i].get()) / 100.
                         and self.idx % self.get_tempo_multiplier() == 0):
 
                     try:
@@ -1291,10 +1285,9 @@ class Sequencer(tk.Frame):
                         time.sleep(.02)
                         continue
 
-                    if not self.intvars_enable_channels[i].get():
-                        if note != NoteTypes.NOTE_PAUSE:
-                            self.step_played_counts[i] += 1
-                            self.actual_notes_played_counts[i] += 1
+                    if not self.intvars_enable_channels[i].get() and note != NoteTypes.NOTE_PAUSE:
+                        self.step_played_counts[i] += 1
+                        self.actual_notes_played_counts[i] += 1
                         continue
 
                     self.off_note_idx[i], self.idx_all_off[i] = self.turn_off_notes(self.off_note_idx[i], self.idx_all_off[i], i)
@@ -1367,13 +1360,13 @@ class Sequencer(tk.Frame):
     def play_delay(self, i, note, octave_idx, valid_channels):
         for j, channel in enumerate(valid_channels):
             orig_note = self.get_orig_note(note=note, octave_idx=octave_idx, i=i, j=j)
-            x = lambda: self.delay.run_delay_with_note(
+            _ = lambda: self.delay.run_delay_with_note(
                 orig_note,
                 60. / self.context.get_bpm() / self.get_delay_multiplier(),
                 self.delay_functions.functions[self.delay_constants.CONSTANT_DECAY],
                 -10)
 
-            Delay(self.context).create_thread_for_function(x)
+            Delay(self.context).create_thread_for_function(_)
 
     def get_octave_idx(self, i):
         try:
